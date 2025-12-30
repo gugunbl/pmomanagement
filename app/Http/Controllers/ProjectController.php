@@ -1,0 +1,518 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Http\Requests\ProjectRequest;
+use App\Project;
+use App\Category;
+use App\Status;
+use App\ProjectTopImplementasi;
+use App\ProjectTopMaintenance;
+use App\Mprojectmanager;
+use App\Http\Requests\CategoryRequest;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB; // Jika ingin transaction
+
+
+class ProjectController extends Controller
+{
+
+
+public function maintenance(Request $request)
+{
+    $tahun = $request->tahun;
+
+    $projects = DB::table('m_project as p')
+        ->leftJoin('project_top_maintenance as ptm', 'ptm.project_id', '=', 'p.id_project')
+        ->select(
+            'p.id_project',
+            'p.nomor_spk',
+            'p.nama_project',
+            'p.tanggal_akhir_maintenance',
+            DB::raw('COUNT(ptm.id) as total_ba'),
+            DB::raw("COUNT(CASE WHEN ptm.status = 'paid' THEN 1 END) as total_paid")
+        )
+        ->where('p.status_maintenance', 1)
+        ->when($tahun, function ($query) use ($tahun) {
+            $query->whereYear('p.tanggal_akhir_maintenance', $tahun);
+        })
+        ->groupBy(
+            'p.id_project',
+            'p.nomor_spk',
+            'p.nama_project',
+            'p.tanggal_akhir_maintenance'
+        )
+        ->orderBy('p.tanggal_akhir_maintenance', 'asc')
+        ->paginate(10)
+        ->appends($request->query()); // supaya pagination bawa filter
+
+    // dropdown tahun
+$listTahun = DB::table('m_project')
+    ->whereNotNull('tanggal_akhir_maintenance')
+    ->selectRaw('DISTINCT YEAR(tanggal_akhir_maintenance) as tahun')
+    ->orderBy('tahun', 'desc')
+    ->pluck('tahun');
+
+    return view('project.maintenance', compact('projects', 'listTahun', 'tahun'));
+}
+
+
+
+public function store(Request $request)
+{
+    // ================= VALIDASI =================
+    $validated = $request->validate([
+        'tanggal_spk' => 'required|date_format:Y-m-d',
+        'nama_project' => 'required|string|max:255',
+        'nomor_spk' => 'required|string|max:255',
+        'link_dokumen' => 'nullable|string|max:255',
+        'keterangan' => 'nullable|string',
+
+        'category' => 'required|exists:categories,id',
+        'customer' => 'nullable|string',
+        'sales' => 'nullable|string',
+
+        'status_implementation' => 'required|exists:m_status,id_status',
+        'status_maintenance' => 'nullable|exists:m_status,id_status',
+
+        'pm_implementasi' => 'nullable|exists:m_project_manager,id_pm',
+        'pm_maintenance' => 'nullable|exists:m_project_manager,id_pm',
+
+        // TOP IMPLEMENTASI (MASTER)
+        'top_impl_total' => 'nullable|integer|min:1|max:20',
+    ]);
+
+    DB::transaction(function () use ($validated, $request) {
+
+        // ================= SIMPAN PROJECT =================
+        $validated['tahun'] = Carbon::createFromFormat(
+            'Y-m-d',
+            $validated['tanggal_spk']
+        )->year;
+
+        $validated['user_id'] = Auth::id();
+
+        // default jika kosong
+        $validated['top_impl_total'] = $validated['top_impl_total'] ?? 0;
+
+        $project = Project::create($validated);
+
+        // ================= SIMPAN TOP IMPLEMENTASI =================
+        if ($project->top_impl_total > 0) {
+
+            $topData = $request->top_impl ?? [];
+
+            for ($i = 1; $i <= $project->top_impl_total; $i++) {
+
+                ProjectTopImplementasi::create([
+                    'project_id'   => $project->id_project,
+                    'top_ke'       => $i,
+                    'tanggal_top'  => $topData[$i]['tanggal'] ?? null,
+                    'status'       => $topData[$i]['status'] ?? 'planned',
+                    'berita_acara' => $topData[$i]['berita_acara'] ?? null,
+                ]);
+            }
+        }
+    });
+
+    flash('Project & TOP Implementasi berhasil disimpan')->success();
+    return redirect()->route('project.index');
+}
+
+
+
+
+
+
+    //
+    public function index(Request $request)
+    {
+    $tipepm = [
+        'implementasi' => 'Implementasi',
+        'maintenance' => 'Maintenance'
+    ];
+
+    $query = Project::leftjoin('m_status as s', 'm_project.status_maintenance', '=', 's.id_status')
+        ->leftjoin('m_status as ss', 'm_project.status_implementation', '=', 'ss.id_status')
+        ->leftjoin('m_project_manager as pmi', 'm_project.pm_implementasi', '=', 'pmi.id_pm')
+        ->leftjoin('m_project_manager as pmm', 'm_project.pm_maintenance', '=', 'pmm.id_pm')
+        ->select(
+            'm_project.id_project',
+            'm_project.tanggal_spk',
+            'm_project.tahun',
+            'm_project.nama_project',
+            'm_project.nomor_spk',
+            'm_project.customer',
+            'm_project.status_maintenance',
+            's.nama_status as sta_m',
+            'pmm.nama_pm as pm_maintenance',
+            'm_project.status_implementation',
+            'ss.nama_status as sta_i',
+            'pmi.nama_pm as pm_implementasi'
+        );
+    
+    // Filter status yang is_type = 1 (sesuai dengan kode existing)
+    $query->where('s.is_type', 1)
+          ->where('ss.is_type', 1)
+          ->where('pmi.status', 1)
+          ->where('pmm.status', 1);
+    
+    // Filter berdasarkan tipe (Implementasi/Maintenance)
+    if ($request->has('status_maintenance') && !empty($request->status_maintenance)) {
+        if ($request->status_maintenance == 'implementasi') {
+            // Filter hanya project dengan status_implementation = 1
+            $query->where('m_project.status_implementation', 1);
+        } elseif ($request->status_maintenance == 'maintenance') {
+            // Filter hanya project dengan status_maintenance = 1
+            $query->where('m_project.status_maintenance', 1);
+        }
+    }
+    
+    // Search dengan OR (pakai grouping untuk aman)
+    if ($request->has('search') && !empty($request->search)) {
+        $query->where(function($q) use ($request) {
+            $q->where('m_project.nama_project', 'like', '%'.$request->search.'%')
+              ->orWhere('m_project.tahun', 'like', '%'.$request->search.'%');
+        });
+    }
+    
+    // Order by
+    $query->orderBy('m_project.tanggal_spk', 'desc');
+    
+    // Paginate
+    $projects = $query->paginate(15);
+    
+    $title = 'Manage Project Infodata'; 
+    $statusma = \App\Status::where('is_type', 1)->pluck('nama_status', 'id_status');
+    
+    return view('project.index', compact('projects', 'title', 'statusma', 'tipepm'));
+    }
+
+
+/*    public function edit(Project $project)
+    {
+        $title = "Informasi Project Details";
+        $project->load(['statusImplementation','statusMaintenance','mcategory']);
+        $categories = Category::pluck('category_name', 'id');
+        $mstatus = Status::pluck('nama_status','id_status');
+        $mprojectmanager = Mprojectmanager::pluck('nama_pm','id_pm');
+        return view('project.edit', compact('mprojectmanager','title','categories', 'project','mstatus'));
+    }
+*/
+
+
+public function edit(Project $project)
+{
+    $title = 'Edit Project';
+
+    $project->load([
+        'topImplementasi',
+        'topMaintenance'
+    ]);
+    $clients = [
+            'BRI' => 'BRI',
+            'BJB' => 'BJB', 
+            'PT Timah' => 'PT Timah',
+            'Allo Bank' => 'Allo Bank',
+            'PNM' => 'PNM',
+            'Bank DKI' => 'Bank DKI',
+            'Jamkrindo Syariah' => 'Jamkrindo Syariah',
+            'Askrindo' => 'Askrindo'
+        ];
+        $saless = [
+            'Putri' => 'Putri',
+            'Sigit' => 'Sigit',
+            'Wandi' => 'Wandi'
+        ];
+
+    $categories = Category::pluck('category_name', 'id');
+    $statusim   = Status::where('is_type', 1)->pluck('nama_status', 'id_status');
+    $statusma = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
+    $mprojectmanager = Mprojectmanager::pluck('nama_pm', 'id_pm');
+
+    return view('project.edit', compact(
+        'project',
+        'title',
+        'categories',
+        'statusim',
+        'statusma',
+        'clients',
+        'saless',
+        'mprojectmanager'
+    ));
+}
+
+
+public function update(Request $request, Project $project)
+{
+    DB::transaction(function () use ($request, $project) {
+
+        /* ===============================
+         * 1️⃣ UPDATE PROJECT INFO
+         * =============================== */
+        $project->update([
+            'nama_project'          => $request->nama_project,
+            'nomor_spk'             => $request->nomor_spk,
+            'tanggal_spk'           => $request->tanggal_spk,
+            'status_implementation' => $request->status_implementation,
+            'status_maintenance'    => $request->status_maintenance,
+            'customer'              => $request->customer,
+            'category'              => $request->category,
+            'pm_implementasi'       => $request->pm_implementasi,
+            'pm_maintenance'        => $request->pm_maintenance,
+            'sales'                 => $request->sales,
+            'link_dokumen'          => $request->link_dokumen,
+            'keterangan'            => $request->keterangan,
+        ]);
+
+        /* ===============================
+         * 2️⃣ UPDATE TOP IMPLEMENTASI
+         * =============================== */
+        if ($request->filled('top_impl_total')) {
+
+            $project->update([
+                'top_impl_total' => $request->top_impl_total
+            ]);
+
+            $rows = $request->top_impl ?? [];
+
+            for ($i = 1; $i <= $request->top_impl_total; $i++) {
+
+                if (!isset($rows[$i])) continue;
+
+                ProjectTopImplementasi::updateOrCreate(
+                    [
+                        'project_id' => $project->id_project,
+                        'top_ke'     => $i,
+                    ],
+                    [
+                        'tanggal_top'  => $rows[$i]['tanggal'] ?? null,
+                        'status'       => $rows[$i]['status'] ?? 'planned',
+                        'berita_acara' => $rows[$i]['berita_acara'] ?? null,
+                    ]
+                );
+            }
+
+            // hapus TOP yg dikurangi
+            ProjectTopImplementasi::where('project_id', $project->id_project)
+                ->where('top_ke', '>', $request->top_impl_total)
+                ->delete();
+        }
+
+        /* ===============================
+         * 3️⃣ UPDATE TOP MAINTENANCE
+         * =============================== */
+        if ($request->filled('top_maintenance_total')) {
+
+            $project->update([
+                'top_maintenance_total' => $request->top_maintenance_total
+            ]);
+
+            $rows = $request->top_maintenance ?? [];
+
+            for ($i = 1; $i <= $request->top_maintenance_total; $i++) {
+
+                if (!isset($rows[$i]['start'])) continue;
+
+                ProjectTopMaintenance::updateOrCreate(
+                    [
+                        'project_id' => $project->id_project,
+                        'top_ke'     => $i,
+                    ],
+                    [
+                        'periode_start' => $rows[$i]['start'],
+                        'periode_end'   => $rows[$i]['end'] ?? null,
+                        'status'        => $rows[$i]['status'] ?? 'planned',
+                    ]
+                );
+            }
+
+            ProjectTopMaintenance::where('project_id', $project->id_project)
+                ->where('top_ke', '>', $request->top_maintenance_total)
+                ->delete();
+        }
+    });
+
+    flash('Project berhasil diperbarui')->success();
+    return redirect()->back();
+}
+
+
+
+
+    public function show(Project $project)
+    {
+        $title = "Informasi Detail Project";
+        $project->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance']);
+        return view('project.show', compact('title', 'project'));
+    }
+
+
+
+    public function destroy($id)
+    {
+    // atau jika menggunakan route model binding
+    // public function destroy(Project $project)
+        $project = Project::findOrFail($id);
+        $project->delete();
+    
+        return redirect()->route('project.index')
+        ->with('success', 'Project deleted successfully');
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+
+         $clients = [
+            'BRI' => 'BRI',
+            'BJB' => 'BJB', 
+            'PT Timah' => 'PT Timah',
+            'Allo Bank' => 'Allo Bank',
+            'PNM' => 'PNM',
+            'Bank DKI' => 'Bank DKI',
+            'Jamkrindo Syariah' => 'Jamkrindo Syariah',
+            'Askrindo' => 'Askrindo'
+        ];
+        $saless = [
+            'Putri' => 'Putri',
+            'Sigit' => 'Sigit',
+            'Wandi' => 'Wandi'
+        ];
+
+        $title = 'Tambah Project Baru';
+        $categories = Category::pluck('category_name', 'id');
+        $statusim = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
+        $statusma = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
+        $mprojectmanager = \App\Mprojectmanager::pluck('nama_pm','id_pm');
+        
+        return view('project.create', compact('categories','statusim','statusma','title','mprojectmanager','clients','saless'));
+       
+    }
+
+
+
+/*public function store(Request $request)
+{
+    // Validasi input
+    $validated = $request->validate([
+        'tanggal_spk' => 'required|date_format:Y-m-d',
+        'nama_project' => 'required|string|max:255',
+        'nomor_spk' => 'required|string|max:255',
+        'link_dokumen' => 'required|string|max:255',
+        'category' => 'required|exists:categories,id',
+        'keterangan' => 'nullable|string',
+         'customer' => 'nullable|string',
+          'sales' => 'nullable|string',
+       'status_implementation' => [
+            'required',
+            'integer',
+            'exists:m_status,id_status',
+            // Custom validation untuk is_type = 1
+            function ($attribute, $value, $fail) {
+                $status = \App\Status::find($value);
+                if (!$status || $status->is_type != 1) {
+                    $fail('Status implementasi harus bertipe implementasi (is_type = 1).');
+                }
+            }
+        ],
+        'status_maintenance' => [
+            'nullable',
+            'integer',
+            'exists:m_status,id_status',
+            // Custom validation untuk is_type = 2 (jika maintenance beda tipe)
+            function ($attribute, $value, $fail) {
+                if ($value) {
+                    $status = \App\Status::find($value);
+                    if (!$status) {
+                        $fail('Status maintenance tidak ditemukan.');
+                    }
+                    // Jika maintenance juga is_type = 1, ganti menjadi != 1
+                    if ($status->is_type != 1) { // Sesuaikan dengan kebutuhan
+                        $fail('Status maintenance harus bertipe maintenance (is_type = 1).');
+                    }
+                }
+            }
+            ],
+            'pm_maintenance' => [
+            'nullable',
+            'integer',
+            'exists:m_project_manager,id_pm', // Validasi id_pm
+            ],
+            'pm_implementasi' => [
+            'nullable',
+            'integer',
+            'exists:m_project_manager,id_pm', // Validasi id_pm
+        ],
+        
+    ]);
+    
+    if (empty($validated['sales'])) {
+        $validated['sales'] = '0';
+    }
+
+    if (empty($validated['status_maintenance'])) {
+        $validated['status_maintenance'] = '0';
+    }
+
+
+
+    // Validasi tambahan: tahun dari tanggal
+    $tahun = Carbon::createFromFormat('Y-m-d', $validated['tanggal_spk'])->year;
+    if ($tahun < 2000 || $tahun > date('Y') + 5) {
+        return back()->withErrors([
+            'tanggal_spk' => 'Tahun harus antara 2000 dan ' . (date('Y') + 5)
+        ])->withInput();
+    }
+
+    // Ambil nama_pm berdasarkan id_pm yang dipilih
+ /*   if (!empty($validated['pm_maintenance'])) {
+        $pm = \App\MProjectManager::find($validated['pm_maintenance']);
+        if ($pm) {
+            $validated['pm_maintenance'] = $pm->nama_pm; // Simpan nama_pm, bukan id_pm
+        }
+    }
+    
+    // Ambil nama_pm berdasarkan id_pm yang dipilih
+    if (!empty($validated['pm_implementasi'])) {
+        $pm = \App\MProjectManager::find($validated['pm_implementasi']);
+        if ($pm) {
+            $validated['pm_implementasi'] = $pm->nama_pm; // Simpan nama_pm, bukan id_pm
+        }
+    }
+*/
+    // Tambahkan field tambahan
+  //  $validated['user_id'] = Auth::id();
+    // $validated['tahun'] = $tahun;
+    
+    // Jika ada field status_implementation, pastikan nilainya valid
+    // (sudah divalidasi di atas)
+/*    
+    try {
+        // Gunakan transaction untuk konsistensi data
+        DB::beginTransaction();
+        
+        // Create project
+        Project::create($validated);
+        
+        DB::commit();
+        
+        flash('Project created successfully!')->success();
+        return redirect()->route('project.index');
+        
+    } catch (\Exception $e) {
+        DB::rollback();
+        
+        flash('Error creating project: ' . $e->getMessage())->error();
+        return back()->withInput();
+    }
+}
+*/
+
+}
