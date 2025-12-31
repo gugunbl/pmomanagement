@@ -13,7 +13,7 @@
             </div>
 
             {{-- Nomor SPK --}}
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <div class="form-group">
                     {{ Form::label('nomor_spk', 'Nomor SPK') }}
                     {{ Form::text('nomor_spk', null, ['class'=>'form-control', 'required']) }}
@@ -21,12 +21,48 @@
             </div>
 
             {{-- Tanggal SPK --}}
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     {{ Form::label('tanggal_spk', 'Tanggal SPK') }}
                     {{ Form::date('tanggal_spk', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
+
+
+            {{-- Tanggal KOM --}}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ Form::label('tanggal_spk', 'Tanggal KOM') }}
+                    {{ Form::date('tanggal_spk', null, ['class'=>'form-control', 'required']) }}
+                </div>
+            </div>
+
+            {{-- Tanggal Akhir Implementasi --}}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ Form::label('tanggal_akhir_implementasi', 'Tanggal Akhir Implementasi') }}
+                    {{ Form::date('tanggal_akhir_implementasi', null, ['class'=>'form-control', 'required']) }}
+                </div>
+            </div>
+
+        <hr width="100%" align="left">
+
+            {{-- Tanggal Awal Maintenance --}}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ Form::label('tanggal_mulai_maintenance', 'Tanggal Awal Maintenance') }}
+                    {{ Form::date('tanggal_mulai_maintenance', null, ['class'=>'form-control', 'required']) }}
+                </div>
+            </div>
+
+            {{-- Tanggal Akhir Maintenance --}}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ Form::label('tanggal_akhir_maintenance', 'Tanggal Akhir Maintenance') }}
+                    {{ Form::date('tanggal_akhir_maintenance', null, ['class'=>'form-control', 'required']) }}
+                </div>
+            </div>
+        <hr width="100%" align="left">
 
             {{-- Status Implementasi --}}
             <div class="col-md-4">

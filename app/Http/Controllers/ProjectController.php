@@ -265,6 +265,9 @@ public function update(Request $request, Project $project)
             'sales'                 => $request->sales,
             'link_dokumen'          => $request->link_dokumen,
             'keterangan'            => $request->keterangan,
+            'tanggal_akhir_implementasi'    => $request->tanggal_akhir_implementasi,
+            'tanggal_mulai_maintenance'     => $request->tanggal_mulai_maintenance,
+            'tanggal_akhir_maintenance'     => $request->tanggal_akhir_maintenance,
         ]);
 
         /* ===============================
