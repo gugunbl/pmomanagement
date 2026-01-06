@@ -12,22 +12,14 @@ use Illuminate\Support\Facades\DB; // ← INI YANG DITAMBAHKAN
 
 class PerangkatController extends Controller
 {
-    //
-/*     public function index()
+public function show(Perangkat $perangkatss)
     {
-
-    $perangkats = Perangkat::with(['project' => function($query) {
-            $query->select('id_project', 'nama_project');
-        }])
-        ->select('id_perangkat', 'id_project', 'serialnumber', 'merk', 'type')
-        //->get();
-        ->orderBy('id_perangkat', 'desc') // ORDER BY id_perangkat DESC
-        ->paginate(15);
-
-    $title =  'Manage Perangkat';    
-    return view('perangkat.index', compact('perangkats','title'));
+        $title = "Informasi Detail Project";
+        $perangkatss->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance']);
+        return view('perangkat.show', compact('title', 'perangkatss'));
     }
-*/
+
+
 
 
 public function index(Request $request)

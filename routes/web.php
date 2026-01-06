@@ -73,7 +73,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->name('perangkat.summary');
 
     Route::resource('perangkat', 'PerangkatController');
-
+    
+    Route::get('/perangkat/{id_perangkat}', 'PerangkatController@show')
+        ->name('perangkat.show');
     /*
     |--------------------------------------------------------------------------
     | PERGANTIAN PERANGKAT

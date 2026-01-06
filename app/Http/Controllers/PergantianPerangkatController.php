@@ -41,7 +41,8 @@ public function index(Request $request)
 
     $pergantians = $query->latest()->paginate(10);
 
-    $projects = Project::orderBy('nama_project')->get();
+    $projects = Project::pluck('nama_project', 'id_project');
+
 
     return view('pergantian.index', compact(
         'pergantians',
