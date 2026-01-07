@@ -80,22 +80,41 @@
 
     <tr>
         <td>{{ $projects->firstItem() + $key }}</td>
-        <td>{{ $item->nama_project }}</td>
+
+
+<td>
+    <span
+        data-toggle="tooltip"
+        data-placement="top"
+        title="{{ $item->nama_project }}"
+        style="cursor: help;"
+    >
+        {{ \Illuminate\Support\Str::limit($item->nama_project, 80) }}
+    </span>
+</td>
         <td>{{ $item->nomor_spk }}</td>
         <td>{{ \Carbon\Carbon::parse($item->tanggal_akhir_maintenance)->format('d-m-Y') }}</td>
         <td class="text-center">{{ $item->total_ba }}</td>
         <td class="text-center">{{ $item->total_paid }}</td>
-        <td style="min-width:180px">
-            <div class="progress" style="height: 18px;">
-                <div class="progress-bar
-                    {{ $persen == 100 ? 'bg-success' : ($persen >= 50 ? 'bg-info' : 'bg-warning') }}"
-                    role="progressbar"
-                    style="width: {{ $persen }}%">
-                    {{ $persen }}%
-                </div>
-            </div>
-        </td>
-        <td class="text-center">
+<td style="min-width:200px">
+    <div class="progress position-relative" style="height: 22px;">
+        <div class="progress-bar
+            {{ $persen == 100 ? 'bg-success' : ($persen >= 50 ? 'bg-info' : 'bg-warning') }}"
+            role="progressbar"
+            style="width: {{ $persen }}%">
+        </div>
+
+        <span class="position-absolute w-100 text-center"
+              style="
+                font-weight: 600;
+                font-size: 14px;
+                line-height: 22px;
+                color: #000;
+              ">
+            {{ $persen }}%
+        </span>
+    </div>
+</td>           <td class="text-center">
             <a href="{{ route('project.edit', $item->id_project) }}"
                class="btn btn-sm btn-primary">
                 <i class="fas fa-edit"></i> Edit
@@ -117,3 +136,12 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+@endpush
+
