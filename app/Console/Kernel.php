@@ -22,10 +22,14 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+
+    protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('maintenance:reminder')
+            ->dailyAt('18:30');
     }
+
+
 
     /**
      * Register the commands for the application.

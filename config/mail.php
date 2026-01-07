@@ -32,6 +32,7 @@ return [
     |            "postmark", "log", "array"
     |
     */
+    'reminder_to' => env('MAIL_REMINDER_TO'),
 
     'mailers' => [
         'smtp' => [

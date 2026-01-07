@@ -64,6 +64,7 @@ public function maintenance(Request $request)
 
    $listPM = DB::table('m_project_manager')
     ->where('status', 1)
+    ->where('user_id',2)
     ->orderBy('nama_pm')
     ->get();
 
