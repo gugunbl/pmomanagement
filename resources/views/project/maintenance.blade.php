@@ -76,9 +76,23 @@
 
     // average progress
     $persen = round((($progressBA + $progressTime) / 2) * 100);
+
+    $today = \Carbon\Carbon::today();
+    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_maintenance);
+
+    if ($endDate->lt($today)) {
+        // sudah lewat
+        $rowClass = 'table-danger';
+    } elseif ($endDate->lte($today->copy()->addMonths(5))) {
+        // 5 bulan ke depan
+        $rowClass = 'table-warning';
+    } else {
+        $rowClass = '';
+    }
+
 @endphp
 
-    <tr>
+    <tr class="{{ $rowClass }}">
         <td>{{ $projects->firstItem() + $key }}</td>
 
 
