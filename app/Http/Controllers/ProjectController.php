@@ -23,30 +23,49 @@ class ProjectController extends Controller
 public function maintenance(Request $request)
 {
     $tahun = $request->tahun;
-
+    $pm_maintenance = $request->pm_maintenance;
     $projects = DB::table('m_project as p')
         ->leftJoin('project_top_maintenance as ptm', 'ptm.project_id', '=', 'p.id_project')
+        ->leftJoin('m_project_manager as pm', 'pm.id_pm', '=', 'p.pm_maintenance')
         ->select(
-            'p.id_project',
-            'p.nomor_spk',
-            'p.nama_project',
-            'p.tanggal_akhir_maintenance',
-            DB::raw('COUNT(ptm.id) as total_ba'),
-            DB::raw("COUNT(CASE WHEN ptm.status = 'paid' THEN 1 END) as total_paid")
-        )
+    'p.id_project',
+    'p.nomor_spk',
+    'p.nama_project',
+    'p.tanggal_mulai_maintenance',
+    'p.tanggal_akhir_maintenance',
+    'pm.nama_pm as pm_maintenance_nama',
+    DB::raw('COUNT(ptm.id) as total_ba'),
+    DB::raw("COUNT(CASE WHEN ptm.status = 'paid' THEN 1 END) as total_paid")
+)
+
         ->where('p.status_maintenance', 1)
+
+        // filter tahun
         ->when($tahun, function ($query) use ($tahun) {
             $query->whereYear('p.tanggal_akhir_maintenance', $tahun);
         })
-        ->groupBy(
-            'p.id_project',
-            'p.nomor_spk',
-            'p.nama_project',
-            'p.tanggal_akhir_maintenance'
-        )
+
+        // filter PM (pakai ID, bukan nama)
+        ->when($pm_maintenance, function ($query) use ($pm_maintenance) {
+            $query->where('p.pm_maintenance', $pm_maintenance);
+        })
+
+->groupBy(
+    'p.id_project',
+    'p.nomor_spk',
+    'p.nama_project',
+    'p.tanggal_mulai_maintenance',
+    'p.tanggal_akhir_maintenance',
+    'pm.nama_pm'
+)
         ->orderBy('p.tanggal_akhir_maintenance', 'asc')
         ->paginate(10)
-        ->appends($request->query()); // supaya pagination bawa filter
+        ->appends($request->query());
+
+   $listPM = DB::table('m_project_manager')
+    ->where('status', 1)
+    ->orderBy('nama_pm')
+    ->get();
 
     // dropdown tahun
 $listTahun = DB::table('m_project')
@@ -55,7 +74,7 @@ $listTahun = DB::table('m_project')
     ->orderBy('tahun', 'desc')
     ->pluck('tahun');
 
-    return view('project.maintenance', compact('projects', 'listTahun', 'tahun'));
+    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance'));
 }
 
 

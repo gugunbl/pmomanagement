@@ -6,20 +6,35 @@
         <h3>Project Maintenance</h3>
     </div>
 
-    {{-- Filter Tahun --}}
     <form method="GET" action="{{ route('project.maintenance') }}" class="form-inline mb-3">
-        <div class="form-group mr-2">
+
+        {{-- Filter Tahun --}}
+        <div class="form-group mr-3">
             <label class="mr-2">Tahun Maintenance</label>
             <select name="tahun" class="form-control form-control-sm" onchange="this.form.submit()">
                 <option value="">-- Semua Tahun --</option>
-                @foreach ($listTahun as $th)
-                    <option value="{{ $th }}" {{ $tahun == $th ? 'selected' : '' }}>
-                        {{ $th }}
-                    </option>
-                @endforeach
-            </select>
+            @foreach ($listTahun as $th)
+                <option value="{{ $th }}" {{ $tahun == $th ? 'selected' : '' }}>
+                    {{ $th }}
+                </option>
+            @endforeach            </select>
         </div>
+
+        {{-- Filter PM Maintenance --}}
+        <div class="form-group">
+            <label class="mr-2">PM Maintenance</label>
+            <select name="pm_maintenance" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- Semua PM --</option>
+@foreach ($listPM as $pm)
+    <option value="{{ $pm->id_pm }}"
+        {{ $pm_maintenance == $pm->id_pm ? 'selected' : '' }}>
+        {{ $pm->nama_pm }}
+    </option>
+@endforeach            </select>
+        </div>
+
     </form>
+
 
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
@@ -38,11 +53,31 @@
 
 <tbody>
 @forelse ($projects as $key => $item)
-    @php
-        $persen = $item->total_ba > 0
-            ? round(($item->total_paid / $item->total_ba) * 100)
-            : 0;
-    @endphp
+@php
+    // progress BA
+    $progressBA = $item->total_ba > 0
+        ? ($item->total_paid / $item->total_ba)
+        : 0;
+
+    // progress waktu
+    $start = \Carbon\Carbon::parse($item->tanggal_mulai_maintenance);
+    $end   = \Carbon\Carbon::parse($item->tanggal_akhir_maintenance);
+    $now   = \Carbon\Carbon::now();
+
+    if ($now < $start) {
+        $progressTime = 0;
+    } elseif ($now > $end) {
+        $progressTime = 1;
+    } else {
+        $totalDays   = $start->diffInDays($end);
+        $passedDays  = $start->diffInDays($now);
+        $progressTime = $totalDays > 0 ? ($passedDays / $totalDays) : 0;
+    }
+
+    // average progress
+    $persen = round((($progressBA + $progressTime) / 2) * 100);
+@endphp
+
     <tr>
         <td>{{ $projects->firstItem() + $key }}</td>
         <td>{{ $item->nama_project }}</td>
