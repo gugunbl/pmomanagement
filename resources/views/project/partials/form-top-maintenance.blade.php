@@ -28,6 +28,7 @@
                     <th>Periode Start</th>
                     <th>Periode End</th>
                     <th>Status</th>
+                    <th>Keterangan</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,6 +61,11 @@
                             <option value="submitted" {{ old("top_maintenance.$i.status", $row->status ?? '')=='submitted'?'selected':'' }}>Submitted</option>
                             <option value="paid"      {{ old("top_maintenance.$i.status", $row->status ?? '')=='paid'?'selected':'' }}>Paid</option>
                         </select>
+                    </td>
+                    <td>
+                        <textarea name="top_maintenance[{{ $i }}][keterangan]" 
+                                  class="form-control" 
+                                  rows="1">{{ old("top_maintenance.$i.keterangan", $row->keterangan ?? '') }}</textarea>
                     </td>
                 </tr>
             @endfor

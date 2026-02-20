@@ -15,7 +15,8 @@ class ProjectTopMaintenance extends Model
         'top_ke',
         'periode_start',
         'periode_end',
-        'status'
+        'status',
+        'keterangan'
     ];
 
     public function project()

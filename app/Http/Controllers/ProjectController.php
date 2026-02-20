@@ -9,6 +9,7 @@ use App\Category;
 use App\Status;
 use App\ProjectTopImplementasi;
 use App\ProjectTopMaintenance;
+use App\ProjectReport;
 use App\Mprojectmanager;
 use App\Http\Requests\CategoryRequest;
 use Illuminate\Support\Facades\Auth;
@@ -229,7 +230,8 @@ public function edit(Project $project)
 
     $project->load([
         'topImplementasi',
-        'topMaintenance'
+        'topMaintenance',
+        'reports'
     ]);
     $clients = [
             'BRI' => 'BRI',
@@ -348,12 +350,48 @@ public function update(Request $request, Project $project)
                         'periode_start' => $rows[$i]['start'],
                         'periode_end'   => $rows[$i]['end'] ?? null,
                         'status'        => $rows[$i]['status'] ?? 'planned',
+                        'keterangan'    => $rows[$i]['keterangan'] ?? null,
                     ]
                 );
             }
 
             ProjectTopMaintenance::where('project_id', $project->id_project)
                 ->where('top_ke', '>', $request->top_maintenance_total)
+                ->delete();
+        }
+
+        /* ===============================
+         * 4️⃣ UPDATE PROJECT REPORTS
+         * =============================== */
+        if ($request->filled('project_report_total')) {
+
+            $project->update([
+                'project_report_total' => $request->project_report_total
+            ]);
+
+            $rows = $request->project_reports ?? [];
+
+            for ($i = 1; $i <= $request->project_report_total; $i++) {
+
+                if (!isset($rows[$i])) continue;
+
+                \App\ProjectReport::updateOrCreate(
+                    [
+                        'project_id' => $project->id_project,
+                        'report_ke'  => $i,
+                    ],
+                    [
+                        'period_start'    => $rows[$i]['start'] ?? null,
+                        'period_end'      => $rows[$i]['end'] ?? null,
+                        'submission_date' => $rows[$i]['submission_date'] ?? null,
+                        'status'          => $rows[$i]['status'] ?? 'progress',
+                        'keterangan'      => $rows[$i]['keterangan'] ?? null,
+                    ]
+                );
+            }
+
+            \App\ProjectReport::where('project_id', $project->id_project)
+                ->where('report_ke', '>', $request->project_report_total)
                 ->delete();
         }
     });

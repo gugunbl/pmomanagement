@@ -43,6 +43,31 @@
                         </li>
                     @endcan
 
+
+                    @canany(['view-entertainment', 'create-entertainment'])
+                        <li class="nav-item">
+                            <a class="nav-link {{ (request()->is('entertainment*')) ? 'active' : '' }}" href="#navbar-entertainment"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-entertainment">
+                                <i class="fas text-primary fa-list-alt"></i>
+                                <span class="nav-link-text">Manage Entertainment</span>
+                            </a>
+                            <div class="collapse" id="navbar-entertainment">
+                                <ul class="nav nav-sm flex-column">
+                                 @can('view-listentertainment')
+                                    <li class="nav-item">
+                                        <a href="{{route('entertainment.index')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">List Data Entertainment</span></a>
+                                    </li>
+                                    @endcan
+                                    @can( 'create-entertainment')
+                                    <li class="nav-item">
+                                        <a href="{{route('entertainment.create')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Tambah Data Entertainment</span></a>
+                                    </li>
+                                    @endcan
+                                </ul>
+                            </div>
+                        </li>
+                    @endcan
+
+
                     @canany(['view-category', 'create-category'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('category*')) ? 'active' : '' }}" href="#navbar-category"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-category">

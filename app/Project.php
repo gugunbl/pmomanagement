@@ -34,6 +34,7 @@ class Project extends Model
         'keterangan',
         'top_impl_total',
         'top_maintenance_total',
+        'project_report_total',
     ];
     
     /**
@@ -65,6 +66,15 @@ public function topMaintenance()
         'id_project'
     );
 }
+
+    public function reports()
+    {
+        return $this->hasMany(
+            \App\ProjectReport::class,
+            'project_id',
+            'id_project'
+        );
+    }
 
 
     public function mPMImplementasi()

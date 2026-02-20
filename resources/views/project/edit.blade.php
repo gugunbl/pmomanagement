@@ -21,6 +21,13 @@
                     TOP Maintenance
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#laporan-project">
+                    Laporan Project
+                </a>
+            </li>
+
         </ul>
     </div>
 
@@ -39,6 +46,10 @@
 
             <div class="tab-pane fade" id="top-maintenance">
                 @include('project.partials.form-top-maintenance')
+            </div>
+
+            <div class="tab-pane fade" id="laporan-project">
+                @include('project.partials.form-laporan-project')
             </div>
 
         </div>

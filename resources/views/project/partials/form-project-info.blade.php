@@ -22,8 +22,7 @@
 
             {{-- Tanggal SPK --}}
             <div class="col-md-3">
-                <div class="form-group">
-                    {{ Form::label('tanggal_spk', 'Tanggal SPK') }}
+                <div class="form-group">                    {{ Form::label('tanggal_spk', 'Tanggal SPK') }}
                     {{ Form::date('tanggal_spk', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>

@@ -23,6 +23,14 @@ Auth::routes(['verify' => true]);
 Route::group(['middleware' => ['auth', 'verified']], function () {
 
     /*
+    |------------------------------------------------------------------
+    | PETTY CASH
+    |------------------------------------------------------------------
+    */
+    Route::resource('entertainment', 'EntertainmentController');
+
+
+    /*
     | Dashboard
     */
     Route::get('/home', 'HomeController@index')->name('home');
@@ -61,6 +69,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->name('settings.index');
     Route::post('/settings', 'SettingController@update')
         ->name('settings.update');
+
+
+
 
     /*
     |--------------------------------------------------------------------------
