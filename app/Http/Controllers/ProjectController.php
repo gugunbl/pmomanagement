@@ -101,6 +101,11 @@ public function store(Request $request)
         'pm_implementasi' => 'nullable|exists:m_project_manager,id_pm',
         'pm_maintenance' => 'nullable|exists:m_project_manager,id_pm',
 
+        'tanggal_kom'                => 'nullable|date_format:Y-m-d',
+        'tanggal_akhir_implementasi' => 'nullable|date_format:Y-m-d',
+        'tanggal_mulai_maintenance'  => 'nullable|date_format:Y-m-d',
+        'tanggal_akhir_maintenance'  => 'nullable|date_format:Y-m-d',
+
         // TOP IMPLEMENTASI (MASTER)
         'top_impl_total' => 'nullable|integer|min:1|max:20',
     ]);
@@ -458,122 +463,28 @@ public function update(Request $request, Project $project)
     }
 
 
-
-/*public function store(Request $request)
-{
-    // Validasi input
-    $validated = $request->validate([
-        'tanggal_spk' => 'required|date_format:Y-m-d',
-        'nama_project' => 'required|string|max:255',
-        'nomor_spk' => 'required|string|max:255',
-        'link_dokumen' => 'required|string|max:255',
-        'category' => 'required|exists:categories,id',
-        'keterangan' => 'nullable|string',
-         'customer' => 'nullable|string',
-          'sales' => 'nullable|string',
-       'status_implementation' => [
-            'required',
-            'integer',
-            'exists:m_status,id_status',
-            // Custom validation untuk is_type = 1
-            function ($attribute, $value, $fail) {
-                $status = \App\Status::find($value);
-                if (!$status || $status->is_type != 1) {
-                    $fail('Status implementasi harus bertipe implementasi (is_type = 1).');
-                }
-            }
-        ],
-        'status_maintenance' => [
-            'nullable',
-            'integer',
-            'exists:m_status,id_status',
-            // Custom validation untuk is_type = 2 (jika maintenance beda tipe)
-            function ($attribute, $value, $fail) {
-                if ($value) {
-                    $status = \App\Status::find($value);
-                    if (!$status) {
-                        $fail('Status maintenance tidak ditemukan.');
-                    }
-                    // Jika maintenance juga is_type = 1, ganti menjadi != 1
-                    if ($status->is_type != 1) { // Sesuaikan dengan kebutuhan
-                        $fail('Status maintenance harus bertipe maintenance (is_type = 1).');
-                    }
-                }
-            }
-            ],
-            'pm_maintenance' => [
-            'nullable',
-            'integer',
-            'exists:m_project_manager,id_pm', // Validasi id_pm
-            ],
-            'pm_implementasi' => [
-            'nullable',
-            'integer',
-            'exists:m_project_manager,id_pm', // Validasi id_pm
-        ],
-        
-    ]);
-    
-    if (empty($validated['sales'])) {
-        $validated['sales'] = '0';
+    public function reportMonitoring()
+    {
+        $reports = \App\ProjectReport::with('project')
+            ->orderBy('period_end', 'desc')
+            ->get();
+            
+        $title = 'Monitoring Laporan';
+        return view('project.monitoring-laporan', compact('reports', 'title'));
     }
 
-    if (empty($validated['status_maintenance'])) {
-        $validated['status_maintenance'] = '0';
-    }
+    public function reportMonitoringUpdate(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:project_reports,id',
+            'field' => 'required|in:status,keterangan',
+            'value' => 'nullable|string'
+        ]);
 
+        $report = \App\ProjectReport::findOrFail($request->id);
+        $report->{$request->field} = $request->value;
+        $report->save();
 
-
-    // Validasi tambahan: tahun dari tanggal
-    $tahun = Carbon::createFromFormat('Y-m-d', $validated['tanggal_spk'])->year;
-    if ($tahun < 2000 || $tahun > date('Y') + 5) {
-        return back()->withErrors([
-            'tanggal_spk' => 'Tahun harus antara 2000 dan ' . (date('Y') + 5)
-        ])->withInput();
+        return response()->json(['success' => true]);
     }
-
-    // Ambil nama_pm berdasarkan id_pm yang dipilih
- /*   if (!empty($validated['pm_maintenance'])) {
-        $pm = \App\MProjectManager::find($validated['pm_maintenance']);
-        if ($pm) {
-            $validated['pm_maintenance'] = $pm->nama_pm; // Simpan nama_pm, bukan id_pm
-        }
-    }
-    
-    // Ambil nama_pm berdasarkan id_pm yang dipilih
-    if (!empty($validated['pm_implementasi'])) {
-        $pm = \App\MProjectManager::find($validated['pm_implementasi']);
-        if ($pm) {
-            $validated['pm_implementasi'] = $pm->nama_pm; // Simpan nama_pm, bukan id_pm
-        }
-    }
-*/
-    // Tambahkan field tambahan
-  //  $validated['user_id'] = Auth::id();
-    // $validated['tahun'] = $tahun;
-    
-    // Jika ada field status_implementation, pastikan nilainya valid
-    // (sudah divalidasi di atas)
-/*    
-    try {
-        // Gunakan transaction untuk konsistensi data
-        DB::beginTransaction();
-        
-        // Create project
-        Project::create($validated);
-        
-        DB::commit();
-        
-        flash('Project created successfully!')->success();
-        return redirect()->route('project.index');
-        
-    } catch (\Exception $e) {
-        DB::rollback();
-        
-        flash('Error creating project: ' . $e->getMessage())->error();
-        return back()->withInput();
-    }
-}
-*/
-
 }

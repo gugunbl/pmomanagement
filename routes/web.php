@@ -56,6 +56,12 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/project/maintenance', 'ProjectController@maintenance')
         ->name('project.maintenance');
 
+    Route::get('/project/report-monitoring', 'ProjectController@reportMonitoring')
+        ->name('project.report.monitoring');
+
+    Route::post('/project/report-monitoring/update', 'ProjectController@reportMonitoringUpdate')
+        ->name('project.report.monitoring.update');
+
     Route::resource('category', 'CategoryController')->except('show');
     Route::resource('post', 'PostController');
     Route::resource('project', 'ProjectController');

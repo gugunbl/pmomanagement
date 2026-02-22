@@ -149,6 +149,11 @@
                                         <a href="{{route('project.create')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Tambah Project Baru</span></a>
                                     </li>
                                     @endcan
+                                    @can('view-project')
+                                    <li class="nav-item">
+                                        <a href="{{route('project.report.monitoring')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Monitoring Laporan</span></a>
+                                    </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </li>
