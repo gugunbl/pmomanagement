@@ -5,10 +5,29 @@
     <div class="row">
         <div class="col">
             <div class="card">
-                <div class="card-header border-0">
+                <!-- Nav tabs -->
+                <div class="card-header border-0 pb-0">
+                    <ul class="nav nav-tabs border-0" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link {{ $activeTab == 'progress' ? 'active font-weight-bold text-primary border-bottom' : '' }}" 
+                               href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'progress'])) }}">
+                               Progress BA
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $activeTab == 'open' ? 'active font-weight-bold text-primary border-bottom' : '' }}" 
+                               href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'open'])) }}">
+                               BA Open
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-header border-0 mt--2">
                     <form action="{{ route('project.ba.monitoring') }}" method="GET">
+                        <input type="hidden" name="tab" value="{{ $activeTab }}">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-control-label">PM Maintenance</label>
                                     <select name="pm_maintenance" class="form-control form-control-sm">
@@ -21,17 +40,17 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-control-label">Search Project</label>
                                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Nama Project..." value="{{ $search }}">
                                 </div>
                             </div>
-                            <div class="col-md-4 mt-4">
-                                    <button type="submit" class="btn btn-primary">Cari</button>
-                                    <a href="{{ route('project.ba.export.pdf', request()->query()) }}" class="btn btn-danger">Export PDF</a>
-                                    <a href="{{ route('project.ba.export.excel', request()->query()) }}" class="btn btn-success">Export Excel</a>
-                                    <a href="{{ route('project.ba.monitoring') }}" class="btn btn-secondary">Reset</a>
+                            <div class="col-md-6 mt-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Cari</button>
+                                <a href="{{ route('project.ba.export.pdf', array_merge(request()->query(), ['tab' => $activeTab])) }}" class="btn btn-danger btn-sm">Export PDF</a>
+                                <a href="{{ route('project.ba.export.excel', array_merge(request()->query(), ['tab' => $activeTab])) }}" class="btn btn-success btn-sm">Export Excel</a>
+                                <a href="{{ route('project.ba.monitoring', ['tab' => $activeTab]) }}" class="btn btn-secondary btn-sm">Reset</a>
                             </div>
                         </div>
                     </form>
@@ -56,7 +75,7 @@
                             @forelse($listBA as $ba)
                                 @php
                                     $highlight = '';
-                                    if ($ba->periode_end) {
+                                    if ($activeTab == 'progress' && $ba->periode_end) {
                                         $endDate = \Carbon\Carbon::parse($ba->periode_end);
                                         $threeMonthsAgo = \Carbon\Carbon::now()->subMonths(3);
                                         $today = \Carbon\Carbon::now();
@@ -90,7 +109,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center">Tidak ada data BA.</td>
+                                    <td colspan="9" class="text-center">Tidak ada data BA di tab ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -113,13 +132,24 @@
         vertical-align: top;
     }
     
-    /* Merah Gelap untuk < 6 bulan */
+    .nav-tabs .nav-link {
+        border: none;
+        color: #8898aa;
+    }
+    
+    .nav-tabs .nav-link.active {
+        background-color: transparent;
+        color: #5e72e4;
+        border-bottom: 3px solid #5e72e4 !important;
+    }
+
+    /* Merah Gelap untuk > 3 bulan overdue */
     .bg-danger-dark {
         background-color: #8B0000 !important;
         color: white !important;
     }
     
-    /* Kuning untuk < 3 bulan */
+    /* Kuning untuk <= 3 bulan overdue */
     .bg-warning-custom {
         background-color: #FFFF00 !important;
         color: black !important;

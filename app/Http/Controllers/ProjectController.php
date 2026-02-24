@@ -494,10 +494,21 @@ public function update(Request $request, Project $project)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
+        $activeTab = $request->tab ?: 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
             ->where('status', '!=', 'paid')
             ->whereHas('project');
+
+        // Tab filtering logic
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        if ($activeTab == 'progress') {
+            // Overdue or exactly today
+            $query->where('periode_end', '<=', $today);
+        } else {
+            // Future
+            $query->where('periode_end', '>', $today);
+        }
 
         // Filter PM Maintenance
         if ($pm_maintenance) {
@@ -515,7 +526,6 @@ public function update(Request $request, Project $project)
 
         $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
-            // Get the earliest end_date for each project group as sorting priority
             ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
             ->orderBy('min_periode_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
@@ -531,17 +541,25 @@ public function update(Request $request, Project $project)
 
         $title = 'Monitoring BA (TOP Maintenance)';
 
-        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title'));
+        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab'));
     }
 
     public function exportBAPdf(Request $request)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
+        $activeTab = $request->tab ?: 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
             ->where('status', '!=', 'paid')
             ->whereHas('project');
+
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        if ($activeTab == 'progress') {
+            $query->where('periode_end', '<=', $today);
+        } else {
+            $query->where('periode_end', '>', $today);
+        }
 
         if ($pm_maintenance) {
             $query->whereHas('project', function ($q) use ($pm_maintenance) {
@@ -563,22 +581,30 @@ public function update(Request $request, Project $project)
             ->orderBy('project_top_maintenance.periode_end', 'asc')
             ->get();
 
-        $title = 'Monitoring BA (TOP Maintenance)';
+        $title = 'Monitoring BA (TOP Maintenance) - ' . ($activeTab == 'progress' ? 'Progress BA' : 'BA Open');
 
         $pdf = Pdf::loadView('project.monitoring-ba-pdf', compact('listBA', 'title'))
                   ->setPaper('A4', 'landscape');
 
-        return $pdf->download('Monitoring-BA-'.date('Ymd').'.pdf');
+        return $pdf->download('Monitoring-BA-'.$activeTab.'-'.date('Ymd').'.pdf');
     }
 
     public function exportBAExcel(Request $request)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
+        $activeTab = $request->tab ?: 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
             ->where('status', '!=', 'paid')
             ->whereHas('project');
+
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        if ($activeTab == 'progress') {
+            $query->where('periode_end', '<=', $today);
+        } else {
+            $query->where('periode_end', '>', $today);
+        }
 
         if ($pm_maintenance) {
             $query->whereHas('project', function ($q) use ($pm_maintenance) {
@@ -600,6 +626,7 @@ public function update(Request $request, Project $project)
             ->orderBy('project_top_maintenance.periode_end', 'asc')
             ->get();
 
-        return Excel::download(new MonitoringBAExport($listBA), 'Monitoring-BA-'.date('Ymd').'.xlsx');
+        $filename = 'Monitoring-BA-'.$activeTab.'-'.date('Ymd').'.xlsx';
+        return Excel::download(new MonitoringBAExport($listBA), $filename);
     }
 }
