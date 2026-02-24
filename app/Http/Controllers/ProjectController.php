@@ -15,6 +15,9 @@ use App\Http\Requests\CategoryRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB; // Jika ingin transaction
+use App\Exports\MonitoringBAExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class ProjectController extends Controller
@@ -486,5 +489,117 @@ public function update(Request $request, Project $project)
         $report->save();
 
         return response()->json(['success' => true]);
+    }
+    public function monitoringBA(Request $request)
+    {
+        $search = $request->search;
+        $pm_maintenance = $request->pm_maintenance;
+
+        $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
+            ->where('status', '!=', 'paid')
+            ->whereHas('project');
+
+        // Filter PM Maintenance
+        if ($pm_maintenance) {
+            $query->whereHas('project', function ($q) use ($pm_maintenance) {
+                $q->where('pm_maintenance', $pm_maintenance);
+            });
+        }
+
+        // Search Nama Project
+        if ($search) {
+            $query->whereHas('project', function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%");
+            });
+        }
+
+        $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
+            ->select('project_top_maintenance.*')
+            // Get the earliest end_date for each project group as sorting priority
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->orderBy('min_periode_end', 'asc')
+            ->orderBy('m_project.nama_project', 'asc')
+            ->orderBy('project_top_maintenance.periode_end', 'asc')
+            ->paginate(15)
+            ->appends($request->query());
+
+        $listPM = DB::table('m_project_manager')
+            ->where('status', 1)
+            ->where('user_id', 2)
+            ->orderBy('nama_pm')
+            ->get();
+
+        $title = 'Monitoring BA (TOP Maintenance)';
+
+        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title'));
+    }
+
+    public function exportBAPdf(Request $request)
+    {
+        $search = $request->search;
+        $pm_maintenance = $request->pm_maintenance;
+
+        $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
+            ->where('status', '!=', 'paid')
+            ->whereHas('project');
+
+        if ($pm_maintenance) {
+            $query->whereHas('project', function ($q) use ($pm_maintenance) {
+                $q->where('pm_maintenance', $pm_maintenance);
+            });
+        }
+
+        if ($search) {
+            $query->whereHas('project', function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%");
+            });
+        }
+
+        $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
+            ->select('project_top_maintenance.*')
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->orderBy('min_periode_end', 'asc')
+            ->orderBy('m_project.nama_project', 'asc')
+            ->orderBy('project_top_maintenance.periode_end', 'asc')
+            ->get();
+
+        $title = 'Monitoring BA (TOP Maintenance)';
+
+        $pdf = Pdf::loadView('project.monitoring-ba-pdf', compact('listBA', 'title'))
+                  ->setPaper('A4', 'landscape');
+
+        return $pdf->download('Monitoring-BA-'.date('Ymd').'.pdf');
+    }
+
+    public function exportBAExcel(Request $request)
+    {
+        $search = $request->search;
+        $pm_maintenance = $request->pm_maintenance;
+
+        $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
+            ->where('status', '!=', 'paid')
+            ->whereHas('project');
+
+        if ($pm_maintenance) {
+            $query->whereHas('project', function ($q) use ($pm_maintenance) {
+                $q->where('pm_maintenance', $pm_maintenance);
+            });
+        }
+
+        if ($search) {
+            $query->whereHas('project', function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%");
+            });
+        }
+
+        $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
+            ->select('project_top_maintenance.*')
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->orderBy('min_periode_end', 'asc')
+            ->orderBy('m_project.nama_project', 'asc')
+            ->orderBy('project_top_maintenance.periode_end', 'asc')
+            ->get();
+
+        return Excel::download(new MonitoringBAExport($listBA), 'Monitoring-BA-'.date('Ymd').'.xlsx');
     }
 }

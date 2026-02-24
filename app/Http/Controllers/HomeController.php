@@ -67,9 +67,31 @@ $maintenanceEndingSoon = DB::table('m_project')
     $customers = $chartRaw->pluck('customer')->unique()->values();
 
     $datasets = [];
+    $customerColors = [
+        'BRI' => '#00529C',
+        'PNM' => '#FF8000',
+        'BJB' => '#00A38D',
+        'Askrindo' => '#F2A100',
+        'PT. Timah' => '#53565A',
+        'Allo Bank' => '#6F2DBD',
+        'Bank DKI' => '#ED1C24',
+        'Jamkrindo Syariah' => '#008800',
+        'PT Timah' => '#53565A', // Handle variations if any
+    ];
+
+    $palette = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+    $colorIndex = 0;
+
     foreach ($customers as $customer) {
+        $color = $customerColors[$customer] ?? $palette[$colorIndex % count($palette)];
+        if (!isset($customerColors[$customer])) {
+            $colorIndex++;
+        }
+
         $datasets[] = [
             'label' => $customer,
+            'backgroundColor' => $color,
+            'borderColor' => $color,
             'data' => $years->map(function ($year) use ($chartRaw, $customer) {
                 return $chartRaw
                     ->where('tahun', $year)

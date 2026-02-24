@@ -62,6 +62,10 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/project/report-monitoring/update', 'ProjectController@reportMonitoringUpdate')
         ->name('project.report.monitoring.update');
 
+    Route::get('/project/monitoring-ba', 'ProjectController@monitoringBA')->name('project.ba.monitoring');
+    Route::get('/project/monitoring-ba/export/pdf', 'ProjectController@exportBAPdf')->name('project.ba.export.pdf');
+    Route::get('/project/monitoring-ba/export/excel', 'ProjectController@exportBAExcel')->name('project.ba.export.excel');
+
     Route::resource('category', 'CategoryController')->except('show');
     Route::resource('post', 'PostController');
     Route::resource('project', 'ProjectController');

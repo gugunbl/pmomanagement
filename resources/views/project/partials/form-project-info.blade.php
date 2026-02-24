@@ -23,7 +23,7 @@
             {{-- Tanggal SPK --}}
             <div class="col-md-3">
                 <div class="form-group">                    {{ Form::label('tanggal_spk', 'Tanggal SPK') }}
-                    {{ Form::date('tanggal_spk', $project->tanggal_spk ?? '1900-01-01', ['class'=>'form-control', 'required']) }}
+                    {{ Form::date('tanggal_spk', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
 
@@ -32,7 +32,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     {{ Form::label('tanggal_kom', 'Tanggal KOM') }}
-                    {{ Form::date('tanggal_kom', $project->tanggal_kom ?? '1900-01-01', ['class'=>'form-control', 'required']) }}
+                    {{ Form::date('tanggal_kom', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
 
@@ -40,7 +40,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     {{ Form::label('tanggal_akhir_implementasi', 'Tanggal Akhir Implementasi') }}
-                    {{ Form::date('tanggal_akhir_implementasi', $project->tanggal_akhir_implementasi ?? '1900-01-01', ['class'=>'form-control', 'required']) }}
+                    {{ Form::date('tanggal_akhir_implementasi', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
 
@@ -50,7 +50,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     {{ Form::label('tanggal_mulai_maintenance', 'Tanggal Awal Maintenance') }}
-                    {{ Form::date('tanggal_mulai_maintenance', $project->tanggal_mulai_maintenance ?? '1900-01-01', ['class'=>'form-control', 'required']) }}
+                    {{ Form::date('tanggal_mulai_maintenance', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
 
@@ -58,7 +58,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     {{ Form::label('tanggal_akhir_maintenance', 'Tanggal Akhir Maintenance') }}
-                    {{ Form::date('tanggal_akhir_maintenance', $project->tanggal_akhir_maintenance ?? '1900-01-01', ['class'=>'form-control', 'required']) }}
+                    {{ Form::date('tanggal_akhir_maintenance', null, ['class'=>'form-control', 'required']) }}
                 </div>
             </div>
         <hr width="100%" align="left">
@@ -122,7 +122,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     {{ Form::label('pm_maintenance', 'Project Manager Maintenance') }}
-                    {{ Form::select('pm_maintenance', $mprojectmanager, 13, [
+                    {{ Form::select('pm_maintenance', $mprojectmanager, null, [
                         'class'=>'form-control',
                         'placeholder'=>'Belum ada PM'
                     ]) }}

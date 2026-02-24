@@ -154,6 +154,14 @@
                                         <a href="{{route('project.report.monitoring')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Monitoring Laporan</span></a>
                                     </li>
                                     @endcan
+                                    @can('view-project')
+                                    <li class="nav-item">
+                                        <a href="{{route('project.ba.monitoring')}}" class="nav-link">
+                                            <span class="sidenav-mini-icon">D </span>
+                                            <span class="sidenav-normal">Monitoring BA</span>
+                                        </a>
+                                    </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </li>
