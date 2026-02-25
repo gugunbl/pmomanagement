@@ -44,6 +44,14 @@ class Perangkat extends Model
         return $this->belongsTo(Lokasi::class, 'id_lokasi', 'id_lokasi');
     }
 
+    /**
+     * Relasi ke Jenis Perangkat
+     */
+    public function jenisPerangkat()
+    {
+        return $this->belongsTo(Jenisperangkat::class, 'jenis', 'id_jenis');
+    }
+
      /**
      * Relasi ke Project
      */

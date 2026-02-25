@@ -7,15 +7,28 @@ use Illuminate\Support\Facades\Auth;
 use App\Perangkat;
 use App\Project;
 use App\Jenisperangkat;
+use App\Lokasi;
+use App\Exports\PerangkatTemplateExport;
+use App\Imports\PerangkatImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB; // ← INI YANG DITAMBAHKAN
 
 
 class PerangkatController extends Controller
 {
-public function show(Perangkat $perangkatss)
+    public function show($id_perangkat)
     {
-        $title = "Informasi Detail Project";
-        $perangkatss->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance']);
+        $title = "Informasi Detail Perangkat";
+        $perangkatss = Perangkat::with([
+            'project.statusImplementation',
+            'project.statusMaintenance',
+            'project.mcategory',
+            'project.mPMImplementasi',
+            'project.mPMMaintenance',
+            'lokasi',
+            'jenisPerangkat'
+        ])->where('id_perangkat', $id_perangkat)->firstOrFail();
+
         return view('perangkat.show', compact('title', 'perangkatss'));
     }
 
@@ -24,7 +37,7 @@ public function show(Perangkat $perangkatss)
 
 public function index(Request $request)
 {
-    $query = Perangkat::with('project');
+    $query = Perangkat::with(['project', 'lokasi']);
 
     // search text
     if ($request->filled('search')) {
@@ -69,8 +82,9 @@ public function index(Request $request)
         'Brilian Club' => 'Brilian Club',
         'DCI' => 'DCI Cibitung'
         ];
+        $lokasis = Lokasi::all();
 
-        return view('perangkat.create', compact('projectes','jenisperangkates','sitelist','statusperangkat'));
+        return view('perangkat.create', compact('projectes','jenisperangkates','sitelist','statusperangkat','lokasis'));
     }
 
      public function store(Request $request)
@@ -129,7 +143,7 @@ public function index(Request $request)
                     'start_warranty' => $unit['start_warranty'] ?? null,
                     'end_warranty' => $unit['end_warranty'] ?? null,
                     'tgl_online' => $unit['tgl_online'] ?? null,
-                    'status' => 'Warehouse',
+                    'status' => 1,
                 ]);
             }
 
@@ -167,4 +181,55 @@ public function index(Request $request)
 
 
 
+    public function templateExport()
+    {
+        return Excel::download(new PerangkatTemplateExport, 'template_import_perangkat.xlsx');
+    }
+
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $file = $request->file('file_excel');
+        $import = new PerangkatImport();
+        $data = Excel::toCollection($import, $file);
+
+        $rows = [];
+        if (isset($data[0])) {
+            // Skip heading row
+            foreach ($data[0]->skip(1) as $row) {
+                if (isset($row[0]) && !empty($row[0])) {
+                    $rows[] = [
+                        'sn' => $row[0],
+                        'koordinat' => $row[1] ?? '',
+                        'lantai' => $row[2] ?? '',
+                        'status_server' => $row[3] ?? 'New Device',
+                        'type_lisensi' => $row[4] ?? '',
+                        'start_warranty' => $this->formatDateExcel($row[5]),
+                        'end_warranty' => $this->formatDateExcel($row[6]),
+                        'tgl_online' => $this->formatDateExcel($row[7]),
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    private function formatDateExcel($value)
+    {
+        if (!$value) return null;
+        
+        try {
+            // Excel dates can be numeric or string
+            if (is_numeric($value)) {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)->format('Y-m-d');
+            }
+            return \Carbon\Carbon::parse($value)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

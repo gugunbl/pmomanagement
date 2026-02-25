@@ -57,23 +57,32 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    {{ Form::label('site', 'Site / Lokasi Global', ['class' => 'form-control-label']) }}
-                                    {{ Form::select('site', $sitelist, null, ['class' => 'form-control select2']) }}
+                                    {{ Form::label('id_lokasi', 'Site / Alamat Lokasi', ['class' => 'form-control-label']) }}
+                                    <select name="id_lokasi" id="id_lokasi_select" class="form-control select2" data-placeholder="Select Site...">
+                                        <option value=""></option>
+                                        @foreach($lokasis as $lok)
+                                            <option value="{{ $lok->id_lokasi }}" data-alamat="{{ $lok->alamat }}" data-nama="{{ $lok->nama_lokasi }}">{{ $lok->nama_lokasi }}</option>
+                                        @endforeach
+                                    </select>
+                                    {{ Form::hidden('site', null, ['id' => 'site_hidden']) }}
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    {{ Form::label('id_lokasi', 'Lokasi Gedung / DC', ['class' => 'form-control-label']) }}
-                                    {{ Form::select('id_lokasi', \App\Lokasi::pluck('nama_lokasi', 'id_lokasi'), null, ['class' => 'form-control select2', 'placeholder' => 'Pilih Lokasi...']) }}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     {{ Form::label('upload_do', 'Upload DO (Signed)', ['class' => 'form-control-label']) }}
                                     {{ Form::file('upload_do', ['class' => 'form-control-file']) }}
                                     <small class="text-muted">Format: PDF/JPG/PNG. Max: 5MB</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="row_alamat" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {{ Form::label('alamat', 'Detail Alamat Gedung / DC', ['class' => 'form-control-label']) }}
+                                    {{ Form::textarea('alamat', null, ['id' => 'alamat_display', 'class' => 'form-control', 'rows' => 2, 'readonly' => true, 'placeholder' => 'Alamat otomatis terisi...']) }}
                                 </div>
                             </div>
                         </div>
@@ -88,12 +97,21 @@
                         </div>
 
                         <hr class="my-4" />
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-0">
                             <h6 class="heading-small text-muted mb-0">Input Detail Unit (Per Serial Number)</h6>
-                            <div class="custom-control custom-checkbox pt-2">
-                                <input type="checkbox" class="custom-control-input" id="apply_to_all_dates">
-                                <label class="custom-control-label text-xs" for="apply_to_all_dates">Samakan Tanggal Garansi & Online (Gunakan Baris 1)</label>
+                            <div class="btn-group">
+                                <a href="{{ route('perangkat.template') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-file-excel mr-1"></i> Download Template
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btn_import_excel">
+                                    <i class="fas fa-file-import mr-1"></i> Import from Excel
+                                </button>
+                                <input type="file" id="import_excel_file" style="display:none;" accept=".xlsx, .xls">
                             </div>
+                        </div>
+                        <div class="custom-control custom-checkbox pt-2 mb-3 text-right">
+                            <input type="checkbox" class="custom-control-input" id="apply_to_all_dates">
+                            <label class="custom-control-label text-xs" for="apply_to_all_dates">Samakan Tanggal Garansi & Online (Gunakan Baris 1)</label>
                         </div>
 
                         <div class="table-responsive border rounded bg-white shadow-sm mb-4" style="max-height: 500px; overflow-y: auto;">
@@ -275,6 +293,96 @@ $(document).ready(function () {
 
     $('#apply_to_all_dates').on('change', function() {
         syncDates();
+    });
+
+    // Handle Location Selection
+    $('#id_lokasi_select').on('change', function() {
+        var selected = $(this).find('option:selected');
+        var alamat = selected.data('alamat');
+        var nama = selected.data('nama');
+        
+        if (selected.val()) {
+            $('#alamat_display').val(alamat || '-');
+            $('#row_alamat').show();
+            $('#site_hidden').val(nama);
+        } else {
+            $('#alamat_display').val('');
+            $('#row_alamat').hide();
+            $('#site_hidden').val('');
+        }
+    });
+
+    // Handle Excel Import
+    $('#btn_import_excel').on('click', function() {
+        $('#import_excel_file').click();
+    });
+
+    $('#import_excel_file').on('change', function() {
+        var file_data = $(this).prop('files')[0];
+        if (!file_data) return;
+
+        var form_data = new FormData();
+        form_data.append('file_excel', file_data);
+        form_data.append('_token', '{{ csrf_token() }}');
+
+        $(this).val(''); // Reset input
+
+        $.ajax({
+            url: '{{ route("perangkat.import") }}',
+            type: 'POST',
+            data: form_data,
+            contentType: false,
+            processData: false,
+            beforeSend: function() {
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Please wait while we import your data.',
+                    allowOutsideClick: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success && response.data.length > 0) {
+                    var data = response.data;
+                    $('#qty_input').val(data.length).trigger('change');
+                    
+                    data.forEach(function(row, index) {
+                        $(`input[name="units[${index}][sn]"]`).val(row.sn);
+                        $(`input[name="units[${index}][koordinat]"]`).val(row.koordinat);
+                        $(`input[name="units[${index}][lantai]"]`).val(row.lantai);
+                        $(`select[name="units[${index}][status_server]"]`).val(row.status_server);
+                        $(`input[name="units[${index}][type_lisensi]"]`).val(row.type_lisensi);
+                        $(`input[name="units[${index}][start_warranty]"]`).val(row.start_warranty);
+                        $(`input[name="units[${index}][end_warranty]"]`).val(row.end_warranty);
+                        $(`input[name="units[${index}][tgl_online]"]`).val(row.tgl_online);
+                    });
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Import Success',
+                        text: `${data.length} units imported correctly.`,
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Import Failed',
+                        text: 'No data found in the Excel file.'
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while importing data. Please check your file format.'
+                });
+            }
+        });
     });
 });
 </script>

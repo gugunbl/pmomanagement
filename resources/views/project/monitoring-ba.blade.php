@@ -20,6 +20,18 @@
                                BA Open
                             </a>
                         </li>
+                        <li class="nav-item ml-auto align-self-center pr-3">
+                            <div class="recap-summary d-flex align-items-center">
+                                <div class="recap-item mr-4">
+                                    <span class="recap-label text-muted">Banyak Project</span>
+                                    <span class="recap-value text-primary font-weight-bold ml-1">{{ $totalProjects }}</span>
+                                </div>
+                                <div class="recap-item">
+                                    <span class="recap-label text-muted">Banyak BA</span>
+                                    <span class="recap-value text-info font-weight-bold ml-1">{{ $totalBA }}</span>
+                                </div>
+                            </div>
+                        </li>
                     </ul>
                 </div>
 
@@ -72,8 +84,18 @@
                             </tr>
                         </thead>
                         <tbody class="list">
+                            @php 
+                                $prevProject = null;
+                                $isSilver = false;
+                            @endphp
                             @forelse($listBA as $ba)
                                 @php
+                                    // Toggle silver background when project changes
+                                    if ($ba->project_id !== $prevProject) {
+                                        $isSilver = !$isSilver;
+                                        $prevProject = $ba->project_id;
+                                    }
+
                                     $highlight = '';
                                     if ($activeTab == 'progress' && $ba->periode_end) {
                                         $endDate = \Carbon\Carbon::parse($ba->periode_end);
@@ -81,17 +103,17 @@
                                         $today = \Carbon\Carbon::now();
 
                                         if ($endDate->lt($threeMonthsAgo)) {
-                                            $highlight = 'bg-danger-dark'; // Merah Gelap (> 3 bulan overdue)
+                                            $highlight = 'bg-danger-dark'; 
                                         } elseif ($endDate->lte($today)) {
-                                            $highlight = 'bg-warning-custom'; // Kuning (<= 3 bulan overdue)
+                                            $highlight = 'bg-warning-custom';
                                         }
                                     }
                                 @endphp
-                                <tr>
+                                <tr class="{{ $isSilver ? 'bg-silver' : '' }}">
                                     <td>{{ ($listBA->currentPage() - 1) * $listBA->perPage() + $loop->iteration }}</td>
-                                    <td class="text-wrap" style="min-width: 200px;">{{ $ba->project->nama_project ?? '-' }}</td>
+                                    <td class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">{{ $ba->project->nama_project ?? '-' }}</td>
                                     <td>{{ $ba->project->nomor_spk ?? '-' }}</td>
-                                    <td>{{ $ba->project->mPMMaintenance->nama_pm ?? '-' }}</td>
+                                    <td class="font-weight-bold" style="font-size: 1.05rem;">{{ $ba->project->mPMMaintenance->nama_pm ?? '-' }}</td>
                                     <td class="text-center">{{ $ba->top_ke }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_start ? \Carbon\Carbon::parse($ba->periode_start)->format('d M Y') : '-' }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_end ? \Carbon\Carbon::parse($ba->periode_end)->format('d M Y') : '-' }}</td>
@@ -153,6 +175,22 @@
     .bg-warning-custom {
         background-color: #FFFF00 !important;
         color: black !important;
+    }
+
+    .bg-silver {
+        background-color: #f4f4f4 !important; /* Silver/Light Gray */
+    }
+
+    .recap-label {
+        font-size: 0.9rem; /* Same as progress BA / standard nav-link */
+        text-transform: uppercase;
+        letter-spacing: .025em;
+    }
+
+    .recap-value {
+        font-size: 1.8rem; /* 2x the label (approx) */
+        line-height: 1;
+        vertical-align: middle;
     }
 </style>
 @endpush

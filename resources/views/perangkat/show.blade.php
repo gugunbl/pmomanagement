@@ -24,7 +24,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <p class="mb-1 text-sm text-muted">Jenis Perangkat</p>
-                                <h4>{{ $perangkatss->jenis }}</h4>
+                                <h4>{{ $perangkatss->jenisPerangkat->jns_perangkat ?? ($perangkatss->jenis ?? '-') }}</h4>
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -57,7 +57,12 @@
                             </div>
                             <div class="col-lg-4">
                                 <p class="mb-1 text-sm text-muted">Lokasi (DC/Gedung)</p>
-                                <h4>{{ $perangkatss->lokasi->nama_lokasi ?? $perangkatss->site }}</h4>
+                                <h4>
+                                    <span class="font-weight-bold">{{ $perangkatss->site }}</span> / {{ $perangkatss->lokasi->nama_lokasi ?? '-' }}
+                                    @if($perangkatss->lokasi && $perangkatss->lokasi->alamat)
+                                        <br><small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ $perangkatss->lokasi->alamat }}</small>
+                                    @endif
+                                </h4>
                             </div>
                         </div>
                         <div class="row mt-3">

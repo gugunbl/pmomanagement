@@ -524,6 +524,13 @@ public function update(Request $request, Project $project)
             });
         }
 
+        // --- CALCULATE SUMMARY ---
+        // clone query to count before pagination
+        $countQuery = clone $query;
+        $totalBA = $countQuery->count();
+        $totalProjects = $countQuery->distinct('project_id')->count('project_id');
+        // --- END CALCULATE ---
+
         $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
             ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
@@ -541,7 +548,7 @@ public function update(Request $request, Project $project)
 
         $title = 'Monitoring BA (TOP Maintenance)';
 
-        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab'));
+        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab', 'totalProjects', 'totalBA'));
     }
 
     public function exportBAPdf(Request $request)

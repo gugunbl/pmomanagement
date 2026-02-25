@@ -87,7 +87,11 @@
                                     <td><code>{{ $perangkat->serialnumber }}</code></td>
                                     <td>
                                         <small>
-                                            {{ $perangkat->site }} / {{ $perangkat->lokasi->nama_lokasi ?? '-' }}<br>
+                                            <span class="font-weight-bold">{{ $perangkat->site }}</span> / {{ $perangkat->lokasi->nama_lokasi ?? '-' }}
+                                            @if($perangkat->lokasi && $perangkat->lokasi->alamat)
+                                                <br><span class="text-muted text-xs"><i class="fas fa-map-marker-alt"></i> {{ $perangkat->lokasi->alamat }}</span>
+                                            @endif
+                                            <br>
                                             {{ $perangkat->koordinat }} {{ $perangkat->lantai }}
                                         </small>
                                     </td>
