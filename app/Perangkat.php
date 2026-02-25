@@ -20,14 +20,29 @@ class Perangkat extends Model
         'status',
         'site',
         'lantai',
+        'dimensi',
+        'koordinat',
+        'id_lokasi',
+        'status_server',
+        'id_warehouse_transaksi',
         'start_warranty',    
         'end_warranty',
         'keterangan',
+        'upload_do',
+        'type_lisensi',
         'tgl_online',
         'user_id',
         'created_at',
         'updated_at',
         ];
+
+     /**
+     * Relasi ke Lokasi
+     */
+    public function lokasi()
+    {
+        return $this->belongsTo(Lokasi::class, 'id_lokasi', 'id_lokasi');
+    }
 
      /**
      * Relasi ke Project

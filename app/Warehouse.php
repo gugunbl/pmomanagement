@@ -35,4 +35,9 @@ class Warehouse extends Model
     {
         return $this->hasMany(WarehouseBarang::class, 'no_dokumen', 'no_dokumen');
     }
+
+    public function perangkats()
+    {
+        return $this->hasMany(Perangkat::class, 'id_warehouse_transaksi', 'id_transaksi');
+    }
 }

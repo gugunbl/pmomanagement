@@ -75,42 +75,71 @@ public function index(Request $request)
 
      public function store(Request $request)
     {
-        // Validasi dan simpan data
-            // Validasi input
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
-            'start_warranty' => 'nullable|date_format:Y-m-d',
-            'end_warranty' => 'nullable|date_format:Y-m-d',
-            'tgl_online' => 'nullable|date_format:Y-m-d',
+            'jenis' => 'required|exists:m_jenis_perangkat,id_jenis',
             'merk' => 'required|string|max:255',
             'type' => 'nullable|string|max:255',
-            'serialnumber' => 'required|string|max:255',
+            'dimensi' => 'nullable|string|max:255',
             'site' => 'required|string|max:255',
-            'lantai' => 'nullable|string|max:255',
-            'jenis' => 'required|exists:m_jenis_perangkat,id_jenis',
+            'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
             'keterangan' => 'nullable|string',
-            'status' => 'nullable|string|max:255',
-            
-            ]);
-        $validated['user_id'] = Auth::id();
-        // Jika ada field status_implementation, pastikan nilainya valid
-        // (sudah divalidasi di atas)
-        
+            'upload_do' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Grid Details
+            'units' => 'required|array',
+            'units.*.sn' => 'required|string|max:255|unique:m_perangkat,serialnumber',
+            'units.*.koordinat' => 'nullable|string|max:255',
+            'units.*.lantai' => 'nullable|string|max:255',
+            'units.*.status_server' => 'nullable|string|max:255',
+            'units.*.type_lisensi' => 'nullable|string|max:255',
+            'units.*.start_warranty' => 'nullable|date',
+            'units.*.end_warranty' => 'nullable|date',
+            'units.*.tgl_online' => 'nullable|date',
+        ]);
+
+        $userId = Auth::id();
+        $doPath = null;
+
+        if ($request->hasFile('upload_do')) {
+            $doPath = $request->file('upload_do')->store('uploads/do', 'public');
+        }
+
         try {
-            // Gunakan transaction untuk konsistensi data
             DB::beginTransaction();
-            
-            // Create project
-            Perangkat::create($validated);
-            
+
+            foreach ($request->units as $unit) {
+                \App\Perangkat::create([
+                    'id_project' => $validated['id_project'],
+                    'jenis' => $validated['jenis'],
+                    'merk' => $validated['merk'],
+                    'type' => $validated['type'],
+                    'dimensi' => $validated['dimensi'],
+                    'site' => $validated['site'],
+                    'id_lokasi' => $validated['id_lokasi'],
+                    'keterangan' => $validated['keterangan'],
+                    'upload_do' => $doPath,
+                    'user_id' => $userId,
+                    
+                    // Unit Specific Info
+                    'serialnumber' => $unit['sn'],
+                    'koordinat' => $unit['koordinat'] ?? null,
+                    'lantai' => $unit['lantai'] ?? null,
+                    'status_server' => $unit['status_server'] ?? 'New Device',
+                    'type_lisensi' => $unit['type_lisensi'] ?? null,
+                    'start_warranty' => $unit['start_warranty'] ?? null,
+                    'end_warranty' => $unit['end_warranty'] ?? null,
+                    'tgl_online' => $unit['tgl_online'] ?? null,
+                    'status' => 'Warehouse',
+                ]);
+            }
+
             DB::commit();
-            
-            flash('Perangkat created successfully!')->success();
+
+            flash(count($request->units) . ' Perangkat Unit(s) created successfully!')->success();
             return redirect()->route('perangkat.index');
-            
+
         } catch (\Exception $e) {
             DB::rollback();
-            
             flash('Error creating perangkat: ' . $e->getMessage())->error();
             return back()->withInput();
         }

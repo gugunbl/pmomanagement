@@ -121,6 +121,8 @@ Route::group(['prefix' => 'pergantian-perangkat'], function () {
 });
 
 
+    Route::resource('lokasi', 'LokasiController');
+
     /*
     |--------------------------------------------------------------------------
     | WAREHOUSE
@@ -131,7 +133,7 @@ Route::group(['prefix' => 'pergantian-perangkat'], function () {
         ->name('warehouse.index');
     Route::get('/warehouse/tambah', 'WarehouseController@create')
         ->name('warehouse.tambah');
-    Route::post('/warehouse/tambah', 'WarehouseController@simpan')
+    Route::post('/warehouse/tambah', 'WarehouseController@store')
         ->name('warehouse.simpan');
 
 

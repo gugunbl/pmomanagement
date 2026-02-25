@@ -13,22 +13,25 @@
             <thead class="table-light">
                 <tr>
                     <th>Serial Number</th>
-                    <th>Nama Barang</th>
-                    <th>Deskripsi</th>
-                    <th>No Dokumen Masuk</th>
+                    <th>Perangkat</th>
+                    <th>Dokumen Masuk</th>
                     <th>Tanggal Masuk</th>
-                    <th>Lokasi</th>
+                    <th>Lokasi DC/Gedung</th>
+                    <th>Rack / Koordinat</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($perangkats as $p)
                 <tr>
-                    <td>{{ $p->serialnumber }}</td>
-                    <td>{{ $p->nama_barang }}</td>
-                    <td>{{ $p->deskripsi }}</td>
+                    <td><code>{{ $p->serialnumber }}</code></td>
+                    <td>
+                        <strong>{{ $p->merk }}</strong> {{ $p->type }}<br>
+                        <small class="text-muted">{{ $p->nama_barang }}</small>
+                    </td>
                     <td>{{ $p->no_dokumen }}</td>
                     <td>{{ \Carbon\Carbon::parse($p->tgl_dokumen)->format('d-m-Y') }}</td>
-                    <td>{{ $p->lokasi_tujuan_asal }}</td>
+                    <td>{{ $p->nama_lokasi ?? $p->lokasi_tujuan_asal }}</td>
+                    <td>{{ $p->lantai }} / {{ $p->koordinat }}</td>
                 </tr>
                 @empty
                 <tr>

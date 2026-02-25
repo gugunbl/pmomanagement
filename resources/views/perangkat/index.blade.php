@@ -65,10 +65,11 @@
                             <table class="table table-hover align-items-center">
                                 <thead class="thead-light">
                                 <tr>
-                                    <th scope="col">Nama Project</th>
-                                    <th scope="col">Merk</th>
-                                    <th scope="col">Type</th>
+                                    <th scope="col">Nama Project / Perangkat</th>
                                     <th scope="col">Serial Number</th>
+                                    <th scope="col">Lokasi</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Warranty</th>
                                     <th scope="col" class="text-center">Aksi</th>
                                 </tr>
                                 </thead>
@@ -77,38 +78,50 @@
                                 @foreach($perangkats as $perangkat)
                                 <tr>
                                     <th scope="row">
-                                        <div class="mx-w-440 d-flex flex-wrap">
-                                            {{ $perangkat->project->nama_project }}
+                                        <div class="mx-w-440">
+                                            <span class="font-weight-bold">{{ $perangkat->project->nama_project ?? '-' }}</span><br>
+                                            <small class="text-muted">{{ $perangkat->merk }} {{ $perangkat->type }}</small>
                                         </div>
                                     </th>
 
-                                    <td>{{ $perangkat->merk }}</td>
-                                    <td>{{ $perangkat->type }}</td>
-                                    <td>{{ $perangkat->serialnumber }}</td>
+                                    <td><code>{{ $perangkat->serialnumber }}</code></td>
+                                    <td>
+                                        <small>
+                                            {{ $perangkat->site }} / {{ $perangkat->lokasi->nama_lokasi ?? '-' }}<br>
+                                            {{ $perangkat->koordinat }} {{ $perangkat->lantai }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-pill badge-primary">{{ $perangkat->status_server }}</span><br>
+                                        @if($perangkat->upload_do)
+                                            <a href="{{ asset('storage/'.$perangkat->upload_do) }}" target="_blank" class="text-xs">
+                                                <i class="fas fa-file-pdf"></i> DO
+                                            </a>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {{ $perangkat->start_warranty ? \Carbon\Carbon::parse($perangkat->start_warranty)->format('d/m/y') : '-' }} - 
+                                            {{ $perangkat->end_warranty ? \Carbon\Carbon::parse($perangkat->end_warranty)->format('d/m/y') : '-' }}
+                                        </small>
+                                    </td>
 
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
-
-                                            {{-- View Detail --}}
                                             <a href="{{ route('perangkat.show', $perangkat->id_perangkat) }}"
-                                            class="btn btn-outline-info"
-                                            title="View Detail">
+                                            class="btn btn-outline-info" title="View Detail">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-
-                                            {{-- Pergantian Perangkat --}}
                                             <a href="{{ route('pergantian.create', $perangkat->id_perangkat) }}"
-                                            class="btn btn-outline-warning"
-                                            title="Pergantian Perangkat">
+                                            class="btn btn-outline-warning" title="Pergantian Perangkat">
                                                 <i class="fas fa-exchange-alt"></i>
                                             </a>
-
                                         </div>
                                     </td>
                                 </tr>
                                 @endforeach
                                 </tbody>
-
+    
                                 <tfoot >
                                 <tr>
                                     <td colspan="6">

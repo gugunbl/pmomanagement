@@ -221,11 +221,10 @@ class WarehouseController extends Controller
             ]);
 
             // =====================
-            // SIMPAN DETAIL BARANG
+            // SIMPAN DETAIL BARANG & UPDATE PERANGKAT
             // =====================
             foreach ($request->barang as $item) {
-                WarehouseBarang::create([
-                    //'no_dokumen' => $request->no_dokumen,
+                $wb = WarehouseBarang::create([
                     'no_dokumen' => $noDokumen,
                     'id_project' => $request->id_project,
                     'serialnumber' => $item['serialnumber'],
@@ -234,26 +233,36 @@ class WarehouseController extends Controller
                     'deskripsi' => $item['deskripsi'] ?? null,
                     'user_id' => auth()->id()
                 ]);
+
+                // Update Status Perangkat
+                $perangkat = \App\Perangkat::where('serialnumber', $item['serialnumber'])->first();
+                if ($perangkat) {
+                    $updateData = [
+                        'id_warehouse_transaksi' => $warehouse->id_transaksi,
+                    ];
+
+                    if ($request->jenis_dokumen == 1) { // Barang Masuk
+                        $updateData['status_server'] = 'In Warehouse';
+                        $updateData['site'] = 'Warehouse - ' . ($request->lokasi_tujuan_asal ?? 'Office');
+                    } else if ($request->jenis_dokumen == 2) { // Barang Keluar
+                        $updateData['status_server'] = 'Deployed';
+                        $updateData['site'] = $request->lokasi_tujuan_asal; // Lokasi tujuan
+                    }
+
+                    $perangkat->update($updateData);
+                }
             }
 
             DB::commit();
 
             return redirect()
-                ->route('warehouse.tambah')
-                ->with('success', 'Transaksi warehouse berhasil disimpan');
+                ->route('warehouse.index')
+                ->with('success', 'Transaksi warehouse ' . $noDokumen . ' berhasil disimpan dan status perangkat telah diupdate.');
 
-        } 
-        //catch (\Exception $e) {
-        //    DB::rollback();
-
-//            return back()->with('error', $e->getMessage());
-  //      }
-
-        catch (\Exception $e) {
-        DB::rollback();
-        dd($e->getMessage());
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
-
     }
 
 
