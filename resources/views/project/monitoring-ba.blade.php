@@ -85,15 +85,20 @@
                         </thead>
                         <tbody class="list">
                             @php 
+                                $projectCounts = $listBA->getCollection()->groupBy('project_id')->map->count();
+                                $projectCounter = ($listBA->currentPage() - 1) * $listBA->perPage();
                                 $prevProject = null;
                                 $isSilver = false;
                             @endphp
                             @forelse($listBA as $ba)
                                 @php
+                                    $isFirst = false;
                                     // Toggle silver background when project changes
                                     if ($ba->project_id !== $prevProject) {
                                         $isSilver = !$isSilver;
                                         $prevProject = $ba->project_id;
+                                        $isFirst = true;
+                                        $projectCounter++;
                                     }
 
                                     $highlight = '';
@@ -108,12 +113,16 @@
                                             $highlight = 'bg-warning-custom';
                                         }
                                     }
+                                    
+                                    $rowspan = $projectCounts[$ba->project_id] ?? 1;
                                 @endphp
                                 <tr class="{{ $isSilver ? 'bg-silver' : '' }}">
-                                    <td>{{ ($listBA->currentPage() - 1) * $listBA->perPage() + $loop->iteration }}</td>
-                                    <td class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">{{ $ba->project->nama_project ?? '-' }}</td>
-                                    <td>{{ $ba->project->nomor_spk ?? '-' }}</td>
-                                    <td class="font-weight-bold" style="font-size: 1.05rem;">{{ $ba->project->mPMMaintenance->nama_pm ?? '-' }}</td>
+                                    @if($isFirst)
+                                        <td rowspan="{{ $rowspan }}">{{ $projectCounter }}</td>
+                                        <td rowspan="{{ $rowspan }}" class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">{{ $ba->project->nama_project ?? '-' }}</td>
+                                        <td rowspan="{{ $rowspan }}">{{ $ba->project->nomor_spk ?? '-' }}</td>
+                                        <td rowspan="{{ $rowspan }}" class="font-weight-bold" style="font-size: 1.05rem;">{{ $ba->project->mPMMaintenance->nama_pm ?? '-' }}</td>
+                                    @endif
                                     <td class="text-center">{{ $ba->top_ke }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_start ? \Carbon\Carbon::parse($ba->periode_start)->format('d M Y') : '-' }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_end ? \Carbon\Carbon::parse($ba->periode_end)->format('d M Y') : '-' }}</td>
