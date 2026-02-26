@@ -55,6 +55,11 @@ $maintenanceEndingSoon = DB::table('m_project')
         ->where('status_maintenance', 1)
         ->count();
 
+    $totalBAMaintenanceOnProgress = DB::table('project_top_maintenance')
+        ->where('status', '!=', 'paid')
+        ->where('periode_end', '<=', Carbon::today()->format('Y-m-d'))
+        ->count();
+
     // DATA CHART (Stacked Column)
     $chartRaw = DB::table('m_project')
         ->select('tahun', 'customer', DB::raw('count(nomor_spk) as total'))
@@ -112,6 +117,7 @@ $maintenanceEndingSoon = DB::table('m_project')
     return view('home', compact(
         'totalImplementasiAktif',
         'totalMaintenanceAktif',
+        'totalBAMaintenanceOnProgress',
         'years',
         'datasets',
         'maintenanceByCustomer',

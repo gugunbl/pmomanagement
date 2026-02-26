@@ -10,27 +10,7 @@
 
         {{-- KPI CARDS SEJAJAR DENGAN CHART --}}
         <div class="row">
-            <div class="col-md-4">
-                {{-- Implementasi --}}
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <h5 class="text-muted text-uppercase">Implementasi Aktif</h5>
-                        <span class="h2 font-weight-bold">{{ $totalImplementasiAktif }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                {{-- Maintenance --}}
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <h5 class="text-muted text-uppercase">Maintenance Aktif</h5>
-                        <span class="h2 font-weight-bold">{{ $totalMaintenanceAktif }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
+            <div class="col-md-3">
                 {{-- Total --}}
                 <div class="card card-stats">
                     <div class="card-body">
@@ -40,6 +20,36 @@
                         </span>
                     </div>
                 </div>
+            </div>
+
+            <div class="col-md-3">
+                {{-- Implementasi --}}
+                <a href="{{ route('project.index', ['search' => '', 'status_maintenance' => 'implementasi']) }}" class="card card-stats btn-link text-left p-0 border-0">
+                    <div class="card-body">
+                        <h5 class="text-muted text-uppercase">Implementasi Aktif</h5>
+                        <span class="h2 font-weight-bold text-primary">{{ $totalImplementasiAktif }}</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-3">
+                {{-- Maintenance --}}
+                <a href="{{ route('project.maintenance') }}" class="card card-stats btn-link text-left p-0 border-0">
+                    <div class="card-body">
+                        <h5 class="text-muted text-uppercase">Maintenance Aktif</h5>
+                        <span class="h2 font-weight-bold text-primary">{{ $totalMaintenanceAktif }}</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-3">
+                {{-- BA Maintenance On Progress --}}
+                <a href="{{ route('project.ba.monitoring') }}" class="card card-stats btn-link text-left p-0 border-0">
+                    <div class="card-body">
+                        <h5 class="text-muted text-uppercase">BA Maintenance On Progress</h5>
+                        <span class="h2 font-weight-bold text-primary">{{ $totalBAMaintenanceOnProgress }}</span>
+                    </div>
+                </a>
             </div>
         </div>
 
