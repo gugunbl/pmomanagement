@@ -107,7 +107,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
 
     Route::resource('perangkat', 'PerangkatController');
     
-    Route::get('/perangkat/{id_perangkat}', 'PerangkatController@show')
+    Route::get('/perangkat/{perangkat}', 'PerangkatController@show')
         ->name('perangkat.show');
     /*
     |--------------------------------------------------------------------------

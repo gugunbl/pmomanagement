@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class PerangkatController extends Controller
 {
-    public function show($id_perangkat)
+    public function show($perangkat)
     {
         $title = "Informasi Detail Perangkat";
         $perangkatss = Perangkat::with([
@@ -28,7 +28,7 @@ class PerangkatController extends Controller
             'project.mPMMaintenance',
             'lokasi',
             'jenisPerangkat'
-        ])->where('id_perangkat', $id_perangkat)->firstOrFail();
+        ])->where('id_perangkat', $perangkat)->firstOrFail();
 
         return view('perangkat.show', compact('title', 'perangkatss'));
     }
@@ -236,22 +236,23 @@ public function index(Request $request)
         return response()->json(['success' => true, 'data' => $rows]);
     }
 
-    public function edit($id)
+    public function edit($perangkat)
     {
-        $perangkat = Perangkat::with(['project', 'lokasi', 'jenisPerangkat'])->where('id_perangkat', $id)->firstOrFail();
+        $perangkatModel = Perangkat::with(['project', 'lokasi', 'jenisPerangkat'])->where('id_perangkat', $perangkat)->firstOrFail();
         
         $projectes = Project::pluck('nama_project', 'id_project');
         $jenisperangkates = Jenisperangkat::pluck('jns_perangkat', 'id_jenis');
         $lokasis = Lokasi::all();
         
-        $title = "Edit Perangkat: " . $perangkat->serialnumber;
+        $title = "Edit Perangkat: " . $perangkatModel->serialnumber;
+        $perangkat = $perangkatModel; // Pastikan $perangkat adalah model untuk view compact
 
         return view('perangkat.edit', compact('perangkat', 'projectes', 'jenisperangkates', 'lokasis', 'title'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $perangkat)
     {
-        $perangkat = Perangkat::where('id_perangkat', $id)->firstOrFail();
+        $perangkatModel = Perangkat::where('id_perangkat', $perangkat)->firstOrFail();
 
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
@@ -262,7 +263,7 @@ public function index(Request $request)
             'site' => 'required|string|max:255',
             'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
             'keterangan' => 'nullable|string',
-            'serialnumber' => 'required|string|max:255|unique:m_perangkat,serialnumber,' . $id . ',id_perangkat',
+            'serialnumber' => 'required|string|max:255|unique:m_perangkat,serialnumber,' . $perangkat . ',id_perangkat',
             'koordinat' => 'nullable|string|max:255',
             'lantai' => 'nullable|string|max:255',
             'status_server' => 'nullable|string|max:255',
@@ -285,10 +286,10 @@ public function index(Request $request)
             $validated['foto_3'] = $request->file('foto_3')->store('uploads/perangkat', 'public');
         }
 
-        $perangkat->update($validated);
+        $perangkatModel->update($validated);
 
         flash('Perangkat updated successfully!')->success();
-        return redirect()->route('perangkat.show', $id);
+        return redirect()->route('perangkat.show', $perangkat);
     }
 
     private function formatDateExcel($value)
