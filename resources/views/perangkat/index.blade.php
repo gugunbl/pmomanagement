@@ -18,7 +18,7 @@
 {!! Form::open(['route' => 'perangkat.index', 'method'=>'get', 'id'=>'filterForm']) !!}
 <div class="row g-2 align-items-center">
 
-    <div class="col-md-5">
+    <div class="col-md-3">
         {{ Form::select(
             'id_project',
             $projectes,
@@ -33,7 +33,7 @@
         ) }}
     </div>
 
-    <div class="col-md-5">
+    <div class="col-md-4">
         {{ Form::text(
             'search',
             request('search'),
@@ -45,11 +45,19 @@
         ) }}
     </div>
 
-    <div class="col-md-2 text-end">
-        <a href="{{ route('perangkat.index') }}"
-           class="btn btn-sm btn-outline-secondary w-100">
-            Reset
-        </a>
+    <div class="col-md-5 text-end">
+        <div class="btn-group">
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <a href="{{ route('perangkat.export', request()->all()) }}" class="btn btn-sm btn-success">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+            <a href="{{ route('perangkat.index') }}"
+               class="btn btn-sm btn-outline-secondary">
+                Reset
+            </a>
+        </div>
     </div>
 
 </div>
@@ -97,10 +105,10 @@
                                     </td>
                                     <td>
                                         <span class="badge badge-pill badge-primary">{{ $perangkat->status_server }}</span><br>
-                                        @if($perangkat->upload_do)
-                                            <a href="{{ asset('storage/'.$perangkat->upload_do) }}" target="_blank" class="text-xs">
-                                                <i class="fas fa-file-pdf"></i> DO
-                                            </a>
+                                        @if($perangkat->foto_1 || $perangkat->foto_2 || $perangkat->foto_3)
+                                            <span class="text-xs text-success">
+                                                <i class="fas fa-camera"></i> Foto
+                                            </span>
                                         @endif
                                     </td>
                                     <td>

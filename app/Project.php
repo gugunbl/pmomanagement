@@ -45,6 +45,11 @@ class Project extends Model
         return $this->hasMany(Perangkat::class, 'id_project', 'id_project');
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'id_project', 'user_id');
+    }
+
 // App/Project.php
 
 public function topMaintenance()

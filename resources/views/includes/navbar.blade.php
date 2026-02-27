@@ -1,18 +1,16 @@
 <nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
     <div class="scrollbar-inner">
         <!-- Brand -->
-        <div class="sidenav-header  d-flex  align-items-center">
+        <div class="sidenav-header d-flex align-items-center">
             <a class="navbar-brand" href="{{ route('home') }}" data-toggle="tooltip" data-original-title="{{ setting('company_name') }}">
-                @if (setting('company_logo'))
-                <img alt="{{ setting('company_name') }}"
-                    height="45"
-                    class="navbar-brand-img"
-                    src="{{ asset(setting('company_logo')) }}">
+                @php $logo = setting('company_logo'); @endphp
+                @if ($logo)
+                    <img alt="{{ setting('company_name') }}" height="45" class="navbar-brand-img" src="{{ asset($logo) }}">
                 @else
-                {{ substr(setting('company_name'), 0, 15) }}...
+                    {{ substr(setting('company_name'), 0, 15) }}...
                 @endif
             </a>
-            <div class=" ml-auto ">
+            <div class="ml-auto">
                 <!-- Sidenav toggler -->
                 <div class="sidenav-toggler d-none d-xl-block" data-action="sidenav-unpin" data-target="#sidenav-main">
                     <div class="sidenav-toggler-inner">
@@ -65,7 +63,7 @@
                                 </ul>
                             </div>
                         </li>
-                    @endcan
+                    @endcanany
 
 
                     @canany(['view-category', 'create-category'])
@@ -89,7 +87,7 @@
                                 </ul>
                             </div>
                         </li>
-                    @endcan
+                    @endcanany
 <!-- Manage Data Perangkat -->
                     @canany(['view-perangkat', 'summary-perangkat','view-warehouse','perangkat-warehouse'])
                         <li class="nav-item">
@@ -123,10 +121,32 @@
                                 </ul>
                             </div>
                         </li>
-                    @endcan
-
-<!-- Manage Data Project -->
+                    @endcanany
+    
                     @canany(['view-project', 'create-project','maintenance-project'])
+                        <li class="nav-item">
+                            <a class="nav-link {{ (request()->is('cases*')) ? 'active' : '' }}" href="#navbar-cases"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-cases">
+                                <i class="fas text-primary fa-briefcase"></i>
+                                <span class="nav-link-text">Case Management</span>
+                            </a>
+                            <div class="collapse" id="navbar-cases">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{{route('cases.index')}}" class="nav-link">
+                                            <span class="sidenav-mini-icon">D </span>
+                                            <span class="sidenav-normal">Daftar Case</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('cases.create')}}" class="nav-link">
+                                            <span class="sidenav-mini-icon">C </span>
+                                            <span class="sidenav-normal">Tambah Case</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('project*')) ? 'active' : '' }}" href="#navbar-project"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-project">
                                 <i class="fas text-primary fa-list-alt"></i>
@@ -136,7 +156,7 @@
                                 <ul class="nav nav-sm flex-column">
                                  @can('view-project')
                                     <li class="nav-item">
-                                        <a href="{{route('project.index')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Data Semua Project</span></a>
+                                        <a href="{{route('project.index')}}" class="nav-link"><span class="sidenav-mini-icon">P </span><span class="sidenav-normal">Data Semua Project</span></a>
                                     </li>
                                     @endcan
                                  @can('maintenance-project')
@@ -166,7 +186,7 @@
                             </div>
                         </li>
 
-                    @endcan
+                    @endcanany
 
                     @canany(['view-user', 'create-user'])
 
@@ -190,7 +210,7 @@
                                 </ul>
                             </div>
                         </li>
-                    @endcan
+                    @endcanany
 
                     @canany(['view-permission', 'create-permission'])
                         <li class="nav-item">
@@ -199,7 +219,7 @@
                                 <span class="nav-link-text">Manage Permissions</span>
                             </a>
                         </li>
-                    @endcan
+                    @endcanany
                     @canany(['view-role', 'create-role'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('roles*')) ? 'active' : '' }}" href="{{route('roles.index')}}">
@@ -207,7 +227,7 @@
                                 <span class="nav-link-text">Manage Roles</span>
                             </a>
                         </li>
-                    @endcan
+                    @endcanany
 
                     @canany(['media'])
                         <li class="nav-item">
@@ -216,7 +236,7 @@
                                 <span class="nav-link-text">Manage Media</span>
                             </a>
                         </li>
-                    @endcan
+                    @endcanany
                     @canany(['view-activity-log'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('activity-log*')) ? 'active' : '' }}" href="{{route('activity-log.index')}}">
@@ -224,7 +244,7 @@
                                 <span class="nav-link-text">Activity Log</span>
                             </a>
                         </li>
-                    @endcan
+                    @endcanany
                     <li class="nav-item">
                         <hr class="my-3">
                     </li>

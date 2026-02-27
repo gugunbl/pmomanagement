@@ -1,0 +1,36 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MCase extends Model
+{
+    protected $table = 'm_cases';
+    protected $primaryKey = 'id_case';
+
+    protected $fillable = [
+        'id_project',
+        'user_id',
+        'open_date',
+        'closed_date',
+        'subject',
+        'detail',
+        'severity',
+        'affected_sn',
+        'location',
+        'principal_ticket_no',
+        'resolution_detail',
+        'status',
+    ];
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'id_project', 'id_project');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+}

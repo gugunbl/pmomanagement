@@ -46,7 +46,8 @@ class UserController extends Controller
     {
         $title = 'Create user';
         $roles = Role::pluck('name', 'id');
-        return view('users.create', compact('roles', 'title'));
+        $projects = \App\Project::where('status_maintenance', 1)->pluck('nama_project', 'id_project');
+        return view('users.create', compact('roles', 'title', 'projects'));
     }
 
     /**
@@ -57,12 +58,17 @@ class UserController extends Controller
      */
     public function store(UserStoreRequest $request)
     {
-        $userData = $request->except(['role', 'profile_photo']);
+        $userData = $request->except(['role', 'profile_photo', 'id_project']);
         if ($request->profile_photo) {
             $userData['profile_photo'] = parse_url($request->profile_photo, PHP_URL_PATH);
         }
         $user = User::create($userData);
         $user->assignRole($request->role);
+
+        if ($request->has('id_project') && is_array($request->id_project)) {
+            $user->projects()->sync($request->id_project);
+        }
+
         flash('User created successfully!')->success();
         return redirect()->route('users.index');
 
@@ -91,7 +97,8 @@ class UserController extends Controller
     {
         $title = "User Details";
         $roles = Role::pluck('name', 'id');
-        return view('users.edit', compact('user','title', 'roles'));
+        $projects = \App\Project::where('status_maintenance', 1)->pluck('nama_project', 'id_project')->toArray();
+        return view('users.edit', compact('user','title', 'roles', 'projects'));
     }
 
     /**
@@ -103,12 +110,19 @@ class UserController extends Controller
      */
     public function update(UserUpdateRequest $request, User $user)
     {
-        $userData = $request->except(['role', 'profile_photo']);
+        $userData = $request->except(['role', 'profile_photo', 'id_project']);
         if ($request->profile_photo) {
             $userData['profile_photo'] = parse_url($request->profile_photo, PHP_URL_PATH);
         }
         $user->update($userData);
         $user->syncRoles($request->role);
+
+        if ($request->has('id_project') && is_array($request->id_project)) {
+            $user->projects()->sync($request->id_project);
+        } else {
+            $user->projects()->sync([]);
+        }
+
         flash('User updated successfully!')->success();
         return redirect()->route('users.index');
     }

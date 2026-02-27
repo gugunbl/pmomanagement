@@ -99,6 +99,12 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/perangkat/import', 'PerangkatController@importExcel')
         ->name('perangkat.import');
 
+    Route::get('/perangkat/export', 'PerangkatController@export')
+        ->name('perangkat.export');
+
+    Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
+    Route::resource('cases', 'CaseController');
+
     Route::resource('perangkat', 'PerangkatController');
     
     Route::get('/perangkat/{id_perangkat}', 'PerangkatController@show')

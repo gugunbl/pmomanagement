@@ -69,11 +69,24 @@
                                     {{ Form::hidden('site', null, ['id' => 'site_hidden']) }}
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    {{ Form::label('upload_do', 'Upload DO (Signed)', ['class' => 'form-control-label']) }}
-                                    {{ Form::file('upload_do', ['class' => 'form-control-file']) }}
-                                    <small class="text-muted">Format: PDF/JPG/PNG. Max: 5MB</small>
+                                    <label class="form-control-label">Foto Perangkat (Max 3)</label>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            {{ Form::file('foto_1', ['class' => 'form-control-file', 'accept' => 'image/*']) }}
+                                            <small class="text-muted">Foto 1</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            {{ Form::file('foto_2', ['class' => 'form-control-file', 'accept' => 'image/*']) }}
+                                            <small class="text-muted">Foto 2</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            {{ Form::file('foto_3', ['class' => 'form-control-file', 'accept' => 'image/*']) }}
+                                            <small class="text-muted">Foto 3</small>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Format: JPG/PNG. Max: 5MB per file</small>
                                 </div>
                             </div>
                         </div>
@@ -153,7 +166,6 @@
                             {{ Form::submit('Simpan Unit-Unit Perangkat', ['class'=> 'btn btn-primary btn-lg px-5 shadow']) }}
                         </div>
                         {!! Form::close() !!}
-                        </div>
                 </div>
             </div>
         </div>
@@ -383,6 +395,11 @@ $(document).ready(function () {
                 });
             }
         });
+    });
+
+    // Uppercase Merk & Type
+    $('input[name="merk"], input[name="type"]').on('input', function() {
+        $(this).val($(this).val().toUpperCase());
     });
 });
 </script>

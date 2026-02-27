@@ -26,7 +26,9 @@ class UserUpdateRequest extends FormRequest
         return [
             'name'=> 'required',
             'email' => 'required|email|unique:users,email,'.$this->user->id,
-            'password' => 'nullable|confirmed|min:6'
+            'password' => 'nullable|confirmed|min:6',
+            'id_project' => 'nullable|array',
+            'id_project.*' => 'exists:m_project,id_project'
         ];
     }
 }

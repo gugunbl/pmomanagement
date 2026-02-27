@@ -26,7 +26,9 @@ class UserStoreRequest extends FormRequest
         return [
             'name'=> 'required',
             'email' => 'required|unique:users,email|email',
-            'password' => 'required|confirmed|min:6'
+            'password' => 'required|confirmed|min:6',
+            'id_project' => 'nullable|array',
+            'id_project.*' => 'exists:m_project,id_project'
         ];
     }
 }

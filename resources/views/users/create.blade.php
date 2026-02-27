@@ -50,6 +50,16 @@
                                         {{ Form::select('role', $roles, null, [ 'class'=> 'selectpicker form-control', 'placeholder' => 'Select role...']) }}
                                     </div>
                                 </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        {{ Form::label('id_project', 'Handle Project (Select 1 or more, Leave empty for All)', ['class' => 'form-control-label']) }}
+                                        <div class="custom-control custom-checkbox mb-2">
+                                            <input type="checkbox" class="custom-control-input" id="all_projects_check">
+                                            <label class="custom-control-label" for="all_projects_check">All Projects (Admin Mode)</label>
+                                        </div>
+                                        {{ Form::select('id_project[]', $projects, null, [ 'class'=> 'select2 form-control', 'id' => 'project_select', 'multiple' => 'multiple']) }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <hr class="my-4" />
@@ -94,11 +104,67 @@
     </div>
 @endsection
 
+@push('styles')
+<style>
+/* === SELECT2 ARGON THEME FIX === */
+.select2-container--bootstrap4 .select2-selection {
+    min-height: 44px;
+    border: 1px solid #cad1d7;
+    border-radius: .375rem;
+    padding: .375rem .75rem;
+    background-color: #fff;
+}
+
+.select2-container--bootstrap4 .select2-selection--single {
+    display: flex;
+    align-items: center;
+}
+
+.select2-container--bootstrap4 .select2-selection__rendered {
+    padding-left: 0;
+    line-height: normal;
+    color: #8898aa;
+}
+
+.select2-container--bootstrap4 .select2-selection__arrow {
+    height: 100%;
+    top: 0;
+    right: 8px;
+}
+
+.select2-container--bootstrap4.select2-container--focus .select2-selection,
+.select2-container--bootstrap4.select2-container--open .select2-selection {
+    border-color: #5e72e4;
+    box-shadow: 0 0 0 0.2rem rgba(94,114,228,.25);
+}
+
+.select2-search--dropdown .select2-search__field {
+    height: 40px;
+    padding: .375rem .75rem;
+    border-radius: .375rem;
+}
+</style>
+@endpush
+
 @push('scripts')
     <script src="{{ asset('vendor/laravel-filemanager/js/stand-alone-button.js') }}"></script>
     <script>
         jQuery(document).ready(function(){
             jQuery('#uploadFile').filemanager('file');
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                allowClear: false
+            });
+
+            $('#all_projects_check').on('change', function() {
+                if($(this).is(':checked')) {
+                    $('#project_select').val('').trigger('change');
+                    $('#project_select').prop('disabled', true);
+                } else {
+                    $('#project_select').prop('disabled', false);
+                }
+            });
         })
     </script>
 @endpush

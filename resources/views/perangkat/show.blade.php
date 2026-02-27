@@ -10,6 +10,7 @@
                             <h3 class="mb-0">Detail Perangkat: {{ $perangkatss->serialnumber }}</h3>
                         </div>
                         <div class="col text-right">
+                            <a href="{{ route('perangkat.edit', $perangkatss->id_perangkat) }}" class="btn btn-sm btn-warning">Edit Perangkat</a>
                             <a href="{{ route('perangkat.index') }}" class="btn btn-sm btn-neutral">Kembali ke List</a>
                         </div>
                     </div>
@@ -94,18 +95,37 @@
                                 <h4>{{ $perangkatss->tgl_online ? \Carbon\Carbon::parse($perangkatss->tgl_online)->format('d F Y') : '-' }}</h4>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-1 text-sm text-muted">Dokumen DO (Signed)</p>
-                                @if($perangkatss->upload_do)
-                                    <a href="{{ asset('storage/'.$perangkatss->upload_do) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-file-download mr-2"></i> Lihat Dokumen DO
-                                    </a>
-                                @else
-                                    <p class="text-muted">Tidak ada dokumen</p>
-                                @endif
+                            <div class="col-lg-12">
+                                <p class="mb-1 text-sm text-muted">Foto Perangkat</p>
+                                <div class="row">
+                                    @if($perangkatss->foto_1)
+                                        <div class="col-md-4 mb-3">
+                                            <a href="{{ asset('storage/'.$perangkatss->foto_1) }}" target="_blank">
+                                                <img src="{{ asset('storage/'.$perangkatss->foto_1) }}" class="img-fluid rounded shadow-sm border" style="max-height: 200px; object-fit: cover;" alt="Foto 1">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if($perangkatss->foto_2)
+                                        <div class="col-md-4 mb-3">
+                                            <a href="{{ asset('storage/'.$perangkatss->foto_2) }}" target="_blank">
+                                                <img src="{{ asset('storage/'.$perangkatss->foto_2) }}" class="img-fluid rounded shadow-sm border" style="max-height: 200px; object-fit: cover;" alt="Foto 2">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if($perangkatss->foto_3)
+                                        <div class="col-md-4 mb-3">
+                                            <a href="{{ asset('storage/'.$perangkatss->foto_3) }}" target="_blank">
+                                                <img src="{{ asset('storage/'.$perangkatss->foto_3) }}" class="img-fluid rounded shadow-sm border" style="max-height: 200px; object-fit: cover;" alt="Foto 3">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    @if(!$perangkatss->foto_1 && !$perangkatss->foto_2 && !$perangkatss->foto_3)
+                                        <div class="col-12">
+                                            <p class="text-muted">Tidak ada foto perangkat</p>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
                     </div>
 
                     <hr class="my-4" />

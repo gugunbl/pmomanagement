@@ -9,9 +9,10 @@ use App\Project;
 use App\Jenisperangkat;
 use App\Lokasi;
 use App\Exports\PerangkatTemplateExport;
+use App\Exports\PerangkatExport;
 use App\Imports\PerangkatImport;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\DB; // ← INI YANG DITAMBAHKAN
+use Illuminate\Support\Facades\DB;
 
 
 class PerangkatController extends Controller
@@ -98,7 +99,9 @@ public function index(Request $request)
             'site' => 'required|string|max:255',
             'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
             'keterangan' => 'nullable|string',
-            'upload_do' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'foto_1' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_2' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_3' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             // Grid Details
             'units' => 'required|array',
             'units.*.sn' => 'required|string|max:255|unique:m_perangkat,serialnumber',
@@ -112,10 +115,18 @@ public function index(Request $request)
         ]);
 
         $userId = Auth::id();
-        $doPath = null;
+        $foto1Path = null;
+        $foto2Path = null;
+        $foto3Path = null;
 
-        if ($request->hasFile('upload_do')) {
-            $doPath = $request->file('upload_do')->store('uploads/do', 'public');
+        if ($request->hasFile('foto_1')) {
+            $foto1Path = $request->file('foto_1')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_2')) {
+            $foto2Path = $request->file('foto_2')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_3')) {
+            $foto3Path = $request->file('foto_3')->store('uploads/perangkat', 'public');
         }
 
         try {
@@ -131,7 +142,9 @@ public function index(Request $request)
                     'site' => $validated['site'],
                     'id_lokasi' => $validated['id_lokasi'],
                     'keterangan' => $validated['keterangan'],
-                    'upload_do' => $doPath,
+                    'foto_1' => $foto1Path,
+                    'foto_2' => $foto2Path,
+                    'foto_3' => $foto3Path,
                     'user_id' => $userId,
                     
                     // Unit Specific Info
@@ -186,6 +199,11 @@ public function index(Request $request)
         return Excel::download(new PerangkatTemplateExport, 'template_import_perangkat.xlsx');
     }
 
+    public function export(Request $request)
+    {
+        return Excel::download(new PerangkatExport($request->all()), 'data_perangkat.xlsx');
+    }
+
     public function importExcel(Request $request)
     {
         $request->validate([
@@ -216,6 +234,61 @@ public function index(Request $request)
         }
 
         return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    public function edit($id)
+    {
+        $perangkat = Perangkat::with(['project', 'lokasi', 'jenisPerangkat'])->where('id_perangkat', $id)->firstOrFail();
+        
+        $projectes = Project::pluck('nama_project', 'id_project');
+        $jenisperangkates = Jenisperangkat::pluck('jns_perangkat', 'id_jenis');
+        $lokasis = Lokasi::all();
+        
+        $title = "Edit Perangkat: " . $perangkat->serialnumber;
+
+        return view('perangkat.edit', compact('perangkat', 'projectes', 'jenisperangkates', 'lokasis', 'title'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $perangkat = Perangkat::where('id_perangkat', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'id_project' => 'required|exists:m_project,id_project',
+            'jenis' => 'required|exists:m_jenis_perangkat,id_jenis',
+            'merk' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
+            'dimensi' => 'nullable|string|max:255',
+            'site' => 'required|string|max:255',
+            'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
+            'keterangan' => 'nullable|string',
+            'serialnumber' => 'required|string|max:255|unique:m_perangkat,serialnumber,' . $id . ',id_perangkat',
+            'koordinat' => 'nullable|string|max:255',
+            'lantai' => 'nullable|string|max:255',
+            'status_server' => 'nullable|string|max:255',
+            'type_lisensi' => 'nullable|string|max:255',
+            'start_warranty' => 'nullable|date',
+            'end_warranty' => 'nullable|date',
+            'tgl_online' => 'nullable|date',
+            'foto_1' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_2' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_3' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($request->hasFile('foto_1')) {
+            $validated['foto_1'] = $request->file('foto_1')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_2')) {
+            $validated['foto_2'] = $request->file('foto_2')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_3')) {
+            $validated['foto_3'] = $request->file('foto_3')->store('uploads/perangkat', 'public');
+        }
+
+        $perangkat->update($validated);
+
+        flash('Perangkat updated successfully!')->success();
+        return redirect()->route('perangkat.show', $id);
     }
 
     private function formatDateExcel($value)
