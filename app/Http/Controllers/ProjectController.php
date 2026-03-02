@@ -421,11 +421,11 @@ public function update(Request $request, Project $project)
 
 
 
-    public function destroy($id)
+    public function destroy($project)
     {
     // atau jika menggunakan route model binding
     // public function destroy(Project $project)
-        $project = Project::findOrFail($id);
+        $project = Project::findOrFail($project);
         $project->delete();
     
         return redirect()->route('project.index')

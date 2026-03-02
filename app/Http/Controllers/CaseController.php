@@ -104,16 +104,16 @@ class CaseController extends Controller
         return response()->json($sns);
     }
 
-    public function show($id)
+    public function show($case)
     {
-        $case = MCase::with(['project', 'user'])->findOrFail($id);
+        $case = MCase::with(['project', 'user'])->findOrFail($case);
         $title = 'Detail Case';
         return view('cases.show', compact('title', 'case'));
     }
 
-    public function edit($id)
+    public function edit($case)
     {
-        $case = MCase::findOrFail($id);
+        $case = MCase::findOrFail($case);
         $title = 'Edit Case';
         $user = Auth::user();
         
@@ -127,9 +127,9 @@ class CaseController extends Controller
         return view('cases.edit', compact('title', 'case', 'projects'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $case)
     {
-        $case = MCase::findOrFail($id);
+        $caseModel = MCase::findOrFail($case);
 
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
@@ -145,7 +145,7 @@ class CaseController extends Controller
             'status' => 'required|in:Open,In Progress,Closed',
         ]);
 
-        $case->update($validated);
+        $caseModel->update($validated);
 
         flash('Case berhasil diupdate!')->success();
         return redirect()->route('cases.index');
