@@ -60,11 +60,11 @@
                                 <div class="col-lg-6">
                                     <div class="form-group">
                                         {{ Form::label('role', 'Select Role', ['class' => 'form-control-label']) }}
-                                        {{ Form::select('role', $roles, $user->roles, [ 'class'=> 'selectpicker form-control', 'placeholder' => 'Select role...']) }}
+                                        {{ Form::select('role', $roles, $user->roles, [ 'class'=> 'selectpicker form-control', 'data-live-search' => 'true', 'placeholder' => 'Select role...']) }}
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
-                                    <div class="form-group">
+                                    <div class="form-group" id="project_select_container">
                                         {{ Form::label('id_project', 'Handle Project (Select 1 or more, Leave empty for All)', ['class' => 'form-control-label']) }}
                                         @php
                                             $userProjects = $user->projects->pluck('id_project')->toArray();
@@ -74,7 +74,16 @@
                                             <input type="checkbox" class="custom-control-input" id="all_projects_check" {{ $isAllProjects ? 'checked' : '' }}>
                                             <label class="custom-control-label" for="all_projects_check">All Projects (Admin Mode)</label>
                                         </div>
-                                        {{ Form::select('id_project[]', $projects, $userProjects, [ 'class'=> 'select2 form-control', 'id' => 'project_select', 'multiple' => 'multiple', 'disabled' => $isAllProjects]) }}
+                                        {{ Form::select('id_project[]', $projects, $userProjects, [ 
+                                            'class'=> 'selectpicker form-control', 
+                                            'id' => 'project_select', 
+                                            'multiple' => 'multiple', 
+                                            'data-live-search' => 'true',
+                                            'data-actions-box' => 'true',
+                                            'data-selected-text-format' => 'count > 3',
+                                            'title' => 'Pilih Project...',
+                                            'disabled' => $isAllProjects
+                                        ]) }}
                                     </div>
                                 </div>
                             </div>
@@ -173,19 +182,18 @@
     <script>
         jQuery(document).ready(function(){
             jQuery('#uploadFile').filemanager('file');
-            $('.select2').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                allowClear: false
-            });
+            
+            // Initialize selectpicker
+            $('.selectpicker').selectpicker();
 
             $('#all_projects_check').on('change', function() {
                 if($(this).is(':checked')) {
-                    $('#project_select').val('').trigger('change');
+                    $('#project_select').selectpicker('deselectAll');
                     $('#project_select').prop('disabled', true);
                 } else {
                     $('#project_select').prop('disabled', false);
                 }
+                $('#project_select').selectpicker('refresh');
             });
         })
     </script>

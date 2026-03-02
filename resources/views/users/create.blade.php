@@ -47,7 +47,7 @@
                                 <div class="col-lg-6">
                                     <div class="form-group">
                                         {{ Form::label('role', 'Select Role', ['class' => 'form-control-label']) }}
-                                        {{ Form::select('role', $roles, null, [ 'class'=> 'selectpicker form-control', 'placeholder' => 'Select role...']) }}
+                                        {{ Form::select('role', $roles, null, [ 'class'=> 'selectpicker form-control', 'data-live-search' => 'true', 'placeholder' => 'Select role...']) }}
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
@@ -57,7 +57,15 @@
                                             <input type="checkbox" class="custom-control-input" id="all_projects_check">
                                             <label class="custom-control-label" for="all_projects_check">All Projects (Admin Mode)</label>
                                         </div>
-                                        {{ Form::select('id_project[]', $projects, null, [ 'class'=> 'select2 form-control', 'id' => 'project_select', 'multiple' => 'multiple']) }}
+                                        {{ Form::select('id_project[]', $projects, null, [ 
+                                            'class'=> 'selectpicker form-control', 
+                                            'id' => 'project_select', 
+                                            'multiple' => 'multiple',
+                                            'data-live-search' => 'true',
+                                            'data-actions-box' => 'true',
+                                            'data-selected-text-format' => 'count > 3',
+                                            'title' => 'Pilih Project...'
+                                        ]) }}
                                     </div>
                                 </div>
                             </div>
@@ -151,19 +159,18 @@
     <script>
         jQuery(document).ready(function(){
             jQuery('#uploadFile').filemanager('file');
-            $('.select2').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                allowClear: false
-            });
+            
+            // Initialize selectpicker
+            $('.selectpicker').selectpicker();
 
             $('#all_projects_check').on('change', function() {
                 if($(this).is(':checked')) {
-                    $('#project_select').val('').trigger('change');
+                    $('#project_select').selectpicker('deselectAll');
                     $('#project_select').prop('disabled', true);
                 } else {
                     $('#project_select').prop('disabled', false);
                 }
+                $('#project_select').selectpicker('refresh');
             });
         })
     </script>

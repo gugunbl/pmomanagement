@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class CaseController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view-case');
+        $this->middleware('permission:create-case', ['only' => ['create', 'store']]);
+        $this->middleware('permission:edit-case', ['only' => ['edit', 'update']]);
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -82,8 +89,8 @@ class CaseController extends Controller
         MCase::create($validated);
 
         flash('Case berhasil ditambahkan!')->success();
-        // Redirect to index or home for now as index isn't requested yet
-        return redirect()->route('home');
+        
+        return redirect()->route('cases.index');
     }
 
     public function getSerialNumbers($id_project)

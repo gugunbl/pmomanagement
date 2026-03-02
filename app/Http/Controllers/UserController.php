@@ -114,6 +114,11 @@ class UserController extends Controller
         if ($request->profile_photo) {
             $userData['profile_photo'] = parse_url($request->profile_photo, PHP_URL_PATH);
         }
+
+        if (!$request->filled('password')) {
+            unset($userData['password']);
+        }
+
         $user->update($userData);
         $user->syncRoles($request->role);
 
@@ -156,6 +161,10 @@ class UserController extends Controller
         $userData = $request->except('profile_photo');
         if ($request->profile_photo) {
             $userData['profile_photo'] = parse_url($request->profile_photo, PHP_URL_PATH);
+        }
+
+        if (!$request->filled('password')) {
+            unset($userData['password']);
         }
 
         $user->update($userData);

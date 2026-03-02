@@ -123,7 +123,7 @@
                         </li>
                     @endcanany
     
-                    @canany(['view-project', 'create-project','maintenance-project'])
+                    @canany(['view-case', 'create-case'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('cases*')) ? 'active' : '' }}" href="#navbar-cases"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-cases">
                                 <i class="fas text-primary fa-briefcase"></i>
@@ -131,22 +131,28 @@
                             </a>
                             <div class="collapse" id="navbar-cases">
                                 <ul class="nav nav-sm flex-column">
+                                    @can('view-case')
                                     <li class="nav-item">
                                         <a href="{{route('cases.index')}}" class="nav-link">
                                             <span class="sidenav-mini-icon">D </span>
                                             <span class="sidenav-normal">Daftar Case</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('create-case')
                                     <li class="nav-item">
                                         <a href="{{route('cases.create')}}" class="nav-link">
                                             <span class="sidenav-mini-icon">C </span>
                                             <span class="sidenav-normal">Tambah Case</span>
                                         </a>
                                     </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </li>
+                    @endcanany
 
+                    @canany(['view-project', 'create-project','maintenance-project'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('project*')) ? 'active' : '' }}" href="#navbar-project"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-project">
                                 <i class="fas text-primary fa-list-alt"></i>
@@ -185,7 +191,6 @@
                                 </ul>
                             </div>
                         </li>
-
                     @endcanany
 
                     @canany(['view-user', 'create-user'])

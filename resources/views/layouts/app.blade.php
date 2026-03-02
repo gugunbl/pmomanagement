@@ -18,8 +18,7 @@
 
     <link rel="stylesheet" href="{{asset('assets/vendor/fullcalendar/dist/fullcalendar.min.css')}}">
     <link rel="stylesheet" href="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.css')}}">
-<!--    <link rel="stylesheet" href="{{asset('assets/css/bootstrap-select.min.css')}}">
--->
+    <link rel="stylesheet" href="{{asset('assets/css/bootstrap-select.min.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/jquery-confirm.min.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/dashboard.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/custom.css')}}">
@@ -87,8 +86,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
-<!-- <script src="{{asset('assets/js/bootstrap-select.min.js')}}"></script>
--->
+<script src="{{asset('assets/js/bootstrap-select.min.js')}}"></script>
 <script src="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.js')}}"></script>
 <script src="{{asset('assets/js/dashboard.js')}}"></script>
 
