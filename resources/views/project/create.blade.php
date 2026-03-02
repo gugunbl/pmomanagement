@@ -20,7 +20,7 @@
         </ul>
     </div>
 
-    {!! Form::open(['route' => 'project.store']) !!}
+    {!! Form::model($project, ['route' => 'project.store']) !!}
 
     <div class="card-body">
         <div class="tab-content">

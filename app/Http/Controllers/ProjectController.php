@@ -295,6 +295,7 @@ public function update(Request $request, Project $project)
             'sales'                 => $request->sales,
             'link_dokumen'          => $request->link_dokumen,
             'keterangan'            => $request->keterangan,
+            'tanggal_kom'                   => $request->tanggal_kom,
             'tanggal_akhir_implementasi'    => $request->tanggal_akhir_implementasi,
             'tanggal_mulai_maintenance'     => $request->tanggal_mulai_maintenance,
             'tanggal_akhir_maintenance'     => $request->tanggal_akhir_maintenance,
@@ -438,6 +439,12 @@ public function update(Request $request, Project $project)
      */
     public function create()
     {
+        $project = new Project();
+        $project->tanggal_spk = '1900-01-01';
+        $project->tanggal_kom = '1900-01-01';
+        $project->tanggal_akhir_implementasi = '1900-01-01';
+        $project->tanggal_mulai_maintenance = '1900-01-01';
+        $project->tanggal_akhir_maintenance = '1900-01-01';
 
          $clients = [
             'BRI' => 'BRI',
@@ -461,7 +468,7 @@ public function update(Request $request, Project $project)
         $statusma = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
         $mprojectmanager = \App\Mprojectmanager::pluck('nama_pm','id_pm');
         
-        return view('project.create', compact('categories','statusim','statusma','title','mprojectmanager','clients','saless'));
+        return view('project.create', compact('project','categories','statusim','statusma','title','mprojectmanager','clients','saless'));
        
     }
 
