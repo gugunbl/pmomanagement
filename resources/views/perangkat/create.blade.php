@@ -122,9 +122,13 @@
                                 <input type="file" id="import_excel_file" style="display:none;" accept=".xlsx, .xls">
                             </div>
                         </div>
-                        <div class="alert alert-secondary py-2 px-3 mt-2 mb-0" style="font-size: 0.75rem; border-left: 3px solid #2dce89;">
+                        <div class="alert alert-secondary py-2 px-3 mt-2 mb-0" style="font-size: 0.75rem; border-left: 3px solid #f5365c;">
+                            <i class="fas fa-info-circle mr-1 text-danger"></i> 
+                            <strong>Penting:</strong> Maksimal data yang dapat di-import adalah <strong>100 unit</strong> per file. SN yang sudah terdaftar di sistem akan otomatis dilewati.
+                        </div>
+                        <div class="alert alert-secondary py-2 px-3 mt-1 mb-0" style="font-size: 0.75rem; border-left: 3px solid #2dce89;">
                             <i class="fas fa-info-circle mr-1 text-success"></i> 
-                            <strong>Catatan:</strong> Baris ke-2 pada template adalah <strong>Sample</strong> dan akan otomatis di-skip oleh sistem. Silakan isi data asli mulai dari baris ke-3 atau biarkan sample tetap ada (tidak akan ter-import).
+                            <strong>Petunjuk:</strong> Baris ke-2 pada template adalah <strong>Sample</strong> dan akan di-skip. Isi data mulai baris ke-3.
                         </div>
                         <div class="custom-control custom-checkbox pt-2 mb-3 text-right">
                             <input type="checkbox" class="custom-control-input" id="apply_to_all_dates">
@@ -376,26 +380,40 @@ $(document).ready(function () {
                         $(`input[name="units[${index}][tgl_online]"]`).val(row.tgl_online);
                     });
 
+                    var statsText = `${data.length} units imported correctly.`;
+                    if (response.skipped > 0) {
+                        statsText += ` (${response.skipped} unit SN duplikat dilewati)`;
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Import Success',
-                        text: `${data.length} units imported correctly.`,
-                        timer: 2000
+                        text: statsText,
+                        timer: 3500
                     });
                 } else {
+                    var errorMsg = 'No data found in the Excel file.';
+                    if (response.skipped > 0) {
+                        errorMsg = `Import Gagal. Seluruh data (${response.skipped} unit) sudah terdaftar di Database.`;
+                    }
+                    
                     Swal.fire({
                         icon: 'error',
                         title: 'Import Failed',
-                        text: 'No data found in the Excel file.'
+                        text: errorMsg
                     });
                 }
             },
             error: function(xhr) {
                 Swal.close();
+                var message = 'An error occurred while importing data. Please check your file format.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An error occurred while importing data. Please check your file format.'
+                    text: message
                 });
             }
         });

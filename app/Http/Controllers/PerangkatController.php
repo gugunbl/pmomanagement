@@ -211,16 +211,43 @@ public function index(Request $request)
         ]);
 
         $file = $request->file('file_excel');
-        $import = new PerangkatImport();
+        $import = new \App\Imports\PerangkatImport();
         $data = Excel::toCollection($import, $file);
 
         $rows = [];
+        $skippedCount = 0;
         if (isset($data[0])) {
-            // Skip heading row and sample row (Row 1 & 2)
-            foreach ($data[0]->skip(2) as $row) {
-                if (isset($row[0]) && !empty($row[0])) {
+            $dataCollection = $data[0]->skip(2);
+            $rowCount = $dataCollection->count();
+
+            // Batasi 100 data karena limitasi server (max_input_vars)
+            if ($rowCount > 100) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Maksimal data yang dapat di-import dalam satu waktu adalah 100 data. Anda mencoba meng-import ' . $rowCount . ' data.'
+                ], 422);
+            }
+
+            // Get all SNs from Excel to check for duplicates in DB
+            $excelSNs = $dataCollection->map(function($row) {
+                return isset($row[0]) ? trim($row[0]) : null;
+            })->filter()->toArray();
+
+            $existingSNs = \App\Perangkat::whereIn('serialnumber', $excelSNs)->pluck('serialnumber')->toArray();
+            $existingSNs = array_map('strtolower', $existingSNs); // Case-insensitive comparison check
+
+            foreach ($dataCollection as $row) {
+                $sn = isset($row[0]) ? trim($row[0]) : null;
+                
+                if ($sn) {
+                    // Check if SN already exists in DB
+                    if (in_array(strtolower($sn), $existingSNs)) {
+                        $skippedCount++;
+                        continue;
+                    }
+
                     $rows[] = [
-                        'sn' => $row[0],
+                        'sn' => $sn,
                         'koordinat' => $row[1] ?? '',
                         'lantai' => $row[2] ?? '',
                         'status_server' => $row[3] ?? 'New Device',
@@ -233,7 +260,11 @@ public function index(Request $request)
             }
         }
 
-        return response()->json(['success' => true, 'data' => $rows]);
+        return response()->json([
+            'success' => true, 
+            'data' => $rows,
+            'skipped' => $skippedCount
+        ]);
     }
 
     public function edit($perangkat)
