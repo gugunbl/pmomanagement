@@ -122,6 +122,10 @@
                                 <input type="file" id="import_excel_file" style="display:none;" accept=".xlsx, .xls">
                             </div>
                         </div>
+                        <div class="alert alert-secondary py-2 px-3 mt-2 mb-0" style="font-size: 0.75rem; border-left: 3px solid #2dce89;">
+                            <i class="fas fa-info-circle mr-1 text-success"></i> 
+                            <strong>Catatan:</strong> Baris ke-2 pada template adalah <strong>Sample</strong> dan akan otomatis di-skip oleh sistem. Silakan isi data asli mulai dari baris ke-3 atau biarkan sample tetap ada (tidak akan ter-import).
+                        </div>
                         <div class="custom-control custom-checkbox pt-2 mb-3 text-right">
                             <input type="checkbox" class="custom-control-input" id="apply_to_all_dates">
                             <label class="custom-control-label text-xs" for="apply_to_all_dates">Samakan Tanggal Garansi & Online (Gunakan Baris 1)</label>

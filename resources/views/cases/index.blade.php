@@ -17,10 +17,10 @@
 
             <div class="card-body border-top">
                 <form action="{{ route('cases.index') }}" method="GET" class="mb-4">
-                    <div class="row">
-                        <div class="col-md-4">
+                    <div class="row align-items-end">
+                        <div class="col-md-5">
                             <div class="form-group mb-0">
-                                <label for="id_project" class="form-control-label">Filter Project</label>
+                                <label for="id_project" class="form-control-label">Filter Berdasarkan Project</label>
                                 <select name="id_project" id="id_project" class="form-control select2">
                                     <option value="">-- Semua Project --</option>
                                     @foreach($projects as $id => $nama)
@@ -29,8 +29,10 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block mb-0">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -44,7 +46,7 @@
                                 <th>Tgl Open Case</th>
                                 <th>Subject Case</th>
                                 <th>Lokasi Perangkat</th>
-                                <th>No Tiket Prinsipal</th>
+                                <th>Tgl & Jam Closed</th>
                                 <th>Severity</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
@@ -59,10 +61,15 @@
                                 <tr class="{{ $rowClass }}">
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ optional($row->user)->name ?? '-' }}</td>
-                                    <td>{{ date('d-m-Y', strtotime($row->open_date)) }}</td>
+                                    <td class="text-nowrap">{{ $row->open_date ? date('d-m-Y H:i', strtotime($row->open_date)) : '-' }}</td>
                                     <td>{{ $row->subject }}</td>
-                                    <td>{{ $row->location ?? '-' }}</td>
-                                    <td>{{ $row->principal_ticket_no ?? '-' }}</td>
+                                    <td>
+                                        {{ $row->location ?? '-' }}
+                                        @if($row->perangkat && $row->perangkat->lantai)
+                                            - {{ $row->perangkat->lantai }}
+                                        @endif
+                                    </td>
+                                    <td class="text-nowrap">{{ $row->closed_date ? date('d-m-Y H:i', strtotime($row->closed_date)) : '-' }}</td>
                                     <td>
                                         <span class="badge badge-dot mr-4">
                                             @if($row->severity == 'Minor')

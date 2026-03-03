@@ -13,7 +13,7 @@ class PerangkatTemplateExport implements FromArray, WithHeadings, WithTitle
         // Return an empty array or a sample row
         return [
             [
-                'SN12345678',
+                '[SAMPLE - AKAN DI-SKIP] SN12345678',
                 'RCK-01-A',
                 '4',
                 'New Device',

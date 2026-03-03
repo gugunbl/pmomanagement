@@ -57,14 +57,21 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-control-label">Perangkat Terdampak (Jenis - Merk - SN)</label>
+                            <label class="form-control-label">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
                             {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn]) }}
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-control-label">Lokasi Perangkat (Lantai/Rak/Koordinat)</label>
-                            {{ Form::text('location', null, ['class' => 'form-control', 'placeholder' => 'e.g. Lantai 2 / Rak A-01']) }}
+                            <label class="form-control-label">Lokasi Perangkat (Site / Alamat)</label>
+                            <select name="location" class="form-control select2" required>
+                                <option value="">Pilih Lokasi...</option>
+                                @foreach($lokasis as $lok)
+                                    <option value="{{ $lok->nama_lokasi }}" {{ (old('location') ?? $case->location) == $lok->nama_lokasi ? 'selected' : '' }}>
+                                        {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                 </div>

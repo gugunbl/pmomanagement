@@ -23,7 +23,7 @@ class CaseController extends Controller
         $title = 'Daftar Case';
 
         $userProjects = $user->projects->pluck('id_project')->toArray();
-        $query = MCase::with(['project', 'user']);
+        $query = MCase::with(['project', 'user', 'perangkat']);
 
         // Base project access filter
         if (count($userProjects) > 0) {
@@ -45,7 +45,9 @@ class CaseController extends Controller
             CASE WHEN status = 'Closed' THEN closed_date ELSE '1970-01-01' END DESC
         ")->get();
 
-        return view('cases.index', compact('title', 'cases', 'projects'));
+        $lokasis = \App\Lokasi::pluck('nama_lokasi', 'nama_lokasi'); // Using name as value for the text field in MCase
+
+        return view('cases.index', compact('title', 'cases', 'projects', 'lokasis'));
     }
 
     public function create()
@@ -65,7 +67,9 @@ class CaseController extends Controller
             $fixedProject = false;
         }
 
-        return view('cases.create', compact('title', 'projects', 'fixedProject'));
+        $lokasis = \App\Lokasi::all();
+
+        return view('cases.create', compact('title', 'projects', 'fixedProject', 'lokasis'));
     }
 
     public function store(Request $request)
@@ -105,7 +109,8 @@ class CaseController extends Controller
             $jenis = optional($device->jenisPerangkat)->jns_perangkat ?? '-';
             $merk = $device->merk ?? '-';
             $sn = $device->serialnumber;
-            $sns[$sn] = "{$jenis} - {$merk} - {$sn}";
+            $lantai = $device->lantai ?? '-';
+            $sns[$sn] = "{$jenis} - {$merk} - {$sn} ({$lantai})";
         }
             
         return response()->json($sns);
@@ -131,7 +136,9 @@ class CaseController extends Controller
             $projects = Project::pluck('nama_project', 'id_project');
         }
 
-        return view('cases.edit', compact('title', 'case', 'projects'));
+        $lokasis = \App\Lokasi::all();
+
+        return view('cases.edit', compact('title', 'case', 'projects', 'lokasis'));
     }
 
     public function update(Request $request, $case)

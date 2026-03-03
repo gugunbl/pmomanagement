@@ -216,8 +216,8 @@ public function index(Request $request)
 
         $rows = [];
         if (isset($data[0])) {
-            // Skip heading row
-            foreach ($data[0]->skip(1) as $row) {
+            // Skip heading row and sample row (Row 1 & 2)
+            foreach ($data[0]->skip(2) as $row) {
                 if (isset($row[0]) && !empty($row[0])) {
                     $rows[] = [
                         'sn' => $row[0],

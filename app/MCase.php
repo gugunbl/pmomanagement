@@ -33,4 +33,10 @@ class MCase extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function perangkat()
+    {
+        // Many cases can belong to one device (SN)
+        return $this->belongsTo(Perangkat::class, 'affected_sn', 'serialnumber');
+    }
 }
