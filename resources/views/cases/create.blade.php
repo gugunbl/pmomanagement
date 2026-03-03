@@ -53,26 +53,41 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-12">
+                        <div class="custom-control custom-checkbox mb-3">
+                            <input type="checkbox" class="custom-control-input" id="manual_location_check" checked>
+                            <label class="custom-control-label font-weight-bold" for="manual_location_check">Input Lokasi Manual (Gunakan jika data perangkat tidak ditemukan di sistem)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" id="dropdown_selection_row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-control-label">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
-                            {{ Form::select('affected_sn', ['' => 'Pilih Perangkat...'], null, ['class' => 'form-control select2', 'id' => 'sn_select']) }}
+                            {{ Form::select('affected_sn', ['' => 'Pilih Perangkat...'], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'disabled']) }}
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <div class="custom-control custom-checkbox mb-2">
-                                <input type="checkbox" class="custom-control-input" id="check_location" checked>
-                                <label class="custom-control-label form-control-label" for="check_location">Input Lokasi Perangkat</label>
-                            </div>
-                            <select name="location" id="location_select" class="form-control select2" required>
+                            <label class="form-control-label">Pilih Site / Lokasi Terdaftar</label>
+                            <select id="location_dropdown" class="form-control select2" disabled>
                                 <option value="">Pilih Lokasi...</option>
                                 @foreach($lokasis as $lok)
-                                    <option value="{{ $lok->nama_lokasi }}" {{ old('location') == $lok->nama_lokasi ? 'selected' : '' }}>
+                                    <option value="{{ $lok->nama_lokasi }}">
                                         {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
                                     </option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" id="manual_location_row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Ketik Lokasi Perangkat (Manual)</label>
+                            {{ Form::text('location', null, ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20', 'required']) }}
                         </div>
                     </div>
                 </div>
@@ -236,21 +251,40 @@ $(document).ready(function() {
     // Initial check
     toggleClosedDate();
 
-    // Location toggle logic
-    function toggleLocationInput() {
-        if ($('#check_location').is(':checked')) {
-            $('#location_select').prop('disabled', false).prop('required', true);
+    // Manual Location toggle logic
+    function updateLocationInputState() {
+        let isManual = $('#manual_location_check').is(':checked');
+        if (isManual) {
+            // Disable & clear dropdowns
+            $('#sn_select').prop('disabled', true).val(null).trigger('change');
+            $('#location_dropdown').prop('disabled', true).val(null).trigger('change').prop('required', false);
+            $('#location_dropdown').attr('name', '');
+            
+            // Enable manual text
+            $('#location_manual').prop('disabled', false).prop('required', true);
+            $('#location_manual').attr('name', 'location');
+            $('#manual_location_row').show();
+            $('#dropdown_selection_row').css('opacity', '0.5');
         } else {
-            $('#location_select').prop('disabled', true).prop('required', false).val(null).trigger('change');
+            // Enable dropdowns
+            $('#sn_select').prop('disabled', false);
+            $('#location_dropdown').prop('disabled', false).prop('required', true);
+            $('#location_dropdown').attr('name', 'location');
+
+            // Disable & hide manual text
+            $('#location_manual').prop('disabled', true).prop('required', false).val('');
+            $('#location_manual').attr('name', '');
+            $('#manual_location_row').hide();
+            $('#dropdown_selection_row').css('opacity', '1');
         }
     }
 
-    $('#check_location').on('change', function() {
-        toggleLocationInput();
+    $('#manual_location_check').on('change', function() {
+        updateLocationInputState();
     });
 
-    // Initial check for location
-    toggleLocationInput();
+    // Initial check for manual location
+    updateLocationInputState();
 });
 </script>
 @endpush
