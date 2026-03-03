@@ -61,8 +61,11 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-control-label">Lokasi Perangkat (Site / Alamat)</label>
-                            <select name="location" class="form-control select2" required>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input" id="check_location" checked>
+                                <label class="custom-control-label form-control-label" for="check_location">Input Lokasi Perangkat</label>
+                            </div>
+                            <select name="location" id="location_select" class="form-control select2" required>
                                 <option value="">Pilih Lokasi...</option>
                                 @foreach($lokasis as $lok)
                                     <option value="{{ $lok->nama_lokasi }}" {{ old('location') == $lok->nama_lokasi ? 'selected' : '' }}>
@@ -230,12 +233,24 @@ $(document).ready(function() {
         }
     }
 
-    $('#status_select').on('change', function() {
-        toggleClosedDate();
-    });
-
     // Initial check
     toggleClosedDate();
+
+    // Location toggle logic
+    function toggleLocationInput() {
+        if ($('#check_location').is(':checked')) {
+            $('#location_select').prop('disabled', false).prop('required', true);
+        } else {
+            $('#location_select').prop('disabled', true).prop('required', false).val(null).trigger('change');
+        }
+    }
+
+    $('#check_location').on('change', function() {
+        toggleLocationInput();
+    });
+
+    // Initial check for location
+    toggleLocationInput();
 });
 </script>
 @endpush

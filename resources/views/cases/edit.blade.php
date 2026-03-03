@@ -57,14 +57,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-control-label">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
-                            {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn]) }}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-control-label">Lokasi Perangkat (Site / Alamat)</label>
-                            <select name="location" class="form-control select2" required>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input" id="check_location" {{ $case->location ? 'checked' : '' }}>
+                                <label class="custom-control-label form-control-label" for="check_location">Input Lokasi Perangkat</label>
+                            </div>
+                            <select name="location" id="location_select" class="form-control select2" {{ $case->location ? 'required' : 'disabled' }}>
                                 <option value="">Pilih Lokasi...</option>
                                 @foreach($lokasis as $lok)
                                     <option value="{{ $lok->nama_lokasi }}" {{ (old('location') ?? $case->location) == $lok->nama_lokasi ? 'selected' : '' }}>
@@ -194,6 +191,28 @@ $(document).ready(function() {
     $('#status_select').on('change', function() {
         toggleClosedDate();
     });
+
+    // Location toggle logic
+    function toggleLocationInput() {
+        if ($('#check_location').is(':checked')) {
+            $('#location_select').prop('disabled', false).prop('required', true);
+        } else {
+            $('#location_select').prop('disabled', true).prop('required', false);
+            // Don't clear value here on edit, just disable? 
+            // Better to clear if user explicitly unchecked it to avoid confusion
+            if (!$('#check_location').data('initial-passed')) {
+                 $('#check_location').data('initial-passed', true);
+            } else {
+                 $('#location_select').val(null).trigger('change');
+            }
+        }
+    }
+
+    $('#check_location').on('change', function() {
+        toggleLocationInput();
+    });
+
+    // Initial state set in Blade via attributes, but trigger toggle to be sure
 });
 </script>
 @endpush
