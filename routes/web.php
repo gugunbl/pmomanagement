@@ -67,6 +67,8 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/project/monitoring-ba/export/excel', 'ProjectController@exportBAExcel')->name('project.ba.export.excel');
 
     Route::resource('category', 'CategoryController')->except('show');
+    Route::resource('customer', 'MCustomerController')->except('show');
+    Route::resource('sales', 'MSalesController')->except('show');
     Route::resource('post', 'PostController');
     Route::resource('project', 'ProjectController');
     /*

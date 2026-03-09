@@ -76,18 +76,32 @@
                                 <ul class="nav nav-sm flex-column">
                                  @can('view-category')
                                     <li class="nav-item">
-                                        <a href="{{route('category.index')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">All Categories</span></a>
+                                        <a href="{{route('category.index')}}" class="nav-link"><span class="sidenav-mini-icon">C </span><span class="sidenav-normal">All Categories</span></a>
                                     </li>
                                     @endcan
                                     @can( 'create-category')
                                     <li class="nav-item">
-                                        <a href="{{route('category.create')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Add New Category</span></a>
+                                        <a href="{{route('category.create')}}" class="nav-link"><span class="sidenav-mini-icon">C </span><span class="sidenav-normal">Add New Category</span></a>
                                     </li>
                                     @endcan
                                 </ul>
                             </div>
                         </li>
                     @endcanany
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ (request()->is('customer*')) ? 'active' : '' }}" href="{{route('customer.index')}}">
+                            <i class="fas text-primary fa-users"></i>
+                            <span class="nav-link-text">Manage Customer</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ (request()->is('sales*')) ? 'active' : '' }}" href="{{route('sales.index')}}">
+                            <i class="fas text-primary fa-user-tag"></i>
+                            <span class="nav-link-text">Manage Sales</span>
+                        </a>
+                    </li>
 <!-- Manage Data Perangkat -->
                     @canany(['view-perangkat', 'summary-perangkat','view-warehouse','perangkat-warehouse'])
                         <li class="nav-item">

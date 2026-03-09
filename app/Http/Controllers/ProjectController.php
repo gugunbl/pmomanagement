@@ -11,6 +11,8 @@ use App\ProjectTopImplementasi;
 use App\ProjectTopMaintenance;
 use App\ProjectReport;
 use App\Mprojectmanager;
+use App\MCustomer;
+use App\MSales;
 use App\Http\Requests\CategoryRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -241,21 +243,8 @@ public function edit(Project $project)
         'topMaintenance',
         'reports'
     ]);
-    $clients = [
-            'BRI' => 'BRI',
-            'BJB' => 'BJB', 
-            'PT Timah' => 'PT Timah',
-            'Allo Bank' => 'Allo Bank',
-            'PNM' => 'PNM',
-            'Bank DKI' => 'Bank DKI',
-            'Jamkrindo Syariah' => 'Jamkrindo Syariah',
-            'Askrindo' => 'Askrindo'
-        ];
-        $saless = [
-            'Putri' => 'Putri',
-            'Sigit' => 'Sigit',
-            'Wandi' => 'Wandi'
-        ];
+    $clients = MCustomer::where('status', 1)->pluck('name', 'name');
+    $saless = MSales::where('status', 1)->pluck('name', 'name');
 
     $categories = Category::pluck('category_name', 'id');
     $statusim   = Status::where('is_type', 1)->pluck('nama_status', 'id_status');
@@ -446,21 +435,8 @@ public function update(Request $request, Project $project)
         $project->tanggal_mulai_maintenance = '1900-01-01';
         $project->tanggal_akhir_maintenance = '1900-01-01';
 
-         $clients = [
-            'BRI' => 'BRI',
-            'BJB' => 'BJB', 
-            'PT Timah' => 'PT Timah',
-            'Allo Bank' => 'Allo Bank',
-            'PNM' => 'PNM',
-            'Bank DKI' => 'Bank DKI',
-            'Jamkrindo Syariah' => 'Jamkrindo Syariah',
-            'Askrindo' => 'Askrindo'
-        ];
-        $saless = [
-            'Putri' => 'Putri',
-            'Sigit' => 'Sigit',
-            'Wandi' => 'Wandi'
-        ];
+        $clients = MCustomer::where('status', 1)->pluck('name', 'name');
+        $saless = MSales::where('status', 1)->pluck('name', 'name');
 
         $title = 'Tambah Project Baru';
         $categories = Category::pluck('category_name', 'id');
