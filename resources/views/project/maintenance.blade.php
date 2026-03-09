@@ -80,7 +80,10 @@
     $today = \Carbon\Carbon::today();
     $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_maintenance);
 
-    if ($endDate->lt($today)) {
+    if ($item->status_maintenance == 2) {
+        // closing / completed
+        $rowClass = 'table-info'; // biru muda
+    } elseif ($endDate->lt($today)) {
         // sudah lewat
         $rowClass = 'table-danger';
     } elseif ($endDate->lte($today->copy()->addMonths(5))) {

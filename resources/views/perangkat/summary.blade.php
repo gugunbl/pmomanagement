@@ -40,7 +40,9 @@
                                     <tr>
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
-                                                {{$perangkat->project->nama_project }}
+                                                <a href="{{ route('perangkat.index', ['id_project' => $perangkat->id_project]) }}" class="font-weight-bold text-primary">
+                                                    {{$perangkat->project->nama_project }}
+                                                </a>
                                             </div>
                                         </th>
                                         <td class="budget">

@@ -39,12 +39,13 @@ public function maintenance(Request $request)
     'p.nama_project',
     'p.tanggal_mulai_maintenance',
     'p.tanggal_akhir_maintenance',
+    'p.status_maintenance',
     'pm.nama_pm as pm_maintenance_nama',
     DB::raw('COUNT(ptm.id) as total_ba'),
     DB::raw("COUNT(CASE WHEN ptm.status = 'paid' THEN 1 END) as total_paid")
 )
 
-        ->where('p.status_maintenance', 1)
+        ->whereIn('p.status_maintenance', [1, 2])
 
         // filter tahun
         ->when($tahun, function ($query) use ($tahun) {
@@ -103,8 +104,8 @@ public function store(Request $request)
         'status_implementation' => 'required|exists:m_status,id_status',
         'status_maintenance' => 'nullable|exists:m_status,id_status',
 
-        'pm_implementasi' => 'nullable|exists:m_project_manager,id_pm',
-        'pm_maintenance' => 'nullable|exists:m_project_manager,id_pm',
+        'pm_implementasi' => 'required|exists:m_project_manager,id_pm',
+        'pm_maintenance' => 'required|exists:m_project_manager,id_pm',
 
         'tanggal_kom'                => 'nullable|date_format:Y-m-d',
         'tanggal_akhir_implementasi' => 'nullable|date_format:Y-m-d',
@@ -266,6 +267,14 @@ public function edit(Project $project)
 
 public function update(Request $request, Project $project)
 {
+    $request->validate([
+        'pm_implementasi' => 'required|exists:m_project_manager,id_pm',
+        'pm_maintenance' => 'required|exists:m_project_manager,id_pm',
+        'nama_project' => 'required|string|max:255',
+        'nomor_spk' => 'required|string|max:255',
+        'tanggal_spk' => 'required|date_format:Y-m-d',
+    ]);
+
     DB::transaction(function () use ($request, $project) {
 
         /* ===============================
@@ -434,6 +443,11 @@ public function update(Request $request, Project $project)
         $project->tanggal_akhir_implementasi = '1900-01-01';
         $project->tanggal_mulai_maintenance = '1900-01-01';
         $project->tanggal_akhir_maintenance = '1900-01-01';
+        
+        $defaultValue = \App\Mprojectmanager::where('nama_pm', 'Belum ada PM')->first();
+        if ($defaultValue) {
+            $project->pm_maintenance = $defaultValue->id_pm;
+        }
 
         $clients = MCustomer::where('status', 1)->pluck('name', 'name');
         $saless = MSales::where('status', 1)->pluck('name', 'name');

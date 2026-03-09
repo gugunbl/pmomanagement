@@ -113,7 +113,8 @@
                     {{ Form::label('pm_implementasi', 'Project Manager Implementasi') }}
                     {{ Form::select('pm_implementasi', $mprojectmanager, null, [
                         'class'=>'form-control',
-                        'placeholder'=>'Pilih PM Implementasi'
+                        'placeholder'=>'Pilih PM Implementasi',
+                        'required'
                     ]) }}
                 </div>
             </div>
@@ -124,7 +125,8 @@
                     {{ Form::label('pm_maintenance', 'Project Manager Maintenance') }}
                     {{ Form::select('pm_maintenance', $mprojectmanager, null, [
                         'class'=>'form-control',
-                        'placeholder'=>'Belum ada PM'
+                        'placeholder'=>'Pilih PM Maintenance',
+                        'required'
                     ]) }}
                 </div>
             </div>
