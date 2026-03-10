@@ -180,14 +180,15 @@ public function maintenance(Request $request)
             $query->where('p.pm_maintenance', $pm_maintenance);
         })
 
-->groupBy(
-    'p.id_project',
-    'p.nomor_spk',
-    'p.nama_project',
-    'p.tanggal_mulai_maintenance',
-    'p.tanggal_akhir_maintenance',
-    'pm.nama_pm'
-)
+        ->groupBy(
+            'p.id_project',
+            'p.nomor_spk',
+            'p.nama_project',
+            'p.tanggal_mulai_maintenance',
+            'p.tanggal_akhir_maintenance',
+            'p.status_maintenance',
+            'pm.nama_pm'
+        )
         ->orderBy('p.tanggal_akhir_maintenance', 'asc')
         ->paginate(10)
         ->appends($request->query());

@@ -55,13 +55,15 @@
         </div>
 
         <div class="text-right mt-4">
+            <a href="{{ route('perangkat.index', ['id_project' => $project->id_project]) }}" class="btn btn-info mr-2">
+                <i class="fas fa-boxes"></i> Jumlah Perangkat: {{ $project->perangkats->count() }}
+            </a>
             <a href="{{ route('project.maintenance') }}" class="btn btn-secondary">
                 Kembali ke List Project Maintenance
             </a>
             <button type="submit" class="btn btn-primary">
                 Update Project 
             </button>
-
         </div>
 
     </div>
