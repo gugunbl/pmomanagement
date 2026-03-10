@@ -111,10 +111,15 @@
 
         {{-- PROJECT AKAN BERAKHIR --}}
         <div class="card">
-            <div class="card-header border-0">
+            <div class="card-header border-0 d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 text-danger">
                     Maintenance Akan Berakhir (≤ 5 Bulan)
                 </h4>
+                @can('send-maintenance-reminder')
+                <a href="{{ route('project.maintenance.preview-reminder') }}" class="btn btn-sm btn-info">
+                    <i class="fas fa-eye"></i> Preview Reminder
+                </a>
+                @endcan
             </div>
             <div class="table-responsive">
                 <table class="table table-sm table-hover">

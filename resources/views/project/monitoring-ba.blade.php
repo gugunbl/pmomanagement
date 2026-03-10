@@ -119,7 +119,11 @@
                                 <tr class="{{ $isSilver ? 'bg-silver' : '' }}">
                                     @if($isFirst)
                                         <td rowspan="{{ $rowspan }}">{{ $projectCounter }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">{{ $ba->project->nama_project ?? '-' }}</td>
+                                        <td rowspan="{{ $rowspan }}" class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">
+                                            <a href="{{ route('project.edit', $ba->project_id) }}">
+                                                {{ $ba->project->nama_project ?? '-' }}
+                                            </a>
+                                        </td>
                                         <td rowspan="{{ $rowspan }}">{{ $ba->project->nomor_spk ?? '-' }}</td>
                                         <td rowspan="{{ $rowspan }}" class="font-weight-bold" style="font-size: 1.05rem;">{{ $ba->project->mPMMaintenance->nama_pm ?? '-' }}</td>
                                     @endif

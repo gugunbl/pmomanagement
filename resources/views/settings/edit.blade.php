@@ -121,7 +121,34 @@
                                 {{ Form::text('lockout_delay', setting('lockout_delay'), ['class'=>"form-control"])}}
                             </div>
                         </div>
-                        <div class="col-md-12 mt-4">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-5">
+                <div class="card-header bg-transparent"><h4 class="mb-0">Maintenance Reminder Email Settings</h4></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{Form::label('maintenance_reminder_to', 'Recipient Email(s) (separate with comma)', ['class' => 'form-control-label'])}}
+                                {{ Form::text('maintenance_reminder_to', setting('maintenance_reminder_to'), ['class'=>"form-control", 'placeholder' => 'example@gmail.com, admin@gmail.com'])}}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{Form::label('maintenance_reminder_subject', 'Email Subject', ['class' => 'form-control-label'])}}
+                                {{ Form::text('maintenance_reminder_subject', setting('maintenance_reminder_subject', 'Reminder Maintenance Project'), ['class'=>"form-control"])}}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{Form::label('maintenance_reminder_body', 'Email Body Greeting/Message', ['class' => 'form-control-label'])}}
+                                {{ Form::textarea('maintenance_reminder_body', setting('maintenance_reminder_body', "Dear Pak Wida dan Team,\n\nIzin reminder kembali untuk data project yang sudah berakhir dan akan berakhir dalam 5 bulan ke depan. Informasi ini untuk memastikan kelancaran project agar sesuai dengan timeline masing-masing project."), ['class'=>"form-control", 'rows' => 4])}}
+                                <small class="text-muted">The project list table will be automatically appended after this message.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-4 text-right">
                             {!! Form::submit('Update Settings', ['class'=> 'btn btn-primary']) !!}
                         </div>
                     </div>

@@ -20,11 +20,134 @@ use Illuminate\Support\Facades\DB; // Jika ingin transaction
 use App\Exports\MonitoringBAExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 
 
 class ProjectController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:send-maintenance-reminder', ['only' => ['previewMaintenanceReminder', 'sendMaintenanceReminder']]);
+    }
 
+    public function previewMaintenanceReminder()
+    {
+        $recipientEmails = setting('maintenance_reminder_to');
+        if (empty($recipientEmails)) {
+            flash('Error: Recipient email is not configured in Settings!')->error();
+            return back();
+        }
+
+        $subject = setting('maintenance_reminder_subject', 'Reminder Maintenance Project');
+        $bodyMessage = setting('maintenance_reminder_body', "Izin reminder kembali untuk data project yang sudah berakhir dan akan berakhir dalam 5 bulan ke depan.");
+
+        $today = Carbon::today();
+        $fiveMonthsFromNow = Carbon::today()->addMonthsNoOverflow(5)->endOfMonth();
+
+        // 1. Expired Projects
+        $expiredProjects = DB::table('m_project')
+            ->where('status_maintenance', 1)
+            ->whereNotNull('tanggal_akhir_maintenance')
+            ->where('tanggal_akhir_maintenance', '<', $today->toDateString())
+            ->orderBy('tanggal_akhir_maintenance', 'desc')
+            ->get();
+
+        // 2. Ending Soon (<= 5 Months)
+        $endingSoonProjects = DB::table('m_project')
+            ->where('status_maintenance', 1)
+            ->whereNotNull('tanggal_akhir_maintenance')
+            ->whereBetween('tanggal_akhir_maintenance', [$today->toDateString(), $fiveMonthsFromNow->toDateString()])
+            ->orderBy('tanggal_akhir_maintenance', 'asc')
+            ->get();
+
+        if ($expiredProjects->isEmpty() && $endingSoonProjects->isEmpty()) {
+            flash('No projects found ending soon or expired. Email not sent.')->info();
+            return back();
+        }
+
+        $title = 'Preview Maintenance Reminder';
+        return view('project.preview-reminder', compact(
+            'expiredProjects', 'endingSoonProjects', 'bodyMessage', 'subject', 'recipientEmails', 'title'
+        ));
+    }
+
+    public function sendMaintenanceReminder(Request $request)
+    {
+        $recipientEmails = setting('maintenance_reminder_to');
+        if (empty($recipientEmails)) {
+            flash('Error: Recipient email is not configured in Settings!')->error();
+            return redirect()->route('home');
+        }
+
+        // Convert list to array
+        $toArr = array_map('trim', explode(',', $recipientEmails));
+        $subject = setting('maintenance_reminder_subject', 'Reminder Maintenance Project');
+        $bodyMessage = setting('maintenance_reminder_body', "Izin reminder kembali untuk data project yang sudah berakhir dan akan berakhir dalam 5 bulan ke depan.");
+
+        $today = Carbon::today();
+        $fiveMonthsFromNow = Carbon::today()->addMonthsNoOverflow(5)->endOfMonth();
+
+        // 1. Expired Projects
+        $expiredProjects = DB::table('m_project')
+            ->where('status_maintenance', 1)
+            ->whereNotNull('tanggal_akhir_maintenance')
+            ->where('tanggal_akhir_maintenance', '<', $today->toDateString())
+            ->orderBy('tanggal_akhir_maintenance', 'desc')
+            ->get();
+
+        // 2. Ending Soon (<= 5 Months)
+        $endingSoonProjects = DB::table('m_project')
+            ->where('status_maintenance', 1)
+            ->whereNotNull('tanggal_akhir_maintenance')
+            ->whereBetween('tanggal_akhir_maintenance', [$today->toDateString(), $fiveMonthsFromNow->toDateString()])
+            ->orderBy('tanggal_akhir_maintenance', 'asc')
+            ->get();
+
+        if ($expiredProjects->isEmpty() && $endingSoonProjects->isEmpty()) {
+            flash('No projects found ending soon or expired. Email not sent.')->info();
+            return redirect()->route('home');
+        }
+
+        try {
+            Mail::send('emails.maintenance-reminder', [
+                'bodyMessage' => $bodyMessage,
+                'expiredProjects' => $expiredProjects,
+                'endingSoonProjects' => $endingSoonProjects,
+            ], function ($message) use ($toArr, $subject) {
+                $message->to($toArr)
+                        ->subject($subject);
+            });
+
+            // LOG SUCCESS to Activity Log
+            activity('email-reminder')
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'recipients' => $recipientEmails,
+                    'subject' => $subject,
+                    'total_expired' => $expiredProjects->count(),
+                    'total_ending_soon' => $endingSoonProjects->count(),
+                    'status' => 'success'
+                ])
+                ->log('Maintenance reminder email sent successfully');
+
+            flash('Maintenance reminder email sent successfully to: ' . $recipientEmails)->success();
+        } catch (\Exception $e) {
+            // LOG FAILURE to Activity Log
+            activity('email-reminder')
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'recipients' => $recipientEmails,
+                    'subject' => $subject,
+                    'error_message' => $e->getMessage(),
+                    'status' => 'failed'
+                ])
+                ->log('Failed to send maintenance reminder email');
+
+            flash('Error sending email: ' . $e->getMessage())->error();
+        }
+
+        return redirect()->route('home');
+    }
 
 public function maintenance(Request $request)
 {

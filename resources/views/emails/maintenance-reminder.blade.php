@@ -1,63 +1,76 @@
-<h4>
-Dear Pak Wida dan Team,
-<p>
-Izin reminder kembali untuk data project yang sudah berakhir dan akan berakhir dalam 6 bulan ke depan. Informasi ini untuk memastikan kelancaran project agar sesuai dengan timeline masing-masing project.
-<p><p>
-</h4>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { width: 95%; margin: 20px auto; }
+        h3 { color: #d9534f; border-bottom: 2px solid #d9534f; padding-bottom: 5px; margin-top: 30px; }
+        h3.warning { color: #f0ad4e; border-bottom: 2px solid #f0ad4e; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f5f5f5; font-weight: bold; }
+        .footer { margin-top: 40px; font-size: 14px; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot-red { background-color: #d9534f; }
+        .dot-orange { background-color: #f0ad4e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>{!! nl2br(e($bodyMessage)) !!}</p>
 
-<h3>🔴 Project Maintenance Expired</h3>
+        @if($endingSoonProjects->count() > 0)
+            <h3 class="warning"><span class="dot dot-orange"></span> Project Maintenance Akan Berakhir &le; 5 Bulan</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Project</th>
+                        <th style="width: 25%;">Nomor SPK</th>
+                        <th style="width: 20%;">Tgl Berakhir</th>
+                        <th style="width: 15%;">Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($endingSoonProjects as $p)
+                        <tr>
+                            <td>{{ $p->nama_project }}</td>
+                            <td>{{ $p->nomor_spk }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->tanggal_akhir_maintenance)->format('d-M-Y') }}</td>
+                            <td>{{ $p->customer ?? $p->client }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
 
-@if($expired->count())
-<table border="1" cellpadding="5" cellspacing="0">
-<tr>
-    <th>Project</th>
-    <th>Nomor SPK</th>
-    <th>Tgl Berakhir</th>
-    <th>Client</th>
-</tr>
-@foreach($expired as $p)
-<tr>
-    <td>{{ $p->nama_project }}</td>
-    <td>{{ $p->nomor_spk }}</td>
-    <td>{{ \Carbon\Carbon::parse($p->tanggal_akhir_maintenance)->format('d-m-Y') }}</td>
-    <td>{{ $p->customer}}</td>
-</tr>
-@endforeach
-</table>
-@else
-<p>- Tidak ada -</p>
-@endif
+        @if($expiredProjects->count() > 0)
+            <h3><span class="dot dot-red"></span> Project Maintenance Expired</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Project</th>
+                        <th style="width: 25%;">Nomor SPK</th>
+                        <th style="width: 20%;">Tgl Berakhir</th>
+                        <th style="width: 15%;">Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($expiredProjects as $p)
+                        <tr>
+                            <td>{{ $p->nama_project }}</td>
+                            <td>{{ $p->nomor_spk }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->tanggal_akhir_maintenance)->format('d-M-Y') }}</td>
+                            <td>{{ $p->customer ?? $p->client }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
 
-<br>
-
-<h3>🟡 Project Maintenance Akan Berakhir ≤ 5 Bulan</h3>
-
-@if($warning->count())
-<table border="1" cellpadding="5" cellspacing="0">
-<tr>
-    <th>Project</th>
-    <th>Nomor SPK</th>
-    <th>Tgl Berakhir</th>
-    <th>Client</th>
-</tr>
-@foreach($warning as $p)
-<tr>
-    <td>{{ $p->nama_project }}</td>
-    <td>{{ $p->nomor_spk }}</td>
-    <td>{{ \Carbon\Carbon::parse($p->tanggal_akhir_maintenance)->format('d-m-Y') }}</td>
-    <td>{{ $p->customer}}</td>
-</tr>
-@endforeach
-</table>
-@else
-<p>- Tidak ada -</p>
-@endif
-
-<h4>
-<p>
-Demikian informasi ini kami sampaikan
-<p>
-Terima kasih
-<br>
-PMO Maintenance
-</h4>
+        <div class="footer">
+            Demikian saya sampaikan informasi tersebut.<br>
+            <strong>Terima kasih</strong>
+        </div>
+    </div>
+</body>
+</html>

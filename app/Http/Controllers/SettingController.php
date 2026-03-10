@@ -25,29 +25,38 @@ class SettingController extends Controller
     }
 
     public function update(Request $request) {
+        $data = $request->except(['_token']);
+        
+        foreach ($data as $key => $value) {
+            // Handle logo specifically if it exists in the loop
+            if ($key == 'company_logo' && !empty($value)) {
+                $settingValue = parse_url($value, PHP_URL_PATH);
+            } else {
+                $settingValue = $value;
+            }
 
-        foreach ($request->all() as $key => $value) {
-            if ($request->company_logo) {
-                Setting::set($key, parse_url($value, PHP_URL_PATH));
-            }else{
-                Setting::set($key, $value);
+            // Skip saving if value is null to avoid DB constraint violation
+            if ($settingValue !== null) {
+                Setting::set($key, $settingValue);
             }
         }
+
         Setting::save();
+
         activity('settings')
             ->causedBy(Auth::user())
-            ->withProperties($request->all())
+            ->withProperties($data)
             ->log('updated');
+
         flash('Settings updated successfully!')->success();
         return back();
-
     }
     public function activity(Request $request){
         $title= 'Activity Logs';
         activity('activity')
         ->causedBy(Auth::user())
         ->log('view');
-        $activities = Activity::paginate(setting('record_per_page', 15));
+        $activities = Activity::latest()->paginate(setting('record_per_page', 15));
         return view('settings.activity', compact('activities', 'title'));
     }
 }
