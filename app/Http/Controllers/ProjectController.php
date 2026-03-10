@@ -189,6 +189,7 @@ public function maintenance(Request $request)
             'p.status_maintenance',
             'pm.nama_pm'
         )
+        ->orderBy('p.status_maintenance', 'asc')
         ->orderBy('p.tanggal_akhir_maintenance', 'asc')
         ->paginate(10)
         ->appends($request->query());
