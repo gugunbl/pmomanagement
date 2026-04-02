@@ -38,12 +38,21 @@ class CaseController extends Controller
             $query->where('id_project', $request->id_project);
         }
 
+        // Search by subject or location
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('subject', 'like', "%$search%")
+                  ->orWhere('location', 'like', "%$search%");
+            });
+        }
+
         // Custom sorting as requested
         $cases = $query->orderByRaw("
             CASE WHEN status IN ('Open', 'In Progress') THEN 1 ELSE 2 END ASC,
             CASE WHEN status IN ('Open', 'In Progress') THEN open_date ELSE '1970-01-01' END DESC,
             CASE WHEN status = 'Closed' THEN closed_date ELSE '1970-01-01' END DESC
-        ")->get();
+        ")->paginate(setting('record_per_page', 15))->withQueryString();
 
         $lokasis = \App\Lokasi::pluck('nama_lokasi', 'nama_lokasi'); // Using name as value for the text field in MCase
 

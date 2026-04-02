@@ -172,24 +172,58 @@ public function index(Request $request)
         }
     }
 
-    public function summary()
+    public function summary(Request $request)
     {
-         $summaryperangkats = Perangkat::with(['project' => function($query) {
-            $query->select('id_project', 'nama_project');
-        }])
-        ->select(
-            'id_project', 
-            'merk', 
-            'type', 
-            DB::raw('COUNT(serialnumber) as jml')
-        )
-        ->groupBy('id_project', 'merk', 'type') // ← HARUS ADA
-        ->paginate(15);
-    
-    $title = 'Summary Perangkat';    
-    return view('perangkat.summary', compact('summaryperangkats', 'title'));
+        $activeTab = $request->get('tab', 'category');
+        $customerFilter = $request->get('customer');
+        $search = $request->get('search');
 
+        $customers = \App\MCustomer::where('status', 1)->pluck('name', 'name');
 
+        if ($activeTab == 'project') {
+            $query = Project::with(['mPMMaintenance', 'statusMaintenance'])
+                ->select('m_project.id_project', 'm_project.nama_project', 'm_project.tanggal_akhir_maintenance', 'm_project.pm_maintenance', 'm_project.status_maintenance', 'm_project.customer')
+                ->whereHas('perangkats');
+
+            if ($search) {
+                $query->where('m_project.nama_project', 'like', "%{$search}%");
+            }
+
+            if ($customerFilter) {
+                $query->where('m_project.customer', $customerFilter);
+            }
+
+            $summaryperangkats = $query->withCount('perangkats as jml')
+                ->orderByRaw("CASE WHEN m_project.status_maintenance = '1' THEN 0 ELSE 1 END ASC")
+                ->orderBy('m_project.tanggal_akhir_maintenance', 'asc')
+                ->paginate(15)
+                ->appends($request->query());
+                
+            $title = 'Summary Perangkat (By Project)';
+            return view('perangkat.summary', compact('summaryperangkats', 'title', 'activeTab', 'customers', 'customerFilter', 'search'));
+        } else {
+             $query = Perangkat::with(['project' => function($query) {
+                $query->select('id_project', 'nama_project');
+            }])
+            ->select(
+                'id_project', 
+                'merk', 
+                'type', 
+                DB::raw('COUNT(serialnumber) as jml')
+            )
+            ->groupBy('id_project', 'merk', 'type');
+            
+            if ($search) {
+                $query->whereHas('project', function($q) use ($search) {
+                    $q->where('nama_project', 'like', "%{$search}%");
+                });
+            }
+
+            $summaryperangkats = $query->paginate(15)->appends($request->query());
+        
+            $title = 'Summary Perangkat';    
+            return view('perangkat.summary', compact('summaryperangkats', 'title', 'activeTab', 'customers', 'customerFilter', 'search'));
+        }
     }
 
 

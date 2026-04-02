@@ -109,13 +109,17 @@ class ProjectController extends Controller
         }
 
         try {
+            $fromAddress = env('MAIL_FROM_ADDRESS', 'manage.service.isdu@gmail.com');
+            $fromName = env('MAIL_FROM_NAME', 'PMO Maintenance');
+
             Mail::send('emails.maintenance-reminder', [
                 'bodyMessage' => $bodyMessage,
                 'expiredProjects' => $expiredProjects,
                 'endingSoonProjects' => $endingSoonProjects,
-            ], function ($message) use ($toArr, $subject) {
+            ], function ($message) use ($toArr, $subject, $fromAddress, $fromName) {
                 $message->to($toArr)
-                        ->subject($subject);
+                        ->subject($subject)
+                        ->from($fromAddress, $fromName);
             });
 
             // LOG SUCCESS to Activity Log
@@ -653,14 +657,27 @@ public function update(Request $request, Project $project)
         $totalProjects = $countQuery->distinct('project_id')->count('project_id');
         // --- END CALCULATE ---
 
-        $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
+        $mainQuery = clone $query;
+        $mainQuery->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
             ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
             ->orderBy('min_periode_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
-            ->orderBy('project_top_maintenance.periode_end', 'asc')
-            ->paginate(15)
-            ->appends($request->query());
+            ->orderBy('project_top_maintenance.periode_end', 'asc');
+
+        $queryForOffset = clone $mainQuery;
+
+        $listBA = $mainQuery->paginate(15)->appends($request->query());
+
+        $offset = ($listBA->currentPage() - 1) * $listBA->perPage();
+        $startProjectCounter = 0;
+        if ($offset > 0) {
+            $prevBAs = $queryForOffset->limit($offset)->pluck('project_top_maintenance.project_id');
+            $startProjectCounter = collect($prevBAs)->unique()->count();
+            if ($listBA->count() > 0 && collect($prevBAs)->last() == $listBA->first()->project_id) {
+                $startProjectCounter--;
+            }
+        }
 
         $listPM = DB::table('m_project_manager')
             ->where('status', 1)
@@ -670,7 +687,7 @@ public function update(Request $request, Project $project)
 
         $title = 'Monitoring BA (TOP Maintenance)';
 
-        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab', 'totalProjects', 'totalBA'));
+        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab', 'totalProjects', 'totalBA', 'startProjectCounter'));
     }
 
     public function exportBAPdf(Request $request)

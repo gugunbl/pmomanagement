@@ -86,7 +86,7 @@
                         <tbody class="list">
                             @php 
                                 $projectCounts = $listBA->getCollection()->groupBy('project_id')->map->count();
-                                $projectCounter = ($listBA->currentPage() - 1) * $listBA->perPage();
+                                $projectCounter = $startProjectCounter ?? 0;
                                 $prevProject = null;
                                 $isSilver = false;
                             @endphp

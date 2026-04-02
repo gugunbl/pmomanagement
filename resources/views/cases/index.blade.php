@@ -18,7 +18,7 @@
             <div class="card-body border-top">
                 <form action="{{ route('cases.index') }}" method="GET" class="mb-4">
                     <div class="row align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <div class="form-group mb-0">
                                 <label for="id_project" class="form-control-label">Filter Berdasarkan Project</label>
                                 <select name="id_project" id="id_project" class="form-control select2">
@@ -29,10 +29,17 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary btn-block mb-0">
-                                <i class="fas fa-filter mr-1"></i> Filter
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label for="search" class="form-control-label">Search Subject / Lokasi</label>
+                                <input type="text" name="search" id="search" class="form-control" placeholder="Cari..." value="{{ request('search') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search mr-1"></i> Cari
                             </button>
+                            <a href="{{ route('cases.index') }}" class="btn btn-secondary">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -59,7 +66,7 @@
                                     $rowClass = $isGray ? 'bg-light text-dark' : '';
                                 @endphp
                                 <tr class="{{ $rowClass }}">
-                                    <td>{{ $key + 1 }}</td>
+                                    <td>{{ ($cases->currentPage() - 1) * $cases->perPage() + $key + 1 }}</td>
                                     <td>{{ optional($row->user)->name ?? '-' }}</td>
                                     <td class="text-nowrap">{{ $row->open_date ? date('d-m-Y H:i', strtotime($row->open_date)) : '-' }}</td>
                                     <td>{{ $row->subject }}</td>
@@ -108,6 +115,9 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <div class="card-footer py-4">
+                    {{ $cases->links() }}
                 </div>
             </div>
         </div>
