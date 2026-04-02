@@ -182,8 +182,7 @@ public function index(Request $request)
 
         if ($activeTab == 'project') {
             $query = Project::with(['mPMMaintenance', 'statusMaintenance'])
-                ->select('m_project.id_project', 'm_project.nama_project', 'm_project.tanggal_akhir_maintenance', 'm_project.pm_maintenance', 'm_project.status_maintenance', 'm_project.customer')
-                ->whereHas('perangkats');
+                ->select('m_project.id_project', 'm_project.nama_project', 'm_project.tanggal_akhir_maintenance', 'm_project.pm_maintenance', 'm_project.status_maintenance', 'm_project.customer');
 
             if ($search) {
                 $query->where('m_project.nama_project', 'like', "%{$search}%");

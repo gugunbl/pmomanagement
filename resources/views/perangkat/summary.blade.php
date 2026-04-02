@@ -110,13 +110,13 @@
                                         <td>{{ ($summaryperangkats->currentPage() - 1) * $summaryperangkats->perPage() + $key + 1 }}</td>
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
-                                                <a href="{{ route('perangkat.index', ['id_project' => $project->id_project]) }}" class="font-weight-bold {{ $project->status_maintenance != '1' ? 'text-white' : 'text-primary' }}">
-                                                    {{$project->nama_project }}
+                                                <a href="{{ route('perangkat.index', ['id_project' => $project->id_project]) }}" class="font-weight-bold {{ $project->status_maintenance != '1' ? 'text-white' : 'text-primary' }}" title="{{ $project->nama_project }}" data-toggle="tooltip">
+                                                    {{ \Illuminate\Support\Str::limit($project->nama_project, 60) }}
                                                 </a>
                                             </div>
                                         </th>
                                         <td>
-                                            {{$project->tanggal_akhir_maintenance}}
+                                            {{ $project->tanggal_akhir_maintenance ? strtoupper(\Carbon\Carbon::parse($project->tanggal_akhir_maintenance)->format('d-M-Y')) : '-' }}
                                         </td>
                                         <td>
                                             {{$project->mPMMaintenance->nama_pm ?? '-'}}
