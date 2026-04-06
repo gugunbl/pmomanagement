@@ -120,7 +120,7 @@
                                         <th style="min-width: 120px;">Koordinat</th>
                                         <th style="min-width: 120px;">Lantai/Rak</th>
                                         <th style="min-width: 140px;">Status Server</th>
-                                        <th style="min-width: 140px;">License</th>
+                                        <th style="min-width: 140px;" id="license_header">License</th>
                                         <th style="min-width: 150px;">Warranty Start</th>
                                         <th style="min-width: 150px;">Warranty End</th>
                                         <th style="min-width: 150px;">Tanggal Online</th>
@@ -176,6 +176,27 @@ $(document).ready(function () {
         allowClear: true,
         placeholder: function () { return $(this).data('placeholder'); }
     });
+
+    // Handle Jenis Perangkat Change for Virtualisasi -> Cores
+    function updateLicenseLabel() {
+        var selectedText = $('#jenis option:selected').text();
+        var isVirtual = selectedText.toLowerCase().includes('virtualisasi');
+        
+        if (isVirtual) {
+            $('#license_header').text('Jumlah Cores');
+            $('input[name="type_lisensi"]').attr('placeholder', 'Jml Cores...');
+        } else {
+            $('#license_header').text('License');
+            $('input[name="type_lisensi"]').attr('placeholder', '');
+        }
+    }
+
+    $('#jenis').on('change', function() {
+        updateLicenseLabel();
+    });
+
+    // Initial check
+    updateLicenseLabel();
 
     $('#id_lokasi_select').on('change', function() {
         var selected = $(this).find('option:selected');

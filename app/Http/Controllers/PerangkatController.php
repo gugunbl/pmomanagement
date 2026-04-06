@@ -38,7 +38,7 @@ class PerangkatController extends Controller
 
 public function index(Request $request)
 {
-    $query = Perangkat::with(['project', 'lokasi']);
+    $query = Perangkat::with(['project', 'lokasi', 'jenisPerangkat']);
 
     // search text
     if ($request->filled('search')) {

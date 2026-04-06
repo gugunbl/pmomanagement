@@ -72,7 +72,13 @@
                                 <h4>{{ $perangkatss->lantai }}</h4>
                             </div>
                             <div class="col-lg-4">
-                                <p class="mb-1 text-sm text-muted">Type Lisensi</p>
+                                <p class="mb-1 text-sm text-muted">
+                                    @if(isset($perangkatss->jenisPerangkat) && strpos(strtolower($perangkatss->jenisPerangkat->jns_perangkat), 'virtualisasi') !== false)
+                                        Jumlah Cores
+                                    @else
+                                        Type Lisensi
+                                    @endif
+                                </p>
                                 <h4>{{ $perangkatss->type_lisensi }}</h4>
                             </div>
                         </div>

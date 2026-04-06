@@ -143,7 +143,7 @@
                                         <th style="min-width: 120px;">Koordinat</th>
                                         <th style="min-width: 120px;">Lantai/Rak</th>
                                         <th style="min-width: 140px;">Status Server</th>
-                                        <th style="min-width: 140px;">License</th>
+                                        <th style="min-width: 140px;" id="license_header">License</th>
                                         <th style="min-width: 150px;">Warranty Start</th>
                                         <th style="min-width: 150px;">Warranty End</th>
                                         <th style="min-width: 150px;">Tanggal Online</th>
@@ -259,6 +259,27 @@ $(document).ready(function () {
         }
     });
 
+    // Handle Jenis Perangkat Change for Virtualisasi -> Cores
+    function updateLicenseLabel() {
+        var selectedText = $('#jenis option:selected').text();
+        var isVirtual = selectedText.toLowerCase().includes('virtualisasi');
+        
+        if (isVirtual) {
+            $('#license_header').text('Jumlah Cores');
+            $('input[name*="[type_lisensi]"]').attr('placeholder', 'Jml Cores...');
+        } else {
+            $('#license_header').text('License');
+            $('input[name*="[type_lisensi]"]').attr('placeholder', '');
+        }
+    }
+
+    $('#jenis').on('change', function() {
+        updateLicenseLabel();
+    });
+
+    // Initial check
+    updateLicenseLabel();
+
     // Handle Quantity -> Unit Grid
     $('#qty_input').on('change input', function() {
         var qty = $(this).val();
@@ -267,6 +288,7 @@ $(document).ready(function () {
 
         if (qty > currentCount) {
             for (var i = currentCount; i < qty; i++) {
+                var placeholder = $('#jenis option:selected').text().toLowerCase().includes('virtualisasi') ? 'Jml Cores...' : '';
                 var html = `
                     <tr class="unit-row">
                         <td><input type="text" name="units[${i}][sn]" class="form-control form-control-sm" required placeholder="SN..."></td>
@@ -278,7 +300,7 @@ $(document).ready(function () {
                                 <option value="Used Device">Used Device</option>
                             </select>
                         </td>
-                        <td><input type="text" name="units[${i}][type_lisensi]" class="form-control form-control-sm"></td>
+                        <td><input type="text" name="units[${i}][type_lisensi]" class="form-control form-control-sm" placeholder="${placeholder}"></td>
                         <td><input type="date" name="units[${i}][start_warranty]" class="form-control form-control-sm row-date-start"></td>
                         <td><input type="date" name="units[${i}][end_warranty]" class="form-control form-control-sm row-date-end"></td>
                         <td><input type="date" name="units[${i}][tgl_online]" class="form-control form-control-sm row-date-online"></td>

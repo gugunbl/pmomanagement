@@ -89,6 +89,16 @@
                                         <div class="mx-w-440">
                                             <span class="font-weight-bold">{{ $perangkat->project->nama_project ?? '-' }}</span><br>
                                             <small class="text-muted">{{ $perangkat->merk }} {{ $perangkat->type }}</small>
+                                            @if($perangkat->type_lisensi)
+                                                <br>
+                                                <small class="text-dark font-weight-bold">
+                                                    @if(isset($perangkat->jenisPerangkat) && strpos(strtolower($perangkat->jenisPerangkat->jns_perangkat), 'virtualisasi') !== false)
+                                                        <i class="fas fa-microchip mr-1"></i> {{ $perangkat->type_lisensi }} Cores
+                                                    @else
+                                                        <i class="fas fa-id-card mr-1"></i> {{ $perangkat->type_lisensi }}
+                                                    @endif
+                                                </small>
+                                            @endif
                                         </div>
                                     </th>
 
