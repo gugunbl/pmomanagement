@@ -20,8 +20,21 @@
             @endforeach            </select>
         </div>
 
+        {{-- Filter Customer --}}
+        <div class="form-group mr-3">
+            <label class="mr-2">Customer</label>
+            <select name="customer" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- Semua Customer --</option>
+                @foreach ($listCustomer as $val => $label)
+                    <option value="{{ $val }}" {{ $customer == $val ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         {{-- Filter PM Maintenance --}}
-        <div class="form-group">
+        <div class="form-group mr-3">
             <label class="mr-2">PM Maintenance</label>
             <select name="pm_maintenance" class="form-control form-control-sm" onchange="this.form.submit()">
                 <option value="">-- Semua PM --</option>

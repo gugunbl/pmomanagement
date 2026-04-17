@@ -96,8 +96,6 @@ public function index(Request $request)
             'merk' => 'required|string|max:255',
             'type' => 'nullable|string|max:255',
             'dimensi' => 'nullable|string|max:255',
-            'site' => 'required|string|max:255',
-            'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
             'keterangan' => 'nullable|string',
             'foto_1' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             'foto_2' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
@@ -105,6 +103,9 @@ public function index(Request $request)
             // Grid Details
             'units' => 'required|array',
             'units.*.sn' => 'required|string|max:255|unique:m_perangkat,serialnumber',
+            'units.*.sik' => 'nullable|string|max:255',
+            'units.*.hostname' => 'nullable|string|max:255',
+            'units.*.id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
             'units.*.koordinat' => 'nullable|string|max:255',
             'units.*.lantai' => 'nullable|string|max:255',
             'units.*.status_server' => 'nullable|string|max:255',
@@ -139,8 +140,8 @@ public function index(Request $request)
                     'merk' => $validated['merk'],
                     'type' => $validated['type'],
                     'dimensi' => $validated['dimensi'],
-                    'site' => $validated['site'],
-                    'id_lokasi' => $validated['id_lokasi'],
+                    'site' => \App\Lokasi::where('id_lokasi', $unit['id_lokasi'])->value('nama_lokasi') ?? '-',
+                    'id_lokasi' => $unit['id_lokasi'],
                     'keterangan' => $validated['keterangan'],
                     'foto_1' => $foto1Path,
                     'foto_2' => $foto2Path,
@@ -149,6 +150,8 @@ public function index(Request $request)
                     
                     // Unit Specific Info
                     'serialnumber' => $unit['sn'],
+                    'sik' => $unit['sik'] ?? null,
+                    'hostname' => $unit['hostname'] ?? null,
                     'koordinat' => $unit['koordinat'] ?? null,
                     'lantai' => $unit['lantai'] ?? null,
                     'status_server' => $unit['status_server'] ?? 'New Device',
@@ -281,13 +284,16 @@ public function index(Request $request)
 
                     $rows[] = [
                         'sn' => $sn,
-                        'koordinat' => $row[1] ?? '',
-                        'lantai' => $row[2] ?? '',
-                        'status_server' => $row[3] ?? 'New Device',
-                        'type_lisensi' => $row[4] ?? '',
-                        'start_warranty' => $this->formatDateExcel($row[5]),
-                        'end_warranty' => $this->formatDateExcel($row[6]),
-                        'tgl_online' => $this->formatDateExcel($row[7]),
+                        'sik' => $row[1] ?? '',
+                        'hostname' => $row[2] ?? '',
+                        'id_lokasi' => isset($row[3]) ? \App\Lokasi::where('nama_lokasi', 'like', '%' . trim($row[3]) . '%')->value('id_lokasi') : null,
+                        'koordinat' => $row[4] ?? '',
+                        'lantai' => $row[5] ?? '',
+                        'status_server' => 'New Device', // Defaulted as it's hidden from template
+                        'type_lisensi' => $row[6] ?? '',
+                        'start_warranty' => $this->formatDateExcel($row[7]),
+                        'end_warranty' => $this->formatDateExcel($row[8]),
+                        'tgl_online' => $this->formatDateExcel($row[9]),
                     ];
                 }
             }
@@ -324,10 +330,11 @@ public function index(Request $request)
             'merk' => 'required|string|max:255',
             'type' => 'nullable|string|max:255',
             'dimensi' => 'nullable|string|max:255',
-            'site' => 'required|string|max:255',
-            'id_lokasi' => 'nullable|exists:m_lokasi,id_lokasi',
+            'id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
             'keterangan' => 'nullable|string',
             'serialnumber' => 'required|string|max:255|unique:m_perangkat,serialnumber,' . $perangkat . ',id_perangkat',
+            'sik' => 'nullable|string|max:255',
+            'hostname' => 'nullable|string|max:255',
             'koordinat' => 'nullable|string|max:255',
             'lantai' => 'nullable|string|max:255',
             'status_server' => 'nullable|string|max:255',
@@ -339,6 +346,8 @@ public function index(Request $request)
             'foto_2' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             'foto_3' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ]);
+
+        $validated['site'] = \App\Lokasi::where('id_lokasi', $validated['id_lokasi'])->value('nama_lokasi') ?? '-';
 
         if ($request->hasFile('foto_1')) {
             $validated['foto_1'] = $request->file('foto_1')->store('uploads/perangkat', 'public');

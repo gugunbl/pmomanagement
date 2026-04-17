@@ -56,6 +56,7 @@
                             </div>
                         </div>
 
+<!--
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -69,6 +70,8 @@
                                     {{ Form::hidden('site', null, ['id' => 'site_hidden']) }}
                                 </div>
                             </div>
+-->
+                            <div class="col-md-12">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="form-control-label">Foto Perangkat (Max 3)</label>
@@ -91,6 +94,7 @@
                             </div>
                         </div>
 
+<!--
                         <div class="row" id="row_alamat" style="display:none;">
                             <div class="col-md-12">
                                 <div class="form-group">
@@ -99,6 +103,7 @@
                                 </div>
                             </div>
                         </div>
+-->
 
                         <div class="row">
                             <div class="col-md-12">
@@ -140,9 +145,12 @@
                                 <thead class="thead-light">
                                     <tr>
                                         <th style="min-width: 180px;">Serial Number</th>
+                                        <th style="min-width: 150px;">SIK</th>
+                                        <th style="min-width: 150px;">Hostname</th>
+                                        <th style="min-width: 200px;">Site / Alamat Lokasi</th>
                                         <th style="min-width: 120px;">Koordinat</th>
                                         <th style="min-width: 120px;">Lantai/Rak</th>
-                                        <th style="min-width: 140px;">Status Server</th>
+                                        <th style="min-width: 140px;" class="d-none">Status Server</th>
                                         <th style="min-width: 140px;" id="license_header">License</th>
                                         <th style="min-width: 150px;">Warranty Start</th>
                                         <th style="min-width: 150px;">Warranty End</th>
@@ -153,11 +161,21 @@
                                     <!-- Row 1 (Default) -->
                                     <tr class="unit-row">
                                         <td><input type="text" name="units[0][sn]" class="form-control form-control-sm" required placeholder="SN..."></td>
+                                        <td><input type="text" name="units[0][sik]" class="form-control form-control-sm" placeholder="SIK..."></td>
+                                        <td><input type="text" name="units[0][hostname]" class="form-control form-control-sm" placeholder="Hostname..."></td>
+                                        <td>
+                                            <select name="units[0][id_lokasi]" class="form-control form-control-sm select2" data-placeholder="Select Site...">
+                                                <option value=""></option>
+                                                @foreach($lokasis as $lok)
+                                                    <option value="{{ $lok->id_lokasi }}">{{ $lok->nama_lokasi }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
                                         <td><input type="text" name="units[0][koordinat]" class="form-control form-control-sm" placeholder="RCK-..."></td>
                                         <td><input type="text" name="units[0][lantai]" class="form-control form-control-sm"></td>
-                                        <td>
+                                        <td class="d-none">
                                             <select name="units[0][status_server]" class="form-control form-control-sm">
-                                                <option value="New Device">New Device</option>
+                                                <option value="New Device" selected>New Device</option>
                                                 <option value="Used Device">Used Device</option>
                                             </select>
                                         </td>
@@ -292,11 +310,21 @@ $(document).ready(function () {
                 var html = `
                     <tr class="unit-row">
                         <td><input type="text" name="units[${i}][sn]" class="form-control form-control-sm" required placeholder="SN..."></td>
+                        <td><input type="text" name="units[${i}][sik]" class="form-control form-control-sm" placeholder="SIK..."></td>
+                        <td><input type="text" name="units[${i}][hostname]" class="form-control form-control-sm" placeholder="Hostname..."></td>
+                        <td>
+                            <select name="units[${i}][id_lokasi]" class="form-control form-control-sm select2-dynamic" data-placeholder="Select Site...">
+                                <option value=""></option>
+                                @foreach($lokasis as $lok)
+                                    <option value="{{ $lok->id_lokasi }}">{{ $lok->nama_lokasi }}</option>
+                                @endforeach
+                            </select>
+                        </td>
                         <td><input type="text" name="units[${i}][koordinat]" class="form-control form-control-sm" placeholder="RCK-..."></td>
                         <td><input type="text" name="units[${i}][lantai]" class="form-control form-control-sm"></td>
-                        <td>
+                        <td class="d-none">
                             <select name="units[${i}][status_server]" class="form-control form-control-sm">
-                                <option value="New Device">New Device</option>
+                                <option value="New Device" selected>New Device</option>
                                 <option value="Used Device">Used Device</option>
                             </select>
                         </td>
@@ -311,6 +339,16 @@ $(document).ready(function () {
         } else if (qty < currentCount) {
             $('.unit-row').slice(qty).remove();
         }
+        
+        // Initialize select2 for new rows
+        $('.select2-dynamic').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            allowClear: true,
+            placeholder: function () {
+                return $(this).data('placeholder');
+            }
+        });
         
         // Trigger date sync if enabled
         syncDates();
@@ -393,8 +431,11 @@ $(document).ready(function () {
                     
                     data.forEach(function(row, index) {
                         $(`input[name="units[${index}][sn]"]`).val(row.sn);
+                        $(`input[name="units[${index}][sik]"]`).val(row.sik);
+                        $(`input[name="units[${index}][hostname]"]`).val(row.hostname);
                         $(`input[name="units[${index}][koordinat]"]`).val(row.koordinat);
                         $(`input[name="units[${index}][lantai]"]`).val(row.lantai);
+                        $(`select[name="units[${index}][id_lokasi]"]`).val(row.id_lokasi).trigger('change');
                         $(`select[name="units[${index}][status_server]"]`).val(row.status_server);
                         $(`input[name="units[${index}][type_lisensi]"]`).val(row.type_lisensi);
                         $(`input[name="units[${index}][start_warranty]"]`).val(row.start_warranty);

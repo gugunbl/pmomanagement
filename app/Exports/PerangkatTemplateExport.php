@@ -14,9 +14,11 @@ class PerangkatTemplateExport implements FromArray, WithHeadings, WithTitle
         return [
             [
                 '[SAMPLE - AKAN DI-SKIP] SN12345678',
+                'SIK-999',
+                'SRV-HOST-01',
+                'GTI - Ragunan',
                 'RCK-01-A',
                 '4',
-                'New Device',
                 'Enterprise',
                 '2024-01-01',
                 '2027-01-01',
@@ -29,9 +31,11 @@ class PerangkatTemplateExport implements FromArray, WithHeadings, WithTitle
     {
         return [
             'Serial Number',
+            'SIK',
+            'Hostname',
+            'Site / Lokasi (Nama Lokasi)',
             'Koordinat',
             'Lantai/Rak',
-            'Status Server (New Device / Used Device)',
             'License',
             'Warranty Start (YYYY-MM-DD)',
             'Warranty End (YYYY-MM-DD)',

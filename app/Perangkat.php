@@ -17,6 +17,8 @@ class Perangkat extends Model
         'merk',
         'type',
         'serialnumber',
+        'sik',
+        'hostname',
         'status',
         'site',
         'lantai',

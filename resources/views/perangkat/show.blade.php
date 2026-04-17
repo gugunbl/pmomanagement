@@ -29,15 +29,25 @@
                             </div>
                         </div>
                         <div class="row mt-3">
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <p class="mb-1 text-sm text-muted">Merk</p>
                                 <h4>{{ $perangkatss->merk }}</h4>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <p class="mb-1 text-sm text-muted">Type</p>
                                 <h4>{{ $perangkatss->type }}</h4>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
+                                <p class="mb-1 text-sm text-muted">SIK</p>
+                                <h4>{{ $perangkatss->sik ?? '-' }}</h4>
+                            </div>
+                            <div class="col-lg-3">
+                                <p class="mb-1 text-sm text-muted">Hostname</p>
+                                <h4 class="text-primary">{{ $perangkatss->hostname ?? '-' }}</h4>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-lg-6">
                                 <p class="mb-1 text-sm text-muted">Serial Number</p>
                                 <h4 class="text-primary font-weight-bold">{{ $perangkatss->serialnumber }}</h4>
                             </div>

@@ -50,7 +50,6 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
             'Alamat',
             'Koordinat',
             'Lantai',
-            'Status Server',
             'Start Warranty',
             'End Warranty',
             'Tanggal Online'
@@ -69,7 +68,6 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
             $perangkat->lokasi->alamat ?? '-',
             $perangkat->koordinat,
             $perangkat->lantai,
-            $perangkat->status_server,
             $perangkat->start_warranty,
             $perangkat->end_warranty,
             $perangkat->tgl_online,

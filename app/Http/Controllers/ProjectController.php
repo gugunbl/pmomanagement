@@ -157,6 +157,8 @@ public function maintenance(Request $request)
 {
     $tahun = $request->tahun;
     $pm_maintenance = $request->pm_maintenance;
+    $customer = $request->customer;
+
     $projects = DB::table('m_project as p')
         ->leftJoin('project_top_maintenance as ptm', 'ptm.project_id', '=', 'p.id_project')
         ->leftJoin('m_project_manager as pm', 'pm.id_pm', '=', 'p.pm_maintenance')
@@ -167,6 +169,7 @@ public function maintenance(Request $request)
     'p.tanggal_mulai_maintenance',
     'p.tanggal_akhir_maintenance',
     'p.status_maintenance',
+    'p.customer',
     'pm.nama_pm as pm_maintenance_nama',
     DB::raw('COUNT(ptm.id) as total_ba'),
     DB::raw("COUNT(CASE WHEN ptm.status = 'paid' THEN 1 END) as total_paid")
@@ -184,6 +187,11 @@ public function maintenance(Request $request)
             $query->where('p.pm_maintenance', $pm_maintenance);
         })
 
+        // filter Customer
+        ->when($customer, function ($query) use ($customer) {
+            $query->where('p.customer', $customer);
+        })
+
         ->groupBy(
             'p.id_project',
             'p.nomor_spk',
@@ -191,6 +199,7 @@ public function maintenance(Request $request)
             'p.tanggal_mulai_maintenance',
             'p.tanggal_akhir_maintenance',
             'p.status_maintenance',
+            'p.customer',
             'pm.nama_pm'
         )
         ->orderBy('p.status_maintenance', 'asc')
@@ -204,6 +213,12 @@ public function maintenance(Request $request)
     ->orderBy('nama_pm')
     ->get();
 
+    // dropdown customer
+    $listCustomer = DB::table('m_customer')
+        ->where('status', 1)
+        ->orderBy('name')
+        ->pluck('name', 'name');
+
     // dropdown tahun
 $listTahun = DB::table('m_project')
     ->whereNotNull('tanggal_akhir_maintenance')
@@ -211,7 +226,7 @@ $listTahun = DB::table('m_project')
     ->orderBy('tahun', 'desc')
     ->pluck('tahun');
 
-    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance'));
+    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance', 'listCustomer', 'customer'));
 }
 
 
