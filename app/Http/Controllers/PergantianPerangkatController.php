@@ -8,6 +8,7 @@ use App\Perangkat;
 use App\Project;
 use App\PergantianPerangkat;
 use App\StockPerangkat;
+use App\MCase;
 use Auth;
 use Barryvdh\DomPDF\Facade\PDF;
 
@@ -66,7 +67,7 @@ public function pdf($id)
 }
 
 
-    public function create($id_perangkat)
+    public function create(Request $request, $id_perangkat)
     {
         $perangkat = Perangkat::findOrFail($id_perangkat);
 
@@ -74,7 +75,12 @@ public function pdf($id)
             ->where('id_project', $perangkat->id_project)
             ->get();
 
-        return view('pergantian.create', compact('perangkat', 'stockPerangkat'));
+        $case = null;
+        if ($request->id_case) {
+            $case = MCase::find($request->id_case);
+        }
+
+        return view('pergantian.create', compact('perangkat', 'stockPerangkat', 'case'));
     }
 
 public function store(Request $request)
@@ -92,13 +98,13 @@ public function store(Request $request)
             }
         ],
 
-        'user_pelapor_id' => 'required',
-        'user_pelapor_nama' => 'required',
-        'user_pelapor_jabatan' => 'required',
+        'user_pelapor_id' => 'nullable',
+        'user_pelapor_nama' => 'nullable',
+        'user_pelapor_jabatan' => 'nullable',
 
-        'user_approval_id' => 'required',
-        'user_approval_nama' => 'required',
-        'user_approval_jabatan' => 'required',
+        'user_approval_id' => 'nullable',
+        'user_approval_nama' => 'nullable',
+        'user_approval_jabatan' => 'nullable',
 
         'tanggal_pergantian' => 'required|date',
     ]);

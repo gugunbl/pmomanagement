@@ -10,7 +10,14 @@
                             <h3 class="mb-0">Detail Perangkat: {{ $perangkatss->serialnumber }}</h3>
                         </div>
                         <div class="col text-right">
-                            <a href="{{ route('perangkat.edit', $perangkatss->id_perangkat) }}" class="btn btn-sm btn-warning">Edit Perangkat</a>
+                            @can('edit-perangkat')
+                                <a href="{{ route('perangkat.edit', $perangkatss->id_perangkat) }}" class="btn btn-sm btn-warning">Edit Perangkat</a>
+                            @endcan
+                            @can('delete-perangkat')
+                                {!! Form::open(['route' => ['perangkat.destroy', $perangkatss->id_perangkat], 'method' => 'delete', 'style' => 'display:inline']) !!}
+                                    <button type="submit" class="btn btn-sm btn-danger delete">Delete Perangkat</button>
+                                {!! Form::close() !!}
+                            @endcan
                             <a href="{{ route('perangkat.index') }}" class="btn btn-sm btn-neutral">Kembali ke List</a>
                         </div>
                     </div>
@@ -156,3 +163,38 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/jquery-confirm.min.js') }}"></script>
+    <script>
+        jQuery(document).ready(function(){
+            $('.delete').on('click', function(e){
+                e.preventDefault();
+                let that = jQuery(this);
+                jQuery.confirm({
+                    icon: 'fas fa-exclamation-triangle',
+                    closeIcon: true,
+                    title: 'Konfirmasi Hapus',
+                    content: 'Apakah Anda yakin ingin menghapus perangkat ini? Data yang sudah dihapus tidak dapat dikembalikan.',
+                    type: 'red',
+                    typeAnimated: true,
+                    buttons: {
+                        confirm: {
+                            text: 'Ya, Hapus',
+                            btnClass: 'btn-red',
+                            action: function () {
+                                that.parent('form').submit();
+                            }
+                        },
+                        cancel: {
+                            text: 'Batal',
+                            action: function () {
+                                // Close dialog
+                            }
+                        }
+                    }
+                });
+            })
+        })
+    </script>
+@endpush

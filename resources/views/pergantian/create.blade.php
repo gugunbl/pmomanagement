@@ -10,6 +10,52 @@
 
         <input type="hidden" name="id_perangkat_lama" value="{{ $perangkat->id_perangkat }}">
 
+        @if($case)
+        <div class="card bg-light shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h6 class="heading-small text-muted mb-4"><i class="fas fa-ticket-alt mr-2"></i> Informasi Ticket Internal (Read Only)</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-2">
+                            <label class="form-control-label small text-uppercase">No. Ticket</label>
+                            <p class="form-control-static font-weight-bold">#{{ $case->id_case }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-2">
+                            <label class="form-control-label small text-uppercase">Tgl Open Case</label>
+                            <p class="form-control-static">{{ date('d M Y H:i', strtotime($case->open_date)) }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-2">
+                            <label class="form-control-label small text-uppercase">Severity</label>
+                            <p class="form-control-static">
+                                @if($case->severity == 'Minor') <span class="badge badge-success">Minor</span>
+                                @elseif($case->severity == 'Major') <span class="badge badge-warning">Major</span>
+                                @elseif($case->severity == 'Critical') <span class="badge badge-danger">Critical</span>
+                                @else <span class="badge badge-info">{{ $case->severity }}</span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group mb-2">
+                            <label class="form-control-label small text-uppercase">Subject Case</label>
+                            <p class="form-control-static">{{ $case->subject }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-2">
+                            <label class="form-control-label small text-uppercase">No. Ticket Prinsipal</label>
+                            <p class="form-control-static">{{ $case->principal_ticket_no ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="form-group">
             <label>Perangkat Lama</label>
             <input type="text" class="form-control" 
@@ -60,19 +106,19 @@
 <div class="form-group">
     <label>NIK / ID Karyawan Pelapor</label>
     <input type="text" name="user_pelapor_id" class="form-control"
-           placeholder="Masukkan NIK / ID Karyawan" required>
+           placeholder="Masukkan NIK / ID Karyawan"> (Opsional)
 </div>
 
 <div class="form-group">
     <label>Nama Pelapor</label>
     <input type="text" name="user_pelapor_nama" class="form-control"
-           placeholder="Nama Lengkap" required>
+           placeholder="Nama Lengkap"> (Opsional)
 </div>
 
 <div class="form-group">
     <label>Jabatan Pelapor</label>
     <input type="text" name="user_pelapor_jabatan" class="form-control"
-           placeholder="Jabatan" required>
+           placeholder="Jabatan"> (Opsional)
 </div>
 
 <hr>

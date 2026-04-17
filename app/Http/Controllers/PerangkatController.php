@@ -13,10 +13,20 @@ use App\Exports\PerangkatExport;
 use App\Imports\PerangkatImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 
 class PerangkatController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view-perangkat');
+        $this->middleware('permission:create-perangkat', ['only' => ['create', 'store']]);
+        $this->middleware('permission:edit-perangkat', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:delete-perangkat', ['only' => ['destroy']]);
+        $this->middleware('permission:view-summary-perangkat', ['only' => ['summary']]);
+    }
+
     public function show($perangkat)
     {
         $title = "Informasi Detail Perangkat";
@@ -38,7 +48,18 @@ class PerangkatController extends Controller
 
 public function index(Request $request)
 {
+    $user = Auth::user();
+    $userProjects = $user->projects->pluck('id_project')->toArray();
+
     $query = Perangkat::with(['project', 'lokasi', 'jenisPerangkat']);
+
+    // Base project access filter
+    if (count($userProjects) > 0) {
+        $query->whereIn('id_project', $userProjects);
+        $projectes = Project::whereIn('id_project', $userProjects)->pluck('nama_project', 'id_project');
+    } else {
+        $projectes = Project::pluck('nama_project', 'id_project');
+    }
 
     // search text
     if ($request->filled('search')) {
@@ -49,14 +70,12 @@ public function index(Request $request)
         });
     }
 
-    // filter project
+    // filter project from request
     if ($request->filled('id_project')) {
         $query->where('id_project', $request->id_project);
     }
 
     $perangkats = $query->paginate(15)->withQueryString();
-
-    $projectes = Project::pluck('nama_project', 'id_project');
 
     return view('perangkat.index', compact('perangkats', 'projectes'));
 }
@@ -363,6 +382,27 @@ public function index(Request $request)
 
         flash('Perangkat updated successfully!')->success();
         return redirect()->route('perangkat.show', $perangkat);
+    }
+
+    public function destroy($perangkat)
+    {
+        $perangkatModel = Perangkat::where('id_perangkat', $perangkat)->firstOrFail();
+
+        // Delete associated photos from storage
+        if ($perangkatModel->foto_1) {
+            Storage::disk('public')->delete($perangkatModel->foto_1);
+        }
+        if ($perangkatModel->foto_2) {
+            Storage::disk('public')->delete($perangkatModel->foto_2);
+        }
+        if ($perangkatModel->foto_3) {
+            Storage::disk('public')->delete($perangkatModel->foto_3);
+        }
+
+        $perangkatModel->delete();
+
+        flash('Perangkat has been deleted successfully!')->success();
+        return redirect()->route('perangkat.index');
     }
 
     private function formatDateExcel($value)

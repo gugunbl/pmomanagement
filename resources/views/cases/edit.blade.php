@@ -10,6 +10,9 @@
                         <h3 class="mb-0">{{ $title }}</h3>
                     </div>
                     <div class="col text-right">
+                        <button type="button" class="btn btn-sm btn-info" id="btnReplaceDevice">
+                            <i class="fas fa-exchange-alt mr-1"></i> Lakukan Pergantian Perangkat
+                        </button>
                         <a href="{{ route('cases.index') }}" class="btn btn-sm btn-secondary">Kembali</a>
                     </div>
                 </div>
@@ -142,11 +145,82 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Pilih Perangkat untuk Pergantian -->
+<div class="modal fade" id="modalReplaceDevice" tabindex="-1" role="dialog" aria-labelledby="modalReplaceDeviceLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header shadow-sm">
+                <h5 class="modal-title" id="modalReplaceDeviceLabel"><i class="fas fa-list mr-2"></i> Pilih Perangkat yang Akan Diganti</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-items-center table-flush table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Jenis - Merk - Type</th>
+                                <th>Serial Number</th>
+                                <th>Lokasi</th>
+                                <th class="text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($affectedPerangkats as $p)
+                            <tr>
+                                <td>
+                                    <span class="font-weight-bold text-dark">
+                                        {{ optional($p->jenisPerangkat)->jns_perangkat ?? '-' }}
+                                    </span><br>
+                                    <small class="text-muted">{{ $p->merk }} {{ $p->type }}</small>
+                                </td>
+                                <td><code>{{ $p->serialnumber }}</code></td>
+                                <td>
+                                    <small class="d-block font-weight-bold">{{ $p->site }}</small>
+                                    <small class="text-muted">{{ optional($p->lokasi)->nama_lokasi ?? '-' }}</small>
+                                </td>
+                                <td class="text-right">
+                                    <a href="{{ route('pergantian.create', $p->id_perangkat) }}?id_case={{ $case->id_case }}" class="btn btn-sm btn-primary shadow-sm hover-lift">
+                                        Pilih & Ganti <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
 $(document).ready(function() {
+    $('#btnReplaceDevice').on('click', function() {
+        let count = {{ count($affectedPerangkats) }};
+        
+        if (count === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perangkat Tidak Ditemukan',
+                text: 'Tidak ada perangkat terdaftar yang ditemukan untuk case ini (SN: {{ $case->affected_sn ?? "-" }}).',
+                confirmButtonColor: '#5e72e4',
+            });
+        } else if (count === 1) {
+            let url = "{{ route('pergantian.create', ($affectedPerangkats[0]->id_perangkat ?? 0)) }}?id_case={{ $case->id_case }}";
+            window.location.href = url;
+        } else {
+            $('#modalReplaceDevice').modal('show');
+        }
+    });
+
     $('.select2').select2({
         theme: 'bootstrap4',
         width: '100%',

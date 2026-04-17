@@ -26,12 +26,14 @@
             <div class="collapse navbar-collapse" id="sidenav-collapse-main">
                 <!-- Nav items -->
                 <ul class="navbar-nav">
+                    @can('menu-dashboard')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('home*')) ? 'active' : '' }}" href="{{route('home')}}">
                             <i class="ni ni-shop text-primary"></i>
                             <span class="nav-link-text">Dashboard</span>
                         </a>
                     </li>
+                    @endcan
                     @can('update-settings')
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('settings*')) ? 'active' : '' }}" href="{{route('settings.index')}}">
@@ -89,21 +91,25 @@
                         </li>
                     @endcanany
 
+                    @can('menu-manage-customer')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('customer*')) ? 'active' : '' }}" href="{{route('customer.index')}}">
                             <i class="fas text-primary fa-users"></i>
                             <span class="nav-link-text">Manage Customer</span>
                         </a>
                     </li>
+                    @endcan
 
+                    @can('menu-manage-sales')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('sales*')) ? 'active' : '' }}" href="{{route('sales.index')}}">
                             <i class="fas text-primary fa-user-tag"></i>
                             <span class="nav-link-text">Manage Sales</span>
                         </a>
                     </li>
+                    @endcan
 <!-- Manage Data Perangkat -->
-                    @canany(['view-perangkat', 'summary-perangkat','view-warehouse','perangkat-warehouse'])
+                    @canany(['view-perangkat', 'view-summary-perangkat','view-warehouse','perangkat-warehouse'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('perangkat*')) ? 'active' : '' }}" href="#navbar-perangkat"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-perangkat">
                                 <i class="fas text-primary fa-list-alt"></i>

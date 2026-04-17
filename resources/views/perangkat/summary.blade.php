@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @push('pg_btn')
-@can('summary-perangkat')
+@can('view-perangkat')
     <a href="{{ route('perangkat.index') }}" class="btn btn-sm btn-neutral">All Perangakt</a>
 @endcan
 @endpush

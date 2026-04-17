@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\MCase;
 use App\Project;
+use App\Perangkat;
 use Illuminate\Support\Facades\Auth;
 
 class CaseController extends Controller
@@ -129,7 +130,16 @@ class CaseController extends Controller
     {
         $case = MCase::with(['project', 'user'])->findOrFail($case);
         $title = 'Detail Case';
-        return view('cases.show', compact('title', 'case'));
+
+        // Fetch affected devices based on SN
+        $affectedPerangkats = [];
+        if ($case->affected_sn) {
+            // Split by common delimiters (comma, semicolon, space, newline)
+            $sns = preg_split('/[,\s;]+/', $case->affected_sn, -1, PREG_SPLIT_NO_EMPTY);
+            $affectedPerangkats = Perangkat::whereIn('serialnumber', $sns)->get();
+        }
+
+        return view('cases.show', compact('title', 'case', 'affectedPerangkats'));
     }
 
     public function edit($case)
@@ -147,7 +157,14 @@ class CaseController extends Controller
 
         $lokasis = \App\Lokasi::all();
 
-        return view('cases.edit', compact('title', 'case', 'projects', 'lokasis'));
+        // Fetch affected devices based on current SN for the replacement button
+        $affectedPerangkats = [];
+        if ($case->affected_sn) {
+            $sns = preg_split('/[,\s;]+/', $case->affected_sn, -1, PREG_SPLIT_NO_EMPTY);
+            $affectedPerangkats = Perangkat::whereIn('serialnumber', $sns)->get();
+        }
+
+        return view('cases.edit', compact('title', 'case', 'projects', 'lokasis', 'affectedPerangkats'));
     }
 
     public function update(Request $request, $case)
