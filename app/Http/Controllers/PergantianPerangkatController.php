@@ -69,9 +69,10 @@ public function pdf($id)
 
     public function create(Request $request, $id_perangkat)
     {
-        $perangkat = Perangkat::findOrFail($id_perangkat);
+        $perangkat = Perangkat::with('jenisPerangkat')->findOrFail($id_perangkat);
 
-        $stockPerangkat = Perangkat::where('status', 3) // stock/golden unit
+        $stockPerangkat = Perangkat::with('jenisPerangkat')
+            ->where('status', 3) // stock/golden unit
             ->where('id_project', $perangkat->id_project)
             ->get();
 

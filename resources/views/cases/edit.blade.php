@@ -18,9 +18,9 @@
                 </div>
             </div>
             <div class="card-body">
-                {!! Form::model($case, ['route' => ['cases.update', $case->id_case], 'method' => 'PUT']) !!}
+                {!! Form::model($case, ['route' => ['cases.update', $case->id_case], 'method' => 'PUT', 'id' => 'formCase']) !!}
                 
-                <h6 class="heading-small text-muted mb-4">Informasi User & Project</h6>
+                <h6 class="heading-small text-muted mb-4">INFORMASI USER & PROJECT</h6>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
@@ -47,7 +47,7 @@
                 </div>
 
                 <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Detail Case</h6>
+                <h6 class="heading-small text-muted mb-4">DETAIL CASE</h6>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
@@ -55,49 +55,6 @@
                             {{ Form::text('subject', null, ['class' => 'form-control', 'placeholder' => 'Subject case...', 'required']) }}
                         </div>
                     </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="custom-control custom-checkbox mb-3">
-                            <input type="checkbox" class="custom-control-input" id="manual_location_check" {{ !$case->affected_sn ? 'checked' : '' }}>
-                            <label class="custom-control-label font-weight-bold" for="manual_location_check">Input Lokasi Manual (Gunakan jika data perangkat tidak ditemukan di sistem)</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" id="dropdown_selection_row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-control-label">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
-                            {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn, $case->affected_sn ? '' : 'disabled']) }}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-control-label">Pilih Site / Lokasi Terdaftar</label>
-                            <select id="location_dropdown" class="form-control select2" {{ $case->affected_sn ? '' : 'disabled' }}>
-                                <option value="">Pilih Lokasi...</option>
-                                @foreach($lokasis as $lok)
-                                    <option value="{{ $lok->nama_lokasi }}" {{ ($case->location == $lok->nama_lokasi) ? 'selected' : '' }}>
-                                        {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" id="manual_location_row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Ketik Lokasi Perangkat (Manual)</label>
-                            {{ Form::text('location', null, ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20', !$case->affected_sn ? 'required' : 'disabled']) }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="form-control-label">Detail Case</label>
@@ -106,7 +63,79 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="selection-container mt-4">
+                    @php
+                        $isPerangkat = !empty($case->affected_sn);
+                        $isLokasi = !$isPerangkat && !empty($case->location) && $lokasis->contains('nama_lokasi', $case->location);
+                        $isManual = !$isPerangkat && !$isLokasi;
+                    @endphp
+
+                    <!-- Option 1: Perangkat -->
+                    <div class="row align-items-center mb-3 selection-row" data-type="perangkat">
+                        <div class="col-md-5">
+                            <div class="custom-control custom-radio custom-control-alternative">
+                                <input name="selection_type" class="custom-control-input" id="radioPerangkat" type="radio" value="perangkat" {{ $isPerangkat ? 'checked' : '' }}>
+                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioPerangkat">
+                                    <span class="square-indicator"></span>
+                                    Pilih Perangkat terdampak dari list
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group mb-0">
+                                <label class="text-xs text-muted mb-1 d-block">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
+                                {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn, $isPerangkat ? '' : 'disabled']) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option 2: Lokasi List -->
+                    <div class="row align-items-center mb-3 selection-row" data-type="lokasi">
+                        <div class="col-md-5">
+                            <div class="custom-control custom-radio custom-control-alternative">
+                                <input name="selection_type" class="custom-control-input" id="radioLokasi" type="radio" value="lokasi" {{ $isLokasi ? 'checked' : '' }}>
+                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioLokasi">
+                                    <span class="square-indicator"></span>
+                                    Pilih Lokasi Terdampak dari list
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group mb-0">
+                                <label class="text-xs text-muted mb-1 d-block">Pilih Site / Lokasi Terdaftar</label>
+                                <select id="location_dropdown" class="form-control select2" {{ $isLokasi ? '' : 'disabled' }}>
+                                    <option value="">Pilih Lokasi...</option>
+                                    @foreach($lokasis as $lok)
+                                        <option value="{{ $lok->nama_lokasi }}" {{ ($case->location == $lok->nama_lokasi) ? 'selected' : '' }}>
+                                            {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option 3: Manual -->
+                    <div class="row align-items-center mb-3 selection-row" data-type="manual">
+                        <div class="col-md-5">
+                            <div class="custom-control custom-radio custom-control-alternative">
+                                <input name="selection_type" class="custom-control-input" id="radioManual" type="radio" value="manual" {{ $isManual ? 'checked' : '' }}>
+                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioManual">
+                                    <span class="square-indicator"></span>
+                                    Input Lokasi Manual (Gunakan jika data perangkat tidak ditemukan di sistem)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group mb-0">
+                                <label class="text-xs text-muted mb-1 d-block">Ketik Lokasi Perangkat (Manual)</label>
+                                {{ Form::text('location_manual_input', $isManual ? $case->location : '', ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20', $isManual ? '' : 'disabled']) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Severity</label>
@@ -136,11 +165,15 @@
                     </div>
                 </div>
 
-                <div class="text-right">
-                    <button type="submit" class="btn btn-warning px-5">Update Case</button>
+                <div class="row align-items-center mt-3">
+                    <div class="col-6 text-right offset-6 d-flex justify-content-end">
+                         <a href="{{ route('cases.index') }}" class="btn btn-secondary px-5 mr-3" style="background-color: #0b5e79; color: white; border: none;">Kembali</a>
+                        <button type="submit" class="btn btn-warning px-5">Update Case</button>
+                    </div>
                 </div>
 
                 {!! Form::close() !!}
+
             </div>
         </div>
     </div>
@@ -199,6 +232,85 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* === SELECT2 ARGON THEME FIX === */
+.select2-container--bootstrap4 .select2-selection {
+    min-height: 44px;
+    border: 1px solid #cad1d7;
+    border-radius: .375rem;
+    padding: .375rem .75rem;
+    background-color: #fff;
+}
+
+.select2-container--bootstrap4 .select2-selection--single {
+    display: flex;
+    align-items: center;
+}
+
+.select2-container--bootstrap4 .select2-selection__rendered {
+    padding-left: 0;
+    line-height: normal;
+    color: #8898aa;
+}
+
+.select2-container--bootstrap4 .select2-selection__arrow {
+    height: 100%;
+    top: 0;
+    right: 8px;
+}
+
+.select2-container--bootstrap4.select2-container--focus .select2-selection,
+.select2-container--bootstrap4.select2-container--open .select2-selection {
+    border-color: #5e72e4;
+    box-shadow: 0 0 0 0.2rem rgba(94,114,228,.25);
+}
+
+.select2-search--dropdown .select2-search__field {
+    height: 40px;
+    padding: .375rem .75rem;
+    border-radius: .375rem;
+}
+
+/* === Custom Selection Indicators === */
+.square-indicator {
+    width: 25px;
+    height: 25px;
+    background-color: #0b4ab1;
+    border-radius: 6px;
+    display: inline-block;
+    margin-right: 15px;
+    vertical-align: middle;
+    transition: all 0.2s;
+    opacity: 0.3; /* Default dimmed */
+}
+
+.custom-control-input:checked ~ .custom-control-label .square-indicator {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(11, 74, 177, 0.5);
+}
+
+.selection-row {
+    transition: background 0.3s;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.selection-row:hover {
+    background-color: #f8f9fe;
+}
+
+.custom-control-label {
+    padding-top: 2px;
+    cursor: pointer;
+}
+
+.custom-control-label::before, .custom-control-label::after {
+    display: none !important; /* Hide default radio circles */
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -283,45 +395,68 @@ $(document).ready(function() {
         }
     }
 
-    $('#status_select').on('change', function() {
-        toggleClosedDate();
-    });
+    $('#status_select').on('change', toggleClosedDate);
+    toggleClosedDate();
 
-    // Manual Location toggle logic
-    function updateLocationInputState(isInitial = false) {
-        let isManual = $('#manual_location_check').is(':checked');
-        if (isManual) {
-            // Disable dropdowns
-            $('#sn_select').prop('disabled', true).trigger('change');
-            if(!isInitial) $('#sn_select').val(null).trigger('change');
-            
-            $('#location_dropdown').prop('disabled', true).trigger('change').prop('required', false);
-            if(!isInitial) $('#location_dropdown').val(null).trigger('change');
-            $('#location_dropdown').attr('name', '');
-            
-            // Enable manual text
-            $('#location_manual').prop('disabled', false).prop('required', true).attr('name', 'location');
-            $('#manual_location_row').show();
-            $('#dropdown_selection_row').css('opacity', '0.5');
-        } else {
-            // Enable dropdowns
-            $('#sn_select').prop('disabled', false);
-            $('#location_dropdown').prop('disabled', false).prop('required', true).attr('name', 'location');
+    // === Selection Logic for Affected Items ===
+    function handleSelectionChange() {
+        let type = $('input[name="selection_type"]:checked').val();
+        
+        // Disable all first
+        $('#sn_select').prop('disabled', true).trigger('change').attr('name', '');
+        $('#location_dropdown').prop('disabled', true).trigger('change').attr('name', '');
+        $('#location_manual').prop('disabled', true).attr('name', '');
 
-            // Disable & hide manual text
-            $('#location_manual').prop('disabled', true).prop('required', false).attr('name', '');
-            if(!isInitial) $('#location_manual').val('');
-            $('#manual_location_row').hide();
-            $('#dropdown_selection_row').css('opacity', '1');
+        if (type === 'perangkat') {
+            $('#sn_select').prop('disabled', false).attr('name', 'affected_sn');
+        } else if (type === 'lokasi') {
+            $('#location_dropdown').prop('disabled', false).attr('name', 'location');
+        } else if (type === 'manual') {
+            $('#location_manual').prop('disabled', false).attr('name', 'location');
         }
     }
 
-    $('#manual_location_check').on('change', function() {
-        updateLocationInputState();
+    $('input[name="selection_type"]').on('change', handleSelectionChange);
+
+    // Specific Error logic as requested by user
+    $('.selection-row').on('click', function(e) {
+        let type = $(this).data('type');
+        let currentActive = $('input[name="selection_type"]:checked').val();
+        
+        if (type !== currentActive) {
+            if ($(e.target).closest('.form-group').length > 0) {
+                 Swal.fire({
+                    icon: 'warning',
+                    title: 'Akses Dibatasi',
+                    text: 'Silahkan tentukan mau pilih dari list atau input manual dengan mengklik opsi di sebelah kiri.',
+                    confirmButtonColor: '#0b4ab1'
+                });
+                return false;
+            }
+            $(this).find('input[name="selection_type"]').prop('checked', true).trigger('change');
+        }
     });
 
-    // Initial state check
-    updateLocationInputState(true);
+    // Form Validation before submit
+    $('#formCase').on('submit', function() {
+        let type = $('input[name="selection_type"]:checked').val();
+        if (type === 'perangkat' && !$('#sn_select').val()) {
+            Swal.fire('Peringatan', 'Silahkan pilih perangkat dari list!', 'warning');
+            return false;
+        }
+        if (type === 'lokasi' && !$('#location_dropdown').val()) {
+            Swal.fire('Peringatan', 'Silahkan pilih lokasi dari list!', 'warning');
+            return false;
+        }
+        if (type === 'manual' && !$('#location_manual').val()) {
+            Swal.fire('Peringatan', 'Silahkan isi lokasi manual!', 'warning');
+            return false;
+        }
+        return true;
+    });
+
+    // Initial trigger
+    handleSelectionChange();
 });
 </script>
 @endpush

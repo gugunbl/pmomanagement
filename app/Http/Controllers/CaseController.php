@@ -120,7 +120,7 @@ class CaseController extends Controller
             $merk = $device->merk ?? '-';
             $sn = $device->serialnumber;
             $lantai = $device->lantai ?? '-';
-            $sns[$sn] = "{$jenis} - {$merk} - {$sn} ({$lantai})";
+            $sns[$sn] = "{$jenis} - {$merk} - {$sn} - {$lantai}";
         }
             
         return response()->json($sns);

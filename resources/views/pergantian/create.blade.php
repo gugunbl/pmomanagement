@@ -59,7 +59,7 @@
         <div class="form-group">
             <label>Perangkat Lama</label>
             <input type="text" class="form-control" 
-                   value="{{ $perangkat->merk }} - {{ $perangkat->type }} ({{ $perangkat->serialnumber }})"
+                   value="{{ optional($perangkat->jenisPerangkat)->jns_perangkat ?? '-' }} - {{ $perangkat->merk }} - {{ $perangkat->serialnumber }} - {{ $perangkat->lantai ?? '-' }}"
                    readonly>
         </div>
 
@@ -78,7 +78,7 @@
                 <option value="">-- Pilih Perangkat Stock --</option>
                 @foreach($stockPerangkat as $stock)
                     <option value="{{ $stock->id_perangkat }}">
-                        {{ $stock->merk }} - {{ $stock->type }} ({{ $stock->serialnumber }})
+                        {{ optional($stock->jenisPerangkat)->jns_perangkat ?? '-' }} - {{ $stock->merk }} - {{ $stock->serialnumber }} - {{ $stock->lantai ?? '-' }}
                     </option>
                 @endforeach
             </select>
