@@ -18,9 +18,9 @@
             <div class="card-body border-top">
                 <form action="{{ route('cases.index') }}" method="GET" class="mb-4">
                     <div class="row align-items-end">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group mb-0">
-                                <label for="id_project" class="form-control-label">Filter Berdasarkan Project</label>
+                                <label for="id_project" class="form-control-label">Filter Project</label>
                                 <select name="id_project" id="id_project" class="form-control select2">
                                     <option value="">-- Semua Project --</option>
                                     @foreach($projects as $id => $nama)
@@ -29,17 +29,27 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="form-group mb-0">
+                                <label for="type" class="form-control-label">Filter Type</label>
+                                <select name="type" id="type" class="form-control">
+                                    <option value="">-- Semua Type --</option>
+                                    <option value="Problem/Incident" {{ request('type') == 'Problem/Incident' ? 'selected' : '' }}>Problem/Incident</option>
+                                    <option value="Request/Kegiatan" {{ request('type') == 'Request/Kegiatan' ? 'selected' : '' }}>Request/Kegiatan</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="form-group mb-0">
                                 <label for="search" class="form-control-label">Search Subject / Lokasi</label>
                                 <input type="text" name="search" id="search" class="form-control" placeholder="Cari..." value="{{ request('search') }}">
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-search mr-1"></i> Cari
                             </button>
-                            <a href="{{ route('cases.index') }}" class="btn btn-secondary">Reset</a>
+                            <a href="{{ route('cases.index') }}" class="btn btn-secondary text-dark">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -49,6 +59,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th>No</th>
+                                <th>Type</th>
                                 <th>User Input</th>
                                 <th>Tgl Open Case</th>
                                 <th>Subject Case</th>
@@ -67,6 +78,15 @@
                                 @endphp
                                 <tr class="{{ $rowClass }}">
                                     <td>{{ ($cases->currentPage() - 1) * $cases->perPage() + $key + 1 }}</td>
+                                    <td>
+                                        @if($row->type == 'Problem/Incident')
+                                            <span class="badge badge-warning">Problem</span>
+                                        @elseif($row->type == 'Request/Kegiatan')
+                                            <span class="badge badge-info">Request</span>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ optional($row->user)->name ?? '-' }}</td>
                                     <td class="text-nowrap">{{ $row->open_date ? date('d-m-Y H:i', strtotime($row->open_date)) : '-' }}</td>
                                     <td>{{ $row->subject }}</td>
@@ -110,7 +130,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center">Tidak ada data case.</td>
+                                    <td colspan="10" class="text-center">Tidak ada data case.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -12,6 +12,7 @@ class MCase extends Model
     protected $fillable = [
         'id_project',
         'user_id',
+        'type',
         'open_date',
         'closed_date',
         'subject',
@@ -22,6 +23,8 @@ class MCase extends Model
         'principal_ticket_no',
         'resolution_detail',
         'status',
+        'evidence_photo',
+        'rca_file',
     ];
 
     public function project()

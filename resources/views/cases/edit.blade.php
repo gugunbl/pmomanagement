@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="card-body">
-                {!! Form::model($case, ['route' => ['cases.update', $case->id_case], 'method' => 'PUT', 'id' => 'formCase']) !!}
+                {!! Form::model($case, ['route' => ['cases.update', $case->id_case], 'method' => 'PUT', 'id' => 'formCase', 'files' => true]) !!}
                 
                 <h6 class="heading-small text-muted mb-4">INFORMASI USER & PROJECT</h6>
                 <div class="row">
@@ -48,6 +48,15 @@
 
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">DETAIL CASE</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Type</label>
+                            {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
@@ -165,7 +174,47 @@
                     </div>
                 </div>
 
-                <div class="row align-items-center mt-3">
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">DOKUMENTASI & EVIDENCE</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">Foto Evidence (PNG, JPG, JPEG)</label>
+                            @if($case->evidence_photo)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . $case->evidence_photo) }}" class="img-thumbnail" style="height: 100px;">
+                                    <small class="d-block text-info">Foto saat ini</small>
+                                </div>
+                            @endif
+                            <div class="custom-file">
+                                <input type="file" name="evidence_photo" class="custom-file-input" id="evidence_photo" accept="image/*">
+                                <label class="custom-file-label" for="evidence_photo">Ganti Foto...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 5 MB. Kosongkan jika tidak ingin merubah.</small>
+                            @error('evidence_photo') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">File RCA / Document (PDF)</label>
+                            @if($case->rca_file)
+                                <div class="mb-2">
+                                    <a href="{{ asset('storage/' . $case->rca_file) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-file-pdf mr-1"></i> Lihat PDF Saat Ini
+                                    </a>
+                                </div>
+                            @endif
+                            <div class="custom-file">
+                                <input type="file" name="rca_file" class="custom-file-input" id="rca_file" accept=".pdf">
+                                <label class="custom-file-label" for="rca_file">Ganti File PDF...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 10 MB. Kosongkan jika tidak ingin merubah.</small>
+                            @error('rca_file') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row align-items-center mt-4">
                     <div class="col-6 text-right offset-6 d-flex justify-content-end">
                          <a href="{{ route('cases.index') }}" class="btn btn-secondary px-5 mr-3" style="background-color: #0b5e79; color: white; border: none;">Kembali</a>
                         <button type="submit" class="btn btn-warning px-5">Update Case</button>

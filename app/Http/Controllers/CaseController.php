@@ -8,6 +8,7 @@ use App\MCase;
 use App\Project;
 use App\Perangkat;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CaseController extends Controller
 {
@@ -37,6 +38,11 @@ class CaseController extends Controller
         // Project filter from request
         if ($request->filled('id_project')) {
             $query->where('id_project', $request->id_project);
+        }
+
+        // Type filter from request
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
         // Search by subject or location
@@ -86,6 +92,7 @@ class CaseController extends Controller
     {
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
+            'type' => 'required|in:Problem/Incident,Request/Kegiatan',
             'open_date' => 'required|date',
             'closed_date' => 'nullable|date',
             'subject' => 'required|string|max:255',
@@ -96,9 +103,23 @@ class CaseController extends Controller
             'principal_ticket_no' => 'nullable|string|max:255',
             'resolution_detail' => 'nullable|string',
             'status' => 'required|in:Open,In Progress,Closed',
+            'evidence_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'rca_file' => 'nullable|mimes:pdf|max:10240',
         ]);
 
         $validated['user_id'] = Auth::id();
+
+        // Handle Photo Upload
+        if ($request->hasFile('evidence_photo')) {
+            $path = $request->file('evidence_photo')->store('cases/photos', 'public');
+            $validated['evidence_photo'] = $path;
+        }
+
+        // Handle RCA File Upload
+        if ($request->hasFile('rca_file')) {
+            $path = $request->file('rca_file')->store('cases/files', 'public');
+            $validated['rca_file'] = $path;
+        }
 
         MCase::create($validated);
 
@@ -173,6 +194,7 @@ class CaseController extends Controller
 
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
+            'type' => 'required|in:Problem/Incident,Request/Kegiatan',
             'open_date' => 'required|date',
             'closed_date' => 'nullable|date',
             'subject' => 'required|string|max:255',
@@ -183,7 +205,29 @@ class CaseController extends Controller
             'principal_ticket_no' => 'nullable|string|max:255',
             'resolution_detail' => 'nullable|string',
             'status' => 'required|in:Open,In Progress,Closed',
+            'evidence_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'rca_file' => 'nullable|mimes:pdf|max:10240',
         ]);
+
+        // Handle Photo Upload
+        if ($request->hasFile('evidence_photo')) {
+            // Delete old file if exists
+            if ($caseModel->evidence_photo) {
+                Storage::disk('public')->delete($caseModel->evidence_photo);
+            }
+            $path = $request->file('evidence_photo')->store('cases/photos', 'public');
+            $validated['evidence_photo'] = $path;
+        }
+
+        // Handle RCA File Upload
+        if ($request->hasFile('rca_file')) {
+            // Delete old file if exists
+            if ($caseModel->rca_file) {
+                Storage::disk('public')->delete($caseModel->rca_file);
+            }
+            $path = $request->file('rca_file')->store('cases/files', 'public');
+            $validated['rca_file'] = $path;
+        }
 
         $caseModel->update($validated);
 

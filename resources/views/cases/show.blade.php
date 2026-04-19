@@ -50,7 +50,21 @@
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">Detail Case</h6>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Type</label>
+                            <p class="form-control-static">
+                                @if($case->type == 'Problem/Incident')
+                                    <span class="badge badge-warning">Problem/Incident</span>
+                                @elseif($case->type == 'Request/Kegiatan')
+                                    <span class="badge badge-info">Request/Kegiatan</span>
+                                @else
+                                    <span class="badge badge-secondary">-</span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
                         <div class="form-group">
                             <label class="form-control-label">Subject Case</label>
                             <p class="form-control-static">{{ $case->subject }}</p>
@@ -136,6 +150,57 @@
                             <div class="p-3 bg-secondary rounded">
                                 {!! nl2br(e($case->resolution_detail ?? '-')) !!}
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">Dokumentasi & Evidence</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">Foto Evidence</label>
+                            @if($case->evidence_photo)
+                                <div class="mt-2 text-center p-3 bg-secondary rounded">
+                                    <a href="{{ asset('storage/' . $case->evidence_photo) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $case->evidence_photo) }}" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                                    </a>
+                                    <small class="d-block mt-2 text-muted">Klik foto untuk memperbesar</small>
+                                </div>
+                            @else
+                                <p class="form-control-static text-muted"><em>Tidak ada foto evidence.</em></p>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">File RCA / Document</label>
+                            @if($case->rca_file)
+                                <div class="mt-2">
+                                    <div class="card card-stats mb-4 mb-xl-0 border shadow-sm">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="col ml--2">
+                                                    <h5 class="card-title text-uppercase text-muted mb-0">RCA Document</h5>
+                                                    <span class="h4 font-weight-bold mb-0">Attachment PDF</span>
+                                                </div>
+                                            </div>
+                                            <p class="mt-3 mb-0 text-muted text-sm">
+                                                <a href="{{ asset('storage/' . $case->rca_file) }}" target="_blank" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-download mr-1"></i> Download / Lihat File
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="form-control-static text-muted"><em>Tidak ada file RCA.</em></p>
+                            @endif
                         </div>
                     </div>
                 </div>

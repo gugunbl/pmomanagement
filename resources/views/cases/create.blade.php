@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="card-body">
-                {!! Form::open(['route' => 'cases.store', 'method' => 'POST', 'id' => 'formCase']) !!}
+                {!! Form::open(['route' => 'cases.store', 'method' => 'POST', 'id' => 'formCase', 'files' => true]) !!}
                 
                 <h6 class="heading-small text-muted mb-4">INFORMASI USER & PROJECT</h6>
                 <div class="row">
@@ -25,18 +25,21 @@
                             @else
                                 {{ Form::select('id_project', ['' => 'Pilih Project...'] + $projects->toArray(), null, ['class' => 'form-control select2', 'id' => 'project_select']) }}
                             @endif
+                            @error('id_project') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Open Case</label>
                             <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i') }}">
+                            @error('open_date') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Closed Case</label>
                             <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="2000-01-01T00:00" disabled>
+                            @error('closed_date') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
@@ -44,16 +47,28 @@
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">DETAIL CASE</h6>
                 <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Type</label>
+                            {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
+                            @error('type') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="form-control-label">Subject Case</label>
                             {{ Form::text('subject', null, ['class' => 'form-control', 'placeholder' => 'Subject case...', 'required']) }}
+                            @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="form-control-label">Detail Case</label>
                             {{ Form::textarea('detail', null, ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Jelaskan detail case...', 'required']) }}
+                            @error('detail') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
@@ -74,6 +89,7 @@
                             <div class="form-group mb-0">
                                 <label class="text-xs text-muted mb-1 d-block">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
                                 {{ Form::select('affected_sn', ['' => 'Pilih Perangkat...'], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'disabled']) }}
+                                @error('affected_sn') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
                     </div>
@@ -119,6 +135,7 @@
                             <div class="form-group mb-0">
                                 <label class="text-xs text-muted mb-1 d-block">Ketik Lokasi Perangkat (Manual)</label>
                                 {{ Form::text('location', null, ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20']) }}
+                                @error('location') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
                     </div>
@@ -129,18 +146,21 @@
                         <div class="form-group">
                             <label class="form-control-label">Severity</label>
                             {{ Form::select('severity', ['Minor' => 'Minor', 'Major' => 'Major', 'Critical' => 'Critical'], 'Minor', ['class' => 'form-control']) }}
+                            @error('severity') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Status</label>
                             {{ Form::select('status', ['Open' => 'Open', 'In Progress' => 'In Progress', 'Closed' => 'Closed'], 'Open', ['class' => 'form-control', 'id' => 'status_select']) }}
+                            @error('status') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">No. Tiket Prinsipal (Opsional)</label>
                             {{ Form::text('principal_ticket_no', null, ['class' => 'form-control', 'placeholder' => 'Tiket prinsipal...']) }}
+                            @error('principal_ticket_no') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
@@ -150,11 +170,39 @@
                         <div class="form-group">
                             <label class="form-control-label">Detail Penyelesaian (Jika sudah Closed)</label>
                             {{ Form::textarea('resolution_detail', null, ['class' => 'form-control', 'rows' => 3, 'placeholder' => 'Jelaskan langkah penyelesaian...']) }}
+                            @error('resolution_detail') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
 
-                <div class="row align-items-center mt-3">
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">DOKUMENTASI & EVIDENCE</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">Foto Evidence (PNG, JPG, JPEG)</label>
+                            <div class="custom-file">
+                                <input type="file" name="evidence_photo" class="custom-file-input" id="evidence_photo" accept="image/*">
+                                <label class="custom-file-label" for="evidence_photo">Pilih Foto...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 5 MB</small>
+                            @error('evidence_photo') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">File RCA / Document (PDF)</label>
+                            <div class="custom-file">
+                                <input type="file" name="rca_file" class="custom-file-input" id="rca_file" accept=".pdf">
+                                <label class="custom-file-label" for="rca_file">Pilih File PDF...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 10 MB</small>
+                            @error('rca_file') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row align-items-center mt-4">
                     <div class="col-6 text-right offset-6 d-flex justify-content-end">
                         <a href="{{ route('cases.index') }}" class="btn btn-secondary px-5 mr-3" style="background-color: #0b5e79; color: white; border: none;">Batal</a>
                         <button type="submit" class="btn btn-primary px-5" style="background-color: #0b4ab1;">Simpan Case</button>
