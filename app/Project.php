@@ -35,6 +35,7 @@ class Project extends Model
         'top_impl_total',
         'top_maintenance_total',
         'project_report_total',
+        'tipe_maintenance',
     ];
     
     /**
@@ -48,6 +49,11 @@ class Project extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'project_user', 'id_project', 'user_id');
+    }
+
+    public function teamSupports()
+    {
+        return $this->belongsToMany(TeamSupport::class, 'project_team_support', 'project_id', 'team_support_id');
     }
 
 // App/Project.php

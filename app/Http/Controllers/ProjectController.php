@@ -13,6 +13,7 @@ use App\ProjectReport;
 use App\Mprojectmanager;
 use App\MCustomer;
 use App\MSales;
+use App\TeamSupport;
 use App\Http\Requests\CategoryRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -214,7 +215,7 @@ public function maintenance(Request $request)
     ->get();
 
     // dropdown customer
-    $listCustomer = DB::table('m_customer')
+    $listCustomer = DB::table('m_customers')
         ->where('status', 1)
         ->orderBy('name')
         ->pluck('name', 'name');
@@ -255,6 +256,9 @@ public function store(Request $request)
         'tanggal_akhir_implementasi' => 'nullable|date_format:Y-m-d',
         'tanggal_mulai_maintenance'  => 'nullable|date_format:Y-m-d',
         'tanggal_akhir_maintenance'  => 'nullable|date_format:Y-m-d',
+        'tipe_maintenance'           => 'nullable|string|in:Manage Service,PM-CM',
+        'team_support'               => 'nullable|array',
+        'team_support.*'             => 'exists:m_team_supports,id',
 
         // TOP IMPLEMENTASI (MASTER)
         'top_impl_total' => 'nullable|integer|min:1|max:20',
@@ -273,7 +277,14 @@ public function store(Request $request)
         // default jika kosong
         $validated['top_impl_total'] = $validated['top_impl_total'] ?? 0;
 
+        // Remove team_support from validated before creating project (it's a pivot)
+        $teamSupportIds = $validated['team_support'] ?? [];
+        unset($validated['team_support']);
+
         $project = Project::create($validated);
+
+        // Sync team supports pivot
+        $project->teamSupports()->sync($teamSupportIds);
 
         // ================= SIMPAN TOP IMPLEMENTASI =================
         if ($project->top_impl_total > 0) {
@@ -386,7 +397,8 @@ public function edit(Project $project)
     $project->load([
         'topImplementasi',
         'topMaintenance',
-        'reports'
+        'reports',
+        'teamSupports'
     ]);
     $clients = MCustomer::where('status', 1)->pluck('name', 'name');
     $saless = MSales::where('status', 1)->pluck('name', 'name');
@@ -395,6 +407,8 @@ public function edit(Project $project)
     $statusim   = Status::where('is_type', 1)->pluck('nama_status', 'id_status');
     $statusma = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
     $mprojectmanager = Mprojectmanager::pluck('nama_pm', 'id_pm');
+    $teamSupports = TeamSupport::where('status', 1)->pluck('name', 'id');
+    $selectedTeamSupports = $project->teamSupports->pluck('id')->toArray();
 
     return view('project.edit', compact(
         'project',
@@ -404,7 +418,9 @@ public function edit(Project $project)
         'statusma',
         'clients',
         'saless',
-        'mprojectmanager'
+        'mprojectmanager',
+        'teamSupports',
+        'selectedTeamSupports'
     ));
 }
 
@@ -412,11 +428,14 @@ public function edit(Project $project)
 public function update(Request $request, Project $project)
 {
     $request->validate([
-        'pm_implementasi' => 'required|exists:m_project_manager,id_pm',
-        'pm_maintenance' => 'required|exists:m_project_manager,id_pm',
-        'nama_project' => 'required|string|max:255',
-        'nomor_spk' => 'required|string|max:255',
-        'tanggal_spk' => 'required|date_format:Y-m-d',
+        'pm_implementasi'  => 'required|exists:m_project_manager,id_pm',
+        'pm_maintenance'   => 'required|exists:m_project_manager,id_pm',
+        'nama_project'     => 'required|string|max:255',
+        'nomor_spk'        => 'required|string|max:255',
+        'tanggal_spk'      => 'required|date_format:Y-m-d',
+        'tipe_maintenance' => 'nullable|string|in:Manage Service,PM-CM',
+        'team_support'     => 'nullable|array',
+        'team_support.*'   => 'exists:m_team_supports,id',
     ]);
 
     DB::transaction(function () use ($request, $project) {
@@ -441,7 +460,11 @@ public function update(Request $request, Project $project)
             'tanggal_akhir_implementasi'    => $request->tanggal_akhir_implementasi,
             'tanggal_mulai_maintenance'     => $request->tanggal_mulai_maintenance,
             'tanggal_akhir_maintenance'     => $request->tanggal_akhir_maintenance,
+            'tipe_maintenance'              => $request->tipe_maintenance,
         ]);
+
+        // Sync team supports (many-to-many)
+        $project->teamSupports()->sync($request->team_support ?? []);
 
         /* ===============================
          * 2️⃣ UPDATE TOP IMPLEMENTASI
@@ -557,7 +580,7 @@ public function update(Request $request, Project $project)
     public function show(Project $project)
     {
         $title = "Informasi Detail Project";
-        $project->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance']);
+        $project->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance','teamSupports']);
         return view('project.show', compact('title', 'project'));
     }
 
@@ -601,8 +624,10 @@ public function update(Request $request, Project $project)
         $statusim = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
         $statusma = \App\Status::where('is_type',1)->pluck('nama_status','id_status');
         $mprojectmanager = \App\Mprojectmanager::pluck('nama_pm','id_pm');
+        $teamSupports = TeamSupport::where('status', 1)->pluck('name', 'id');
+        $selectedTeamSupports = [];
         
-        return view('project.create', compact('project','categories','statusim','statusma','title','mprojectmanager','clients','saless'));
+        return view('project.create', compact('project','categories','statusim','statusma','title','mprojectmanager','clients','saless', 'teamSupports', 'selectedTeamSupports'));
        
     }
 

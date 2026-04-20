@@ -154,6 +154,27 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card mb-5">
+                <div class="card-header bg-transparent"><h4 class="mb-0">WhatsApp Sharing Settings</h4></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{Form::label('wa_interference_template', 'Interference Ratio Narrative Template', ['class' => 'form-control-label'])}}
+                                {{ Form::textarea('wa_interference_template', setting('wa_interference_template', "Selamat Siang,\n\nBerikut Report Adjust Channel Interference - Pukul [WAKTU]. Detail interference Ratio yang cukup tinggi sebagai berikut :\n\n• [AP_NAME] : [UTIL_BEFORE]% / Channel [CHANNEL_BEFORE]\n\nSetelah dilakukan penyesuaian, Rate interference nya menjadi berikut :\n\n• [AP_NAME] : [UTIL_AFTER]% / Channel [CHANNEL_AFTER]\n\nBerikut laporan interference Ratio kami sampaikan.\n\nTerimakasih"), ['class'=>"form-control", 'rows' => 12])}}
+                                <small class="text-muted">
+                                    Gunakan tag variabel berikut ini yang akan terganti secara otomatis: 
+                                    <code>[WAKTU]</code>, <code>[AP_NAME]</code>, <code>[CHANNEL_BEFORE]</code>, <code>[CHANNEL_AFTER]</code>, <code>[UTIL_BEFORE]</code>, <code>[UTIL_AFTER]</code>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-4 text-right">
+                            {!! Form::submit('Update Settings', ['class'=> 'btn btn-primary']) !!}
+                        </div>
+                    </div>
+                </div>
+            </div>
             {{Form::close()}}
 
         </div>

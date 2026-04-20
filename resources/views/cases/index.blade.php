@@ -6,10 +6,15 @@
         <div class="card">
             <div class="card-header border-0">
                 <div class="row align-items-center">
-                    <div class="col-8">
+                    <div class="col-md-3">
                         <h3 class="mb-0">{{ $title }}</h3>
                     </div>
-                    <div class="col-4 text-right">
+                    <div class="col-md-7 text-center">
+                        <span style="font-size: 14px;" class="mr-4 text-muted">Jumlah Case Open : <strong class="text-danger" style="font-size: 20px;">{{ $openCasesCount ?? 0 }}</strong></span>
+                        <span style="font-size: 14px;" class="mr-4 text-muted">Jumlah Case Hari ini : <strong class="text-primary" style="font-size: 20px;">{{ $todayCasesCount ?? 0 }}</strong></span>
+                        <span style="font-size: 14px;" class="text-muted">Jumlah Case Kemarin : <strong class="text-warning" style="font-size: 20px;">{{ $yesterdayCasesCount ?? 0 }}</strong></span>
+                    </div>
+                    <div class="col-md-2 text-right">
                         <a href="{{ route('cases.create') }}" class="btn btn-sm btn-primary">Tambah Case</a>
                     </div>
                 </div>

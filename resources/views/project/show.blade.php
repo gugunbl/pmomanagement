@@ -94,6 +94,26 @@
                             <strong>{{ $project->mPMMaintenance->nama_pm }}</strong>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-1">
+                            Tipe Maintenance
+                        </div>
+                        <div class="col-sm-3">
+                            <strong>{{ $project->tipe_maintenance ?? '-' }}</strong>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-1">
+                            Team Support
+                        </div>
+                        <div class="col-sm-9">
+                            @forelse($project->teamSupports as $ts)
+                                <span class="badge badge-pill badge-info mr-1">{{ $ts->name }}</span>
+                            @empty
+                                <strong>-</strong>
+                            @endforelse
+                        </div>
+                    </div>
                     
 
  

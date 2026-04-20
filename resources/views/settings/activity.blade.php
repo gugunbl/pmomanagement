@@ -33,8 +33,7 @@
                                         </td>
 
                                         <td>
-
-                                            {{ $activity->created_at->diffForHumans() }}
+                                            {{ $activity->created_at ? $activity->created_at->diffForHumans() : '-' }}
                                         </td>
 
                                     </tr>

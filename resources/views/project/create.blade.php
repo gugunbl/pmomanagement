@@ -46,3 +46,39 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        function toggleTipeMaintenance() {
+            var statusMa = $('#status_maintenance').val();
+            if (statusMa == '1') {
+                $('#tipe_maintenance').prop('disabled', false);
+                $('.ts-checkbox').prop('disabled', false);
+                $('#btn-select-all-ts, #btn-deselect-all-ts').removeClass('disabled').css('pointer-events', '');
+            } else {
+                $('#tipe_maintenance').prop('disabled', true).val('');
+                $('.ts-checkbox').prop('disabled', true).prop('checked', false);
+                $('#btn-select-all-ts, #btn-deselect-all-ts').addClass('disabled').css('pointer-events', 'none');
+            }
+        }
+
+        $('#status_maintenance').on('change', function() {
+            toggleTipeMaintenance();
+        });
+
+        // Initialize on load
+        toggleTipeMaintenance();
+
+        // Team Support: Select All / Deselect All
+        $('#btn-select-all-ts').on('click', function(e) {
+            e.preventDefault();
+            $('.ts-checkbox').prop('checked', true);
+        });
+        $('#btn-deselect-all-ts').on('click', function(e) {
+            e.preventDefault();
+            $('.ts-checkbox').prop('checked', false);
+        });
+    });
+</script>
+@endpush

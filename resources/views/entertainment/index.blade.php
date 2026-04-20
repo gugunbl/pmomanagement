@@ -52,7 +52,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            {{$category->created_at->diffForHumans()}}
+                                            {{ $category->created_at ? $category->created_at->diffForHumans() : '-' }}
                                         </td>
                                         <td class="text-center">
                                             @can('destroy-category')

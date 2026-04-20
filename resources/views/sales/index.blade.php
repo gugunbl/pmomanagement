@@ -46,7 +46,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            {{$sales->created_at->diffForHumans()}}
+                                            {{ $sales->created_at ? $sales->created_at->diffForHumans() : '-' }}
                                         </td>
                                         <td class="text-center">
                                             {!! Form::open(['route' => ['sales.destroy', $sales->id],'method' => 'delete',  'class'=>'d-inline-block dform']) !!}

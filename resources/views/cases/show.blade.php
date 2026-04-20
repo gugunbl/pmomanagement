@@ -45,6 +45,43 @@
                             <p class="form-control-static">{{ $case->closed_date ? date('d-m-Y H:i', strtotime($case->closed_date)) : '-' }}</p>
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @php
+                                $openDate = \Carbon\Carbon::parse($case->open_date);
+                                if ($case->status == 'Closed' && $case->closed_date) {
+                                    $endDate = \Carbon\Carbon::parse($case->closed_date);
+                                    $durasiLabel = 'Durasi Penyelesaian';
+                                    $badgeClass = 'badge-success';
+                                    $iconClass = 'fas fa-check-circle';
+                                } else {
+                                    $endDate = \Carbon\Carbon::now();
+                                    $durasiLabel = 'Aging';
+                                    $badgeClass = 'badge-warning';
+                                    $iconClass = 'fas fa-clock';
+                                }
+                                $diff = $openDate->diff($endDate);
+                                $parts = [];
+                                if ($diff->d > 0 || $diff->m > 0 || $diff->y > 0) {
+                                    $totalDays = $diff->days;
+                                    $parts[] = $totalDays . ' Day' . ($totalDays > 1 ? 's' : '');
+                                }
+                                if ($diff->h > 0) {
+                                    $parts[] = $diff->h . ' Hour' . ($diff->h > 1 ? 's' : '');
+                                }
+                                if ($diff->i > 0) {
+                                    $parts[] = $diff->i . ' Minute' . ($diff->i > 1 ? 's' : '');
+                                }
+                                $durasiText = count($parts) > 0 ? implode(' ', $parts) : '0 Minutes';
+                            @endphp
+                            <label class="form-control-label">{{ $durasiLabel }}</label>
+                            <p class="form-control-static">
+                                <span class="badge {{ $badgeClass }} px-3 py-2" style="font-size: 0.85rem;">
+                                    <i class="{{ $iconClass }} mr-1"></i> {{ $durasiText }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <hr class="my-4" />

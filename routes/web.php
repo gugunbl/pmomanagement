@@ -75,6 +75,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::resource('category', 'CategoryController')->except('show');
     Route::resource('customer', 'MCustomerController')->except('show');
     Route::resource('sales', 'MSalesController')->except('show');
+    Route::resource('team-support', 'TeamSupportController')->except('show');
     Route::resource('post', 'PostController');
     Route::resource('project', 'ProjectController');
     /*
@@ -112,6 +113,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
 
     Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
     Route::resource('cases', 'CaseController');
+    Route::resource('interference-ratio', 'InterferenceRatioController');
 
     Route::resource('perangkat', 'PerangkatController');
     

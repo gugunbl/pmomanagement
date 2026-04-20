@@ -80,10 +80,63 @@
                     {{ Form::label('status_maintenance', 'Status Maintenance') }}
                     {{ Form::select('status_maintenance', $statusma, null, [
                         'class'=>'form-control',
-                        'placeholder'=>'Pilih Status'
+                        'placeholder'=>'Pilih Status',
+                        'id' => 'status_maintenance'
                     ]) }}
                 </div>
             </div>
+
+            {{-- Tipe Maintenance --}}
+            <div class="col-md-4">
+                <div class="form-group">
+                    {{ Form::label('tipe_maintenance', 'Tipe Maintenance') }}
+                    {{ Form::select('tipe_maintenance', ['Manage Service'=>'Manage Service', 'PM-CM'=>'PM-CM'], null, [
+                        'class'=>'form-control',
+                        'placeholder'=>'Pilih Tipe',
+                        'id' => 'tipe_maintenance',
+                        'disabled' => true
+                    ]) }}
+                </div>
+            </div>
+
+            {{-- Team Support --}}
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="d-flex align-items-center mb-1">
+                        {{ Form::label('team_support[]', 'Team Support', ['class' => 'mb-0 mr-3']) }}
+                        @if(isset($teamSupports) && $teamSupports->count())
+                            <a href="#" id="btn-select-all-ts" class="btn btn-sm btn-outline-primary py-0 px-2 mr-1" style="font-size:0.75rem;">
+                                <i class="fas fa-check-double mr-1"></i>Select All
+                            </a>
+                            <a href="#" id="btn-deselect-all-ts" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:0.75rem;">
+                                <i class="fas fa-times mr-1"></i>Deselect All
+                            </a>
+                        @endif
+                    </div>
+                    <div class="border rounded p-3" style="max-height:160px; overflow-y:auto; background:#f8f9fa;">
+                        @if(isset($teamSupports) && $teamSupports->count())
+                            <div class="row">
+                            @foreach($teamSupports as $id => $name)
+                                <div class="col-md-3 col-sm-4 col-6 mb-1">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input ts-checkbox"
+                                            id="ts_{{ $id }}"
+                                            name="team_support[]"
+                                            value="{{ $id }}"
+                                            @if(isset($selectedTeamSupports) && in_array($id, $selectedTeamSupports)) checked @endif
+                                        >
+                                        <label class="custom-control-label" for="ts_{{ $id }}">{{ $name }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                            </div>
+                        @else
+                            <span class="text-muted small">Belum ada data team support. <a href="{{ route('team-support.index') }}">Tambah disini</a></span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
 
             {{-- Customer --}}
             <div class="col-md-6">

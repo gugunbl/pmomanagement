@@ -27,9 +27,13 @@ class CaseController extends Controller
         $userProjects = $user->projects->pluck('id_project')->toArray();
         $query = MCase::with(['project', 'user', 'perangkat']);
 
+        // Base query for summaries (respects project access and project filter, but not type/search)
+        $summaryQuery = MCase::query();
+
         // Base project access filter
         if (count($userProjects) > 0) {
             $query->whereIn('id_project', $userProjects);
+            $summaryQuery->whereIn('id_project', $userProjects);
             $projects = Project::whereIn('id_project', $userProjects)->pluck('nama_project', 'id_project');
         } else {
             $projects = Project::pluck('nama_project', 'id_project');
@@ -38,7 +42,13 @@ class CaseController extends Controller
         // Project filter from request
         if ($request->filled('id_project')) {
             $query->where('id_project', $request->id_project);
+            $summaryQuery->where('id_project', $request->id_project);
         }
+
+        // Calculate summaries
+        $openCasesCount = (clone $summaryQuery)->whereIn('status', ['Open', 'In Progress'])->count();
+        $todayCasesCount = (clone $summaryQuery)->whereDate('open_date', \Carbon\Carbon::today())->count();
+        $yesterdayCasesCount = (clone $summaryQuery)->whereDate('open_date', \Carbon\Carbon::yesterday())->count();
 
         // Type filter from request
         if ($request->filled('type')) {
@@ -63,7 +73,7 @@ class CaseController extends Controller
 
         $lokasis = \App\Lokasi::pluck('nama_lokasi', 'nama_lokasi'); // Using name as value for the text field in MCase
 
-        return view('cases.index', compact('title', 'cases', 'projects', 'lokasis'));
+        return view('cases.index', compact('title', 'cases', 'projects', 'lokasis', 'openCasesCount', 'todayCasesCount', 'yesterdayCasesCount'));
     }
 
     public function create()
@@ -140,8 +150,9 @@ class CaseController extends Controller
             $jenis = optional($device->jenisPerangkat)->jns_perangkat ?? '-';
             $merk = $device->merk ?? '-';
             $sn = $device->serialnumber;
+            $hostname = $device->hostname ?? '-';
             $lantai = $device->lantai ?? '-';
-            $sns[$sn] = "{$jenis} - {$merk} - {$sn} - {$lantai}";
+            $sns[$sn] = "{$jenis} - {$merk} - {$sn} - {$hostname} - {$lantai}";
         }
             
         return response()->json($sns);
