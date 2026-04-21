@@ -33,7 +33,7 @@ class InterferenceRatioController extends Controller
             $query->where('id_project', $request->id_project);
         }
 
-        $ratios = $query->orderBy('tanggal', 'desc')->paginate(setting('record_per_page', 15))->withQueryString();
+        $ratios = $query->orderBy('tanggal', 'desc')->orderBy('waktu', 'desc')->paginate(setting('record_per_page', 15))->withQueryString();
 
         return view('interference_ratio.index', compact('title', 'ratios'));
     }

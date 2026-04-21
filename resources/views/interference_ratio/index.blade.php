@@ -65,11 +65,34 @@
                                 </td>
                                 @endif
                                 
-                                <td class="text-left align-middle">{{ $row->ap_name }}</td>
+                                <td class="text-left align-middle">
+                                    @php
+                                        $apParts = explode(' - ', $row->ap_name);
+                                        $hostname = count($apParts) >= 4 ? trim($apParts[3]) : $row->ap_name;
+                                        if ((empty($hostname) || $hostname == '-') && count($apParts) >= 5) {
+                                            $hostname = trim($apParts[4]) != '-' ? trim($apParts[4]) : $row->ap_name;
+                                        }
+                                        if (empty($hostname) || $hostname == '-') {
+                                            $hostname = $row->ap_name;
+                                        }
+                                    @endphp
+                                    <span class="font-weight-bold" title="{{ $row->ap_name }}">{{ $hostname }}</span>
+                                    @if($hostname != $row->ap_name)
+                                        <br><small class="text-muted">{{ Str::limit($row->ap_name, 30) }}</small>
+                                    @endif
+                                </td>
                                 <td class="align-middle">{{ $row->channel_before }}</td>
-                                <td class="align-middle">{{ $row->channel_after }}</td>
-                                <td class="align-middle">{{ $row->utilisasi_before }}%</td>
-                                <td class="align-middle">{{ $row->utilisasi_after }}%</td>
+                                <td class="align-middle text-primary font-weight-bold">{{ $row->channel_after }}</td>
+                                <td class="align-middle">
+                                    <span class="badge badge-pill badge-{{ $row->utilisasi_before > 50 ? 'danger' : ($row->utilisasi_before > 30 ? 'warning' : 'success') }}">
+                                        {{ $row->utilisasi_before }}%
+                                    </span>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge badge-pill badge-{{ $row->utilisasi_after > 50 ? 'danger' : ($row->utilisasi_after > 30 ? 'warning' : 'success') }}">
+                                        {{ $row->utilisasi_after }}%
+                                    </span>
+                                </td>
                                 
                                 @if($index == 0)
                                 <td rowspan="{{ $groupSize }}" class="align-middle">

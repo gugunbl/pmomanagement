@@ -38,7 +38,14 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Waktu Monitor</label>
-                            {{ Form::select('waktu', ['' => 'Pilih Waktu...', '07.00 WIB' => '07.00 WIB', '12.00 WIB' => '12.00 WIB', '17.00 WIB' => '17.00 WIB', '22.00 WIB' => '22.00 WIB'], null, ['class' => 'form-control', 'required']) }}
+                            @php
+                                $waktu_list = ['' => 'Pilih Waktu...'];
+                                for ($i = 6; $i <= 23; $i++) {
+                                    $h = str_pad($i, 2, '0', STR_PAD_LEFT) . '.00 WIB';
+                                    $waktu_list[$h] = $h;
+                                }
+                            @endphp
+                            {{ Form::select('waktu', $waktu_list, null, ['class' => 'form-control', 'required']) }}
                             @error('waktu') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>

@@ -50,7 +50,20 @@
                     <div class="col-md-12">
                         <div class="form-group mb-2">
                             <label class="form-control-label text-primary"><i class="fas fa-wifi"></i> AP Name</label>
-                            <p class="form-control-static font-weight-bold ml-4 mb-0">{{ $r->ap_name }}</p>
+                            @php
+                                $apParts = explode(' - ', $r->ap_name);
+                                $hostname = count($apParts) >= 4 ? trim($apParts[3]) : $r->ap_name;
+                                if ((empty($hostname) || $hostname == '-') && count($apParts) >= 5) {
+                                    $hostname = trim($apParts[4]) != '-' ? trim($apParts[4]) : $r->ap_name;
+                                }
+                                if (empty($hostname) || $hostname == '-') {
+                                    $hostname = $r->ap_name;
+                                }
+@endphp
+                            <p class="form-control-static font-weight-bold ml-4 mb-0">{{ $hostname }}</p>
+                            @if($hostname != $r->ap_name)
+                                <small class="text-muted ml-4">{{ $r->ap_name }}</small>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -135,12 +148,27 @@
             </thead>
             <tbody>
                 @foreach($ratios as $r)
+                @php
+                    $apParts = explode(' - ', $r->ap_name);
+                    $h = count($apParts) >= 4 ? trim($apParts[3]) : $r->ap_name;
+                    if ((empty($h) || $h == '-') && count($apParts) >= 5) {
+                        $h = trim($apParts[4]) != '-' ? trim($apParts[4]) : $r->ap_name;
+                    }
+                    if (empty($h) || $h == '-') {
+                        $h = $r->ap_name;
+                    }
+                @endphp
                 <tr>
-                    <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $r->ap_name }}</td>
+                    <td style="border: 1px solid black; padding: 8px; text-align: left;">
+                        <div style="font-weight: bold;">{{ $h }}</div>
+                        @if($h != $r->ap_name)
+                            <div style="font-size: 10px; color: #666;">{{ $r->ap_name }}</div>
+                        @endif
+                    </td>
                     <td style="border: 1px solid black; padding: 8px;">{{ $r->channel_before }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $r->channel_after }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $r->utilisasi_before }}%</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $r->utilisasi_after }}%</td>
+                    <td style="border: 1px solid black; padding: 8px; color: #5e72e4; font-weight: bold;">{{ $r->channel_after }}</td>
+                    <td style="border: 1px solid black; padding: 8px; color: #f5365c;">{{ $r->utilisasi_before }}%</td>
+                    <td style="border: 1px solid black; padding: 8px; color: #2dce89; font-weight: bold;">{{ $r->utilisasi_after }}%</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -164,8 +192,18 @@ $(document).ready(function() {
         var beforeList = "";
         var afterList = "";
         @foreach($ratios as $r)
-        beforeList += "• {{ $r->ap_name }} : {{ $r->utilisasi_before }}% / Channel {{ $r->channel_before }}\n";
-        afterList  += "• {{ $r->ap_name }} : {{ $r->utilisasi_after }}% / Channel {{ $r->channel_after }}\n";
+        @php
+            $apParts = explode(' - ', $r->ap_name);
+            $hostname = count($apParts) >= 4 ? trim($apParts[3]) : $r->ap_name;
+            if ((empty($hostname) || $hostname == '-') && count($apParts) >= 5) {
+                $hostname = trim($apParts[4]) != '-' ? trim($apParts[4]) : $r->ap_name;
+            }
+            if (empty($hostname) || $hostname == '-') {
+                $hostname = $r->ap_name;
+            }
+        @endphp
+        beforeList += "- {{ $hostname }} : {{ $r->utilisasi_before }}% / Channel {{ $r->channel_before }}\n";
+        afterList  += "- {{ $hostname }} : {{ $r->utilisasi_after }}% / Channel {{ $r->channel_after }}\n";
         @endforeach
 
         var template = `{!! addslashes(setting('wa_interference_template', "Selamat Siang,\n\nBerikut Report Adjust Channel Interference - Pukul [WAKTU]. Detail interference Ratio yang cukup tinggi sebagai berikut :\n\n[BEFORE_LIST]\n\nSetelah dilakukan penyesuaian, Rate interference nya menjadi berikut :\n\n[AFTER_LIST]\n\nBerikut laporan interference Ratio kami sampaikan.\n\nTerimakasih")) !!}`;
