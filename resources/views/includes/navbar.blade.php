@@ -174,7 +174,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('view-case')
+                                    @can('menu-interferance-view')
                                     <li class="nav-item">
                                         <a href="{{route('interference-ratio.index')}}" class="nav-link">
                                             <span class="sidenav-mini-icon">I </span>

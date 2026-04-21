@@ -10,7 +10,9 @@
                         <h3 class="mb-0">{{ $title }}</h3>
                     </div>
                     <div class="col-4 text-right">
+                        @can('menu-interferance-create')
                         <a href="{{ route('interference-ratio.create') }}" class="btn btn-sm btn-primary">Tambah Data</a>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -47,7 +49,9 @@
                                 <td>{{ $row->waktu }}</td>
                                 <td>
                                     <a href="{{ route('interference-ratio.show', $row->id) }}" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i> Detail</a>
+                                    @can('menu-interferance-edit')
                                     <a href="{{ route('interference-ratio.edit', $row->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i> Edit</a>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty

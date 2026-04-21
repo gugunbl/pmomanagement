@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class InterferenceRatioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:menu-interferance-view', ['only' => ['index', 'show']]);
+        $this->middleware('permission:menu-interferance-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:menu-interferance-edit', ['only' => ['edit', 'update']]);
+    }
     public function index(Request $request)
     {
         $user = Auth::user();

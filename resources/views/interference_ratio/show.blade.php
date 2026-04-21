@@ -12,7 +12,9 @@
                     <div class="col text-right">
                         <a href="{{ route('interference-ratio.index') }}" class="btn btn-sm btn-secondary">Kembali</a>
                         <button type="button" id="btnShareWa" class="btn btn-sm btn-success"><i class="fab fa-whatsapp"></i> Share ke WA</button>
+                        @can('menu-interferance-edit')
                         <a href="{{ route('interference-ratio.edit', $ratio->id) }}" class="btn btn-sm btn-warning">Edit Data</a>
+                        @endcan
                     </div>
                 </div>
             </div>
