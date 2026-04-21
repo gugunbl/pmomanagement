@@ -22,11 +22,10 @@
                     <thead class="thead-light">
                         <tr>
                             <th rowspan="2" class="align-middle">No</th>
-                            <th rowspan="2" class="align-middle">Tanggal</th>
+                            <th rowspan="2" class="align-middle">Tanggal & Waktu</th>
                             <th rowspan="2" class="align-middle">AP Name</th>
                             <th colspan="2" class="align-middle border-bottom-0">Channel</th>
                             <th colspan="2" class="align-middle border-bottom-0">Utilisasi Interference</th>
-                            <th rowspan="2" class="align-middle">Waktu</th>
                             <th rowspan="2" class="align-middle">Aksi</th>
                         </tr>
                         <tr>
@@ -37,26 +36,54 @@
                         </tr>
                     </thead>
                     <tbody class="list">
-                        @forelse($ratios as $key => $row)
+                        @php
+                            $groupedRatios = [];
+                            foreach($ratios as $row) {
+                                $key = $row->tanggal . '_' . $row->waktu;
+                                if (!isset($groupedRatios[$key])) {
+                                    $groupedRatios[$key] = [];
+                                }
+                                $groupedRatios[$key][] = $row;
+                            }
+                            $pageOffset = ($ratios->currentPage() - 1) * $ratios->perPage();
+                            $groupIndex = 0;
+                        @endphp
+                        
+                        @forelse($groupedRatios as $key => $group)
+                            @php
+                                $groupSize = count($group);
+                                $firstItem = $group[0];
+                                $groupIndex++;
+                            @endphp
+                            @foreach($group as $index => $row)
                             <tr>
-                                <td>{{ ($ratios->currentPage() - 1) * $ratios->perPage() + $key + 1 }}</td>
-                                <td class="text-nowrap">{{ date('d/m/Y', strtotime($row->tanggal)) }}</td>
-                                <td class="text-left">{{ $row->ap_name }}</td>
-                                <td>{{ $row->channel_before }}</td>
-                                <td>{{ $row->channel_after }}</td>
-                                <td>{{ $row->utilisasi_before }}%</td>
-                                <td>{{ $row->utilisasi_after }}%</td>
-                                <td>{{ $row->waktu }}</td>
-                                <td>
-                                    <a href="{{ route('interference-ratio.show', $row->id) }}" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i> Detail</a>
+                                @if($index == 0)
+                                <td rowspan="{{ $groupSize }}" class="align-middle">{{ $pageOffset + $groupIndex }}</td>
+                                <td rowspan="{{ $groupSize }}" class="align-middle text-nowrap">
+                                    {{ date('d/m/Y', strtotime($firstItem->tanggal)) }}<br>
+                                    <small class="font-weight-bold text-muted">{{ $firstItem->waktu }}</small>
+                                </td>
+                                @endif
+                                
+                                <td class="text-left align-middle">{{ $row->ap_name }}</td>
+                                <td class="align-middle">{{ $row->channel_before }}</td>
+                                <td class="align-middle">{{ $row->channel_after }}</td>
+                                <td class="align-middle">{{ $row->utilisasi_before }}%</td>
+                                <td class="align-middle">{{ $row->utilisasi_after }}%</td>
+                                
+                                @if($index == 0)
+                                <td rowspan="{{ $groupSize }}" class="align-middle">
+                                    <a href="{{ route('interference-ratio.show', $firstItem->id) }}" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i> Detail</a>
                                     @can('menu-interferance-edit')
-                                    <a href="{{ route('interference-ratio.edit', $row->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="{{ route('interference-ratio.edit', $firstItem->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i> Edit</a>
                                     @endcan
                                 </td>
+                                @endif
                             </tr>
+                            @endforeach
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center">Tidak ada data.</td>
+                                <td colspan="8" class="text-center">Tidak ada data.</td>
                             </tr>
                         @endforelse
                     </tbody>

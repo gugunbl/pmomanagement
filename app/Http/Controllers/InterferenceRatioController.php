@@ -84,14 +84,26 @@ class InterferenceRatioController extends Controller
     public function show($id)
     {
         $ratio = InterferenceRatio::with(['project', 'user'])->findOrFail($id);
+        
+        $ratios = InterferenceRatio::with(['user'])->where('id_project', $ratio->id_project)
+            ->where('tanggal', $ratio->tanggal)
+            ->where('waktu', $ratio->waktu)
+            ->get();
+
         $title = 'Detail Interference Ratio';
 
-        return view('interference_ratio.show', compact('title', 'ratio'));
+        return view('interference_ratio.show', compact('title', 'ratio', 'ratios'));
     }
 
     public function edit($id)
     {
         $ratio = InterferenceRatio::findOrFail($id);
+        
+        $ratios = InterferenceRatio::where('id_project', $ratio->id_project)
+            ->where('tanggal', $ratio->tanggal)
+            ->where('waktu', $ratio->waktu)
+            ->get();
+
         $title = 'Edit Interference Ratio';
         
         $user = Auth::user();
@@ -103,7 +115,7 @@ class InterferenceRatioController extends Controller
             $projects = Project::pluck('nama_project', 'id_project');
         }
 
-        return view('interference_ratio.edit', compact('title', 'ratio', 'projects'));
+        return view('interference_ratio.edit', compact('title', 'ratio', 'ratios', 'projects'));
     }
 
     public function update(Request $request, $id)
@@ -113,16 +125,31 @@ class InterferenceRatioController extends Controller
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
             'tanggal' => 'required|date',
-            'ap_name' => 'required|string|max:255',
-            'channel_before' => 'required|integer',
-            'channel_after' => 'required|integer',
-            'utilisasi_before' => 'required|integer',
-            'utilisasi_after' => 'required|integer',
             'waktu' => 'required|string',
             'keterangan' => 'nullable|string',
+            'ap_data' => 'required|array',
+            'ap_data.*.id' => 'required|exists:interference_ratios,id',
+            'ap_data.*.ap_name' => 'required|string|max:255',
+            'ap_data.*.channel_before' => 'required|integer',
+            'ap_data.*.channel_after' => 'required|integer',
+            'ap_data.*.utilisasi_before' => 'required|integer',
+            'ap_data.*.utilisasi_after' => 'required|integer',
         ]);
 
-        $ratio->update($validated);
+        foreach ($request->ap_data as $data) {
+            $r = InterferenceRatio::findOrFail($data['id']);
+            $r->update([
+                'id_project' => $request->id_project,
+                'tanggal' => $request->tanggal,
+                'waktu' => $request->waktu,
+                'keterangan' => $request->keterangan,
+                'ap_name' => $data['ap_name'],
+                'channel_before' => $data['channel_before'],
+                'channel_after' => $data['channel_after'],
+                'utilisasi_before' => $data['utilisasi_before'],
+                'utilisasi_after' => $data['utilisasi_after'],
+            ]);
+        }
 
         flash('Interference Ratio berhasil diupdate!')->success();
         

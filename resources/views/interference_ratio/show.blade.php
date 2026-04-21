@@ -42,18 +42,20 @@
                     </div>
                 </div>
                 
-                <div class="row">
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">Interference Data</h6>
+                
+                @foreach($ratios as $r)
+                <div class="row mb-3">
                     <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">AP Name</label>
-                            <p class="form-control-static font-weight-bold">{{ $ratio->ap_name }}</p>
+                        <div class="form-group mb-2">
+                            <label class="form-control-label text-primary"><i class="fas fa-wifi"></i> AP Name</label>
+                            <p class="form-control-static font-weight-bold ml-4 mb-0">{{ $r->ap_name }}</p>
                         </div>
                     </div>
                 </div>
                 
-                <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Interference Data</h6>
-                <div class="row">
+                <div class="row mb-4">
                     <div class="col-md-6">
                         <div class="card bg-secondary shadow-none border">
                             <div class="card-body">
@@ -61,11 +63,11 @@
                                 <div class="row text-center">
                                     <div class="col-6 border-right">
                                         <label class="form-control-label text-xs">BEFORE</label>
-                                        <p class="h3 font-weight-bold mb-0 text-primary">{{ $ratio->channel_before }}</p>
+                                        <p class="h3 font-weight-bold mb-0 text-primary">{{ $r->channel_before }}</p>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-control-label text-xs">AFTER</label>
-                                        <p class="h3 font-weight-bold mb-0 text-success">{{ $ratio->channel_after }}</p>
+                                        <p class="h3 font-weight-bold mb-0 text-success">{{ $r->channel_after }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -79,17 +81,18 @@
                                 <div class="row text-center">
                                     <div class="col-6 border-right">
                                         <label class="form-control-label text-xs">BEFORE</label>
-                                        <p class="h3 font-weight-bold mb-0 text-danger">{{ $ratio->utilisasi_before }}%</p>
+                                        <p class="h3 font-weight-bold mb-0 text-danger">{{ $r->utilisasi_before }}%</p>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-control-label text-xs">AFTER</label>
-                                        <p class="h3 font-weight-bold mb-0 text-success">{{ $ratio->utilisasi_after }}%</p>
+                                        <p class="h3 font-weight-bold mb-0 text-success">{{ $r->utilisasi_after }}%</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                @endforeach
                 
                 <div class="row mt-4">
                     <div class="col-md-12">
@@ -131,13 +134,15 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach($ratios as $r)
                 <tr>
-                    <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $ratio->ap_name }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $ratio->channel_before }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $ratio->channel_after }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $ratio->utilisasi_before }}%</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $ratio->utilisasi_after }}%</td>
+                    <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $r->ap_name }}</td>
+                    <td style="border: 1px solid black; padding: 8px;">{{ $r->channel_before }}</td>
+                    <td style="border: 1px solid black; padding: 8px;">{{ $r->channel_after }}</td>
+                    <td style="border: 1px solid black; padding: 8px;">{{ $r->utilisasi_before }}%</td>
+                    <td style="border: 1px solid black; padding: 8px;">{{ $r->utilisasi_after }}%</td>
                 </tr>
+                @endforeach
             </tbody>
         </table>
     </div>
@@ -156,15 +161,24 @@ $(document).ready(function() {
         btn.html('<i class="fas fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
 
         // 1. Get raw template from PHP and replace variables
-        var template = `{!! addslashes(setting('wa_interference_template', "Selamat Siang,\n\nBerikut Report Adjust Channel Interference - Pukul [WAKTU]. Detail interference Ratio yang cukup tinggi sebagai berikut :\n\n• [AP_NAME] : [UTIL_BEFORE]% / Channel [CHANNEL_BEFORE]\n\nSetelah dilakukan penyesuaian, Rate interference nya menjadi berikut :\n\n• [AP_NAME] : [UTIL_AFTER]% / Channel [CHANNEL_AFTER]\n\nBerikut laporan interference Ratio kami sampaikan.\n\nTerimakasih")) !!}`;
+        var beforeList = "";
+        var afterList = "";
+        @foreach($ratios as $r)
+        beforeList += "• {{ $r->ap_name }} : {{ $r->utilisasi_before }}% / Channel {{ $r->channel_before }}\n";
+        afterList  += "• {{ $r->ap_name }} : {{ $r->utilisasi_after }}% / Channel {{ $r->channel_after }}\n";
+        @endforeach
+
+        var template = `{!! addslashes(setting('wa_interference_template', "Selamat Siang,\n\nBerikut Report Adjust Channel Interference - Pukul [WAKTU]. Detail interference Ratio yang cukup tinggi sebagai berikut :\n\n[BEFORE_LIST]\n\nSetelah dilakukan penyesuaian, Rate interference nya menjadi berikut :\n\n[AFTER_LIST]\n\nBerikut laporan interference Ratio kami sampaikan.\n\nTerimakasih")) !!}`;
         
+        // Handle old template placeholders specifically
+        template = template.replace(/• \[AP_NAME\] : \[UTIL_BEFORE\]% \/ Channel \[CHANNEL_BEFORE\]/g, beforeList.trim());
+        template = template.replace(/• \[AP_NAME\] : \[UTIL_AFTER\]% \/ Channel \[CHANNEL_AFTER\]/g, afterList.trim());
+        
+        // Replace list variables
         var text = template
-            .replace(/\[WAKTU\]/g, "{{ $ratio->waktu }}")
-            .replace(/\[AP_NAME\]/g, "{{ $ratio->ap_name }}")
-            .replace(/\[CHANNEL_BEFORE\]/g, "{{ $ratio->channel_before }}")
-            .replace(/\[CHANNEL_AFTER\]/g, "{{ $ratio->channel_after }}")
-            .replace(/\[UTIL_BEFORE\]/g, "{{ $ratio->utilisasi_before }}")
-            .replace(/\[UTIL_AFTER\]/g, "{{ $ratio->utilisasi_after }}");
+            .replace(/\[BEFORE_LIST\]/g, beforeList.trim())
+            .replace(/\[AFTER_LIST\]/g, afterList.trim())
+            .replace(/\[WAKTU\]/g, "{{ $ratio->waktu }}");
             
         // Encode text
         var encodedText = encodeURIComponent(text);

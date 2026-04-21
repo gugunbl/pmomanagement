@@ -39,76 +39,80 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group mb-0">
-                            <label class="form-control-label d-block">AP Name (Pilih Perangkat)</label>
-                            {{ Form::select('ap_name', [$ratio->ap_name => $ratio->ap_name], $ratio->ap_name, ['class' => 'form-control select2', 'id' => 'ap_name_select', 'required']) }}
-                            @error('ap_name') <small class="text-danger">{{ $message }}</small> @enderror
+                <div id="ap_container">
+                    <hr class="my-4" />
+                    <h6 class="heading-small text-muted mb-4">Interference Data</h6>
+                    @foreach($ratios as $i => $r)
+                    <input type="hidden" name="ap_data[{{ $i }}][id]" value="{{ $r->id }}">
+                    <div class="p-3 mb-4 rounded border bg-white shadow-sm">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label class="form-control-label d-block text-primary"><i class="fas fa-wifi"></i> AP Name (Pilih Perangkat)</label>
+                                    <select name="ap_data[{{ $i }}][ap_name]" class="form-control select2 ap_name_select" data-selected="{{ $r->ap_name }}" required>
+                                        <option value="{{ $r->ap_name }}">{{ $r->ap_name }}</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Interference Data</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card bg-secondary shadow-none border">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">CHANNEL</h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">Before</label>
-                                            {{ Form::number('channel_before', null, ['class' => 'form-control', 'required']) }}
-                                            @error('channel_before') <small class="text-danger">{{ $message }}</small> @enderror
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-secondary shadow-none border mb-0">
+                                    <div class="card-body py-3">
+                                        <h5 class="card-title text-center text-muted mb-3">CHANNEL</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">Before</label>
+                                                    <input type="number" name="ap_data[{{ $i }}][channel_before]" class="form-control" required value="{{ $r->channel_before }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">After</label>
+                                                    <input type="number" name="ap_data[{{ $i }}][channel_after]" class="form-control" required value="{{ $r->channel_after }}">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">After</label>
-                                            {{ Form::number('channel_after', null, ['class' => 'form-control', 'required']) }}
-                                            @error('channel_after') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card bg-secondary shadow-none border mb-0">
+                                    <div class="card-body py-3">
+                                        <h5 class="card-title text-center text-muted mb-3">UTILISASI INTERFERENCE</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">Before (%)</label>
+                                                    <div class="input-group">
+                                                        <input type="number" name="ap_data[{{ $i }}][utilisasi_before]" class="form-control" required value="{{ $r->utilisasi_before }}">
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">After (%)</label>
+                                                    <div class="input-group">
+                                                        <input type="number" name="ap_data[{{ $i }}][utilisasi_after]" class="form-control" required value="{{ $r->utilisasi_after }}">
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <div class="card bg-secondary shadow-none border">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">UTILISASI INTERFERENCE</h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">Before (%)</label>
-                                            <div class="input-group">
-                                                {{ Form::number('utilisasi_before', null, ['class' => 'form-control', 'required']) }}
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
-                                                </div>
-                                            </div>
-                                            @error('utilisasi_before') <small class="text-danger">{{ $message }}</small> @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">After (%)</label>
-                                            <div class="input-group">
-                                                {{ Form::number('utilisasi_after', null, ['class' => 'form-control', 'required']) }}
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
-                                                </div>
-                                            </div>
-                                            @error('utilisasi_after') <small class="text-danger">{{ $message }}</small> @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
 
                 <div class="row mt-3">
@@ -176,11 +180,9 @@ $(document).ready(function() {
         allowClear: false
     });
 
-    let currentApName = "{{ $ratio->ap_name }}";
-
     function fetchSNs(projectId) {
         if (!projectId) {
-            $('#ap_name_select').html('<option value="">Pilih AP Name...</option>').trigger('change');
+            $('.ap_name_select').html('<option value="">Pilih AP Name...</option>').trigger('change');
             return;
         }
 
@@ -191,20 +193,23 @@ $(document).ready(function() {
             url: url,
             type: 'GET',
             success: function(data) {
-                let options = '<option value="">Pilih AP Name...</option>';
-                let found = false;
-                $.each(data, function(key, value) {
-                    options += '<option value="' + value + '">' + value + '</option>';
-                    if (value == currentApName) found = true;
+                $('.ap_name_select').each(function() {
+                    let select = $(this);
+                    let currentApName = select.data('selected');
+                    let options = '<option value="">Pilih AP Name...</option>';
+                    let found = false;
+                    $.each(data, function(key, value) {
+                        options += '<option value="' + value + '">' + value + '</option>';
+                        if (value == currentApName) found = true;
+                    });
+                    
+                    if(!found && currentApName) {
+                        options += '<option value="' + currentApName + '">' + currentApName + '</option>';
+                    }
+                    
+                    select.html(options);
+                    select.val(currentApName).trigger('change');
                 });
-                
-                // If the current AP Name doesn't exist in the list anymore (e.g., deleted device), append it manually
-                if(!found && currentApName) {
-                    options += '<option value="' + currentApName + '">' + currentApName + '</option>';
-                }
-                
-                $('#ap_name_select').html(options);
-                $('#ap_name_select').val(currentApName).trigger('change');
             }
         });
     }
