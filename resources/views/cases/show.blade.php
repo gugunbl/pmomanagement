@@ -85,6 +85,29 @@
                 </div>
 
                 <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">Informasi Pelapor & Customer</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Nama Pelapor</label>
+                            <p class="form-control-static">{{ $case->reporter_name ?? '-' }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">No Tlp/Email Pelapor</label>
+                            <p class="form-control-static">{{ $case->reporter_contact ?? '-' }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">NCM Customer</label>
+                            <p class="form-control-static">{{ $case->ncm_customer ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">Detail Case</h6>
                 <div class="row">
                     <div class="col-md-4">

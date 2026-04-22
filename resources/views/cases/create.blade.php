@@ -45,30 +45,62 @@
                 </div>
 
                 <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">DETAIL CASE</h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Type</label>
-                            {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
-                            @error('type') <small class="text-danger">{{ $message }}</small> @enderror
+                <h6 class="heading-small text-muted mb-4 d-flex justify-content-between align-items-center" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseDetailCase" aria-expanded="true">
+                    DETAIL CASE
+                    <i class="fas fa-chevron-down"></i>
+                </h6>
+
+                <div class="collapse show" id="collapseDetailCase">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Type</label>
+                                {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
+                                @error('type') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Subject Case</label>
+                                {{ Form::text('subject', null, ['class' => 'form-control', 'placeholder' => 'Subject case...', 'required']) }}
+                                @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Detail Case</label>
+                                {{ Form::textarea('detail', null, ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Jelaskan detail case...', 'required']) }}
+                                @error('detail') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">INFORMASI PELAPOR & CUSTOMER</h6>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Subject Case</label>
-                            {{ Form::text('subject', null, ['class' => 'form-control', 'placeholder' => 'Subject case...', 'required']) }}
-                            @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
+                            <label class="form-control-label">Nama Pelapor</label>
+                            {{ Form::text('reporter_name', null, ['class' => 'form-control', 'placeholder' => 'Nama pelapor...']) }}
+                            @error('reporter_name') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Detail Case</label>
-                            {{ Form::textarea('detail', null, ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Jelaskan detail case...', 'required']) }}
-                            @error('detail') <small class="text-danger">{{ $message }}</small> @enderror
+                            <label class="form-control-label">No Tlp/Email Pelapor</label>
+                            {{ Form::text('reporter_contact', null, ['class' => 'form-control', 'placeholder' => 'No tlp atau email...']) }}
+                            @error('reporter_contact') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">NCM Customer</label>
+                            {{ Form::text('ncm_customer', null, ['class' => 'form-control', 'placeholder' => 'NCM Customer...']) }}
+                            @error('ncm_customer') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
@@ -292,6 +324,14 @@
 
 .custom-control-label::before, .custom-control-label::after {
     display: none !important; /* Hide default radio circles */
+}
+
+.fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+[aria-expanded="false"] .fa-chevron-down {
+    transform: rotate(-90deg);
 }
 
 </style>
