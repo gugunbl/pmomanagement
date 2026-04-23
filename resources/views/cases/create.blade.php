@@ -31,14 +31,14 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Open Case</label>
-                            <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i') }}">
+                            <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i:s') }}" step="1">
                             @error('open_date') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Closed Case</label>
-                            <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="2000-01-01T00:00" disabled>
+                            <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="2000-01-01T00:00:00" step="1" disabled>
                             @error('closed_date') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
@@ -392,11 +392,12 @@ $(document).ready(function() {
                 let day = String(now.getDate()).padStart(2, '0');
                 let hours = String(now.getHours()).padStart(2, '0');
                 let minutes = String(now.getMinutes()).padStart(2, '0');
-                let formatted = `${year}-${month}-${day}T${hours}:${minutes}`;
+                let seconds = String(now.getSeconds()).padStart(2, '0');
+                let formatted = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
                 $('#closed_date').val(formatted);
             }
         } else {
-            $('#closed_date').prop('disabled', true).prop('required', false).val('2000-01-01T00:00');
+            $('#closed_date').prop('disabled', true).prop('required', false).val('2000-01-01T00:00:00');
         }
     }
 

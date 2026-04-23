@@ -25,7 +25,7 @@ class CaseController extends Controller
         $title = 'Daftar Case';
 
         $userProjects = $user->projects->pluck('id_project')->toArray();
-        $query = MCase::with(['project', 'user', 'perangkat']);
+        $query = MCase::with(['project.teamSupports', 'user', 'perangkat']);
 
         // Base query for summaries (respects project access and project filter, but not type/search)
         $summaryQuery = MCase::query();

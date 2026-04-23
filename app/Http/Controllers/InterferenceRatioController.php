@@ -63,18 +63,30 @@ class InterferenceRatioController extends Controller
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
             'tanggal' => 'required|date',
-            'ap_name' => 'required|string|max:255',
-            'channel_before' => 'required|integer',
-            'channel_after' => 'required|integer',
-            'utilisasi_before' => 'required|integer',
-            'utilisasi_after' => 'required|integer',
             'waktu' => 'required|string',
             'keterangan' => 'nullable|string',
+            'entries' => 'required|array|min:1',
+            'entries.*.ap_name' => 'required|string|max:255',
+            'entries.*.channel_before' => 'required|integer',
+            'entries.*.channel_after' => 'required|integer',
+            'entries.*.utilisasi_before' => 'required|integer',
+            'entries.*.utilisasi_after' => 'required|integer',
         ]);
 
-        $validated['user_id'] = Auth::id();
-
-        InterferenceRatio::create($validated);
+        foreach ($request->entries as $entry) {
+            InterferenceRatio::create([
+                'id_project' => $request->id_project,
+                'tanggal' => $request->tanggal,
+                'waktu' => $request->waktu,
+                'keterangan' => $request->keterangan,
+                'user_id' => Auth::id(),
+                'ap_name' => $entry['ap_name'],
+                'channel_before' => $entry['channel_before'],
+                'channel_after' => $entry['channel_after'],
+                'utilisasi_before' => $entry['utilisasi_before'],
+                'utilisasi_after' => $entry['utilisasi_after'],
+            ]);
+        }
 
         flash('Interference Ratio berhasil ditambahkan!')->success();
         

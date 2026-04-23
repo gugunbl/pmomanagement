@@ -65,11 +65,11 @@
                             <tr>
                                 <th>No</th>
                                 <th>Type</th>
-                                <th>User Input</th>
                                 <th>Tgl Open Case</th>
                                 <th>Subject Case</th>
                                 <th>Lokasi Perangkat</th>
                                 <th>Tgl & Jam Closed</th>
+                                <th>Team Support</th>
                                 <th>Severity</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
@@ -92,9 +92,8 @@
                                             <span class="text-muted small">-</span>
                                         @endif
                                     </td>
-                                    <td>{{ optional($row->user)->name ?? '-' }}</td>
                                     <td class="text-nowrap">{{ $row->open_date ? date('d-m-Y H:i', strtotime($row->open_date)) : '-' }}</td>
-                                    <td>{{ $row->subject }}</td>
+                                    <td title="{{ $row->subject }}">{{ Str::limit($row->subject, 20) }}</td>
                                     <td>
                                         {{ $row->location ?? '-' }}
                                         @if($row->perangkat && $row->perangkat->lantai)
@@ -102,6 +101,20 @@
                                         @endif
                                     </td>
                                     <td class="text-nowrap">{{ $row->closed_date ? date('d-m-Y H:i', strtotime($row->closed_date)) : '-' }}</td>
+                                    <td>
+                                        @if($row->project && $row->project->teamSupports && $row->project->teamSupports->count() > 0)
+                                            @php $teams = $row->project->teamSupports->take(2); @endphp
+                                            @foreach($teams as $idx => $team)
+                                                @if($row->project->teamSupports->count() > 1)
+                                                    {{ Str::limit($team->name, 10) }} {{ $idx + 1 }}{{ !$loop->last ? ',' : '' }}
+                                                @else
+                                                    {{ Str::limit($team->name, 10) }}
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <span class="badge badge-dot mr-4">
                                             @if($row->severity == 'Minor')

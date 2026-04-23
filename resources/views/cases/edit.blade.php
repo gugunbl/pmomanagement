@@ -35,13 +35,13 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Open Case</label>
-                            <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i', strtotime($case->open_date)) }}">
+                            <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i:s', strtotime($case->open_date)) }}" step="1">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Tgl Closed Case</label>
-                            <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="{{ $case->closed_date ? date('Y-m-d\TH:i', strtotime($case->closed_date)) : '' }}" {{ $case->status == 'Closed' ? '' : 'disabled' }}>
+                            <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="{{ $case->closed_date ? date('Y-m-d\TH:i:s', strtotime($case->closed_date)) : '' }}" step="1" {{ $case->status == 'Closed' ? '' : 'disabled' }}>
                         </div>
                     </div>
                 </div>
@@ -479,7 +479,8 @@ $(document).ready(function() {
                 let day = String(now.getDate()).padStart(2, '0');
                 let hours = String(now.getHours()).padStart(2, '0');
                 let minutes = String(now.getMinutes()).padStart(2, '0');
-                let formatted = `${year}-${month}-${day}T${hours}:${minutes}`;
+                let seconds = String(now.getSeconds()).padStart(2, '0');
+                let formatted = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
                 $('#closed_date').val(formatted);
             }
         } else {

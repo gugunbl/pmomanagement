@@ -227,7 +227,17 @@ $listTahun = DB::table('m_project')
     ->orderBy('tahun', 'desc')
     ->pluck('tahun');
 
-    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance', 'listCustomer', 'customer'));
+    // Count active projects per PM Maintenance
+    $pmProjectCounts = DB::table('m_project as p')
+        ->join('m_project_manager as pm', 'pm.id_pm', '=', 'p.pm_maintenance')
+        ->where('p.status_maintenance', 1)
+        ->where('pm.status', 1)
+        ->select('pm.nama_pm', DB::raw('COUNT(p.id_project) as total_projects'))
+        ->groupBy('pm.nama_pm')
+        ->orderBy('pm.nama_pm')
+        ->get();
+
+    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance', 'listCustomer', 'customer', 'pmProjectCounts'));
 }
 
 

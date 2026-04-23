@@ -51,70 +51,82 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group mb-0">
-                            <label class="form-control-label d-block">AP Name (Pilih Perangkat)</label>
-                            {{ Form::select('ap_name', ['' => 'Pilih AP Name...'], null, ['class' => 'form-control select2', 'id' => 'ap_name_select', 'required']) }}
-                            @error('ap_name') <small class="text-danger">{{ $message }}</small> @enderror
-                        </div>
-                    </div>
+                <hr class="my-4" />
+                <div class="d-flex align-items-center mb-4">
+                    <h6 class="heading-small text-muted mb-0">AP Name & Interference Data</h6>
+                    <button type="button" id="btn-add-entry" class="btn btn-sm btn-success ml-3" title="Tambah AP Entry">
+                        <i class="fas fa-plus"></i> Tambah AP
+                    </button>
                 </div>
 
-                <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Interference Data</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card bg-secondary shadow-none border">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">CHANNEL</h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">Before</label>
-                                            <input type="number" name="channel_before" class="form-control" required>
-                                            @error('channel_before') <small class="text-danger">{{ $message }}</small> @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">After</label>
-                                            <input type="number" name="channel_after" class="form-control" required>
-                                            @error('channel_after') <small class="text-danger">{{ $message }}</small> @enderror
+                <div id="ap-entries-container">
+                    {{-- Entry #1 (default) --}}
+                    <div class="ap-entry-block border rounded p-3 mb-3 bg-white" data-index="0">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge badge-primary entry-label">AP #1</span>
+                            <button type="button" class="btn btn-sm btn-danger btn-remove-entry" title="Hapus entry ini" style="display:none;">
+                                <i class="fas fa-minus"></i> Hapus
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label d-block">AP Name (Pilih Perangkat)</label>
+                                    <select name="entries[0][ap_name]" class="form-control ap-name-select select2" required disabled>
+                                        <option value="">Pilih AP Name...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-secondary shadow-none border">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center">CHANNEL</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">Before</label>
+                                                    <input type="number" name="entries[0][channel_before]" class="form-control interference-input" required disabled>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">After</label>
+                                                    <input type="number" name="entries[0][channel_after]" class="form-control interference-input" required disabled>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="card bg-secondary shadow-none border">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">UTILISASI INTERFERENCE</h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">Before (%)</label>
-                                            <div class="input-group">
-                                                <input type="number" name="utilisasi_before" class="form-control" required>
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
+                            <div class="col-md-6">
+                                <div class="card bg-secondary shadow-none border">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center">UTILISASI INTERFERENCE</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">Before (%)</label>
+                                                    <div class="input-group">
+                                                        <input type="number" name="entries[0][utilisasi_before]" class="form-control interference-input" required disabled>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            @error('utilisasi_before') <small class="text-danger">{{ $message }}</small> @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="form-control-label text-xs">After (%)</label>
-                                            <div class="input-group">
-                                                <input type="number" name="utilisasi_after" class="form-control" required>
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
+                                            <div class="col-6">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-control-label text-xs">After (%)</label>
+                                                    <div class="input-group">
+                                                        <input type="number" name="entries[0][utilisasi_after]" class="form-control interference-input" required disabled>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">%</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            @error('utilisasi_after') <small class="text-danger">{{ $message }}</small> @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -182,15 +194,27 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    $('.select2').select2({
-        theme: 'bootstrap4',
-        width: '100%',
-        allowClear: false
+    // Store AP options globally so we can populate new entries
+    var apOptions = '<option value="">Pilih AP Name...</option>';
+    var entryIndex = 0;
+
+    function initSelect2(el) {
+        $(el).select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            allowClear: false
+        });
+    }
+
+    // Init select2 on existing elements
+    $('.select2').each(function() {
+        initSelect2(this);
     });
 
     function fetchSNs(projectId) {
         if (!projectId) {
-            $('#ap_name_select').html('<option value="">Pilih AP Name...</option>').trigger('change');
+            apOptions = '<option value="">Pilih AP Name...</option>';
+            $('.ap-name-select').html(apOptions).trigger('change');
             return;
         }
 
@@ -201,29 +225,132 @@ $(document).ready(function() {
             url: url,
             type: 'GET',
             success: function(data) {
-                let options = '<option value="">Pilih AP Name...</option>';
-                // Note: The value and text is the same since ap_name is string. Or we can just store the full text generated by CasesController
+                apOptions = '<option value="">Pilih AP Name...</option>';
                 $.each(data, function(key, value) {
-                    options += '<option value="' + value + '">' + value + '</option>';
+                    apOptions += '<option value="' + value + '">' + value + '</option>';
                 });
-                $('#ap_name_select').html(options).trigger('change');
+                // Populate all existing AP selects
+                $('.ap-name-select').each(function() {
+                    var currentVal = $(this).val();
+                    $(this).html(apOptions);
+                    if (currentVal) $(this).val(currentVal);
+                    $(this).trigger('change');
+                });
             }
         });
     }
 
+    // Enable/disable AP selects based on project selection
+    function toggleApSelects(hasProject) {
+        $('.ap-name-select').each(function() {
+            $(this).prop('disabled', !hasProject);
+            if (!hasProject) {
+                $(this).val('').trigger('change');
+                // Also disable interference inputs
+                $(this).closest('.ap-entry-block').find('.interference-input').prop('disabled', true).val('');
+            }
+        });
+    }
+
+    // Enable/disable interference inputs based on AP Name selection
+    $(document).on('change', '.ap-name-select', function() {
+        var block = $(this).closest('.ap-entry-block');
+        var hasValue = !!$(this).val();
+        block.find('.interference-input').prop('disabled', !hasValue);
+        if (!hasValue) {
+            block.find('.interference-input').val('');
+        }
+    });
+
     $('#project_select').on('change', function() {
-        let projectId = $(this).val();
+        var projectId = $(this).val();
+        toggleApSelects(!!projectId);
         fetchSNs(projectId);
     });
 
     let initialProject = $('#project_select').val();
     if (initialProject) {
+        toggleApSelects(true);
         fetchSNs(initialProject);
     }
-    
+
+    // Update labels and remove button visibility
+    function updateEntries() {
+        var blocks = $('.ap-entry-block');
+        blocks.each(function(i) {
+            $(this).find('.entry-label').text('AP #' + (i + 1));
+            // Show remove button only if more than 1 entry
+            if (blocks.length > 1) {
+                $(this).find('.btn-remove-entry').show();
+            } else {
+                $(this).find('.btn-remove-entry').hide();
+            }
+        });
+    }
+
+    // Add new AP entry
+    $('#btn-add-entry').on('click', function() {
+        entryIndex = $('.ap-entry-block').length;
+
+        var newBlock = $('.ap-entry-block').first().clone();
+        
+        // Destroy select2 on the cloned element before manipulating
+        newBlock.find('.select2-container').remove();
+        newBlock.find('.ap-name-select').removeClass('select2-hidden-accessible').removeAttr('data-select2-id').removeAttr('aria-hidden').removeAttr('tabindex');
+        
+        // Update data-index
+        newBlock.attr('data-index', entryIndex);
+
+        // Update all input names to new index
+        newBlock.find('select, input').each(function() {
+            var name = $(this).attr('name');
+            if (name) {
+                $(this).attr('name', name.replace(/entries\[\d+\]/, 'entries[' + entryIndex + ']'));
+            }
+            // Clear values
+            if ($(this).is('select')) {
+                $(this).html(apOptions);
+                // AP select enabled if project is selected
+                $(this).prop('disabled', !$('#project_select').val());
+            } else {
+                $(this).val('');
+                // Interference inputs always disabled on new entry (until AP is selected)
+                if ($(this).hasClass('interference-input')) {
+                    $(this).prop('disabled', true);
+                }
+            }
+        });
+
+        // Append and init select2
+        $('#ap-entries-container').append(newBlock);
+        initSelect2(newBlock.find('.ap-name-select'));
+
+        updateEntries();
+
+        // Scroll to new entry
+        $('html, body').animate({
+            scrollTop: newBlock.offset().top - 100
+        }, 300);
+    });
+
+    // Remove AP entry
+    $(document).on('click', '.btn-remove-entry', function() {
+        if ($('.ap-entry-block').length > 1) {
+            $(this).closest('.ap-entry-block').remove();
+            updateEntries();
+        }
+    });
+
+    // Form validation
     $('#formRatio').on('submit', function() {
-        if (!$('#ap_name_select').val()) {
-            Swal.fire('Peringatan', 'Silahkan pilih AP Name dari list!', 'warning');
+        var valid = true;
+        $('.ap-name-select').each(function() {
+            if (!$(this).val()) {
+                valid = false;
+            }
+        });
+        if (!valid) {
+            Swal.fire('Peringatan', 'Silahkan pilih AP Name untuk semua entry!', 'warning');
             return false;
         }
         return true;

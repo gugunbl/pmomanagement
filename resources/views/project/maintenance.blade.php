@@ -3,7 +3,16 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3>Project Maintenance</h3>
+        <div class="d-flex align-items-center flex-wrap">
+            <h3 class="mb-0 mr-4">Project Maintenance</h3>
+            @if(isset($pmProjectCounts) && $pmProjectCounts->count() > 0)
+                @foreach($pmProjectCounts as $pm)
+                    <span class="mr-4" style="font-size: 1rem;">
+                        {{ $pm->nama_pm }} : <strong style="font-size: 1.3rem; color: #5e72e4; font-weight: 700;">{{ $pm->total_projects }}</strong> Project
+                    </span>
+                @endforeach
+            @endif
+        </div>
     </div>
 
     <form method="GET" action="{{ route('project.maintenance') }}" class="form-inline mb-3">
