@@ -222,6 +222,27 @@ $maintenanceEndingSoon = DB::table('m_project')
             $chartClosedTickets[] = $closedByDay[$dateStr] ?? 0;
         }
 
+        // ========== TOP 10 PROJECT, TICKET OPEN ==========
+        $top10Query = DB::table('m_cases')
+            ->join('m_project', 'm_cases.id_project', '=', 'm_project.id_project')
+            ->select(
+                'm_project.id_project',
+                'm_project.nama_project',
+                'm_project.tipe_maintenance',
+                DB::raw("SUM(CASE WHEN m_cases.status IN ('Open', 'In Progress') THEN 1 ELSE 0 END) as open_count"),
+                DB::raw("SUM(CASE WHEN m_cases.status = 'Closed' THEN 1 ELSE 0 END) as closed_count")
+            );
+
+        if (count($userProjectIds) > 0) {
+            $top10Query->whereIn('m_cases.id_project', $userProjectIds);
+        }
+
+        $top10Projects = $top10Query
+            ->groupBy('m_project.id_project', 'm_project.nama_project', 'm_project.tipe_maintenance')
+            ->orderByDesc('open_count')
+            ->limit(10)
+            ->get();
+
         return view('home_user', compact(
             'tiketBulanLalu',
             'tiketBulanIni',
@@ -232,7 +253,8 @@ $maintenanceEndingSoon = DB::table('m_project')
             'pmCm',
             'chartLabels',
             'chartTotalTickets',
-            'chartClosedTickets'
+            'chartClosedTickets',
+            'top10Projects'
         ));
     }
 
