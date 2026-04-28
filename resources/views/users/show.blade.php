@@ -4,6 +4,12 @@
         <a class="btn btn-info btn-sm m-1" data-toggle="tooltip" data-placement="top" title="Edit user details" href="{{route('users.edit',$user)}}">
             <i class="fa fa-edit" aria-hidden="true"></i> Edit User
         </a>
+        <button class="btn btn-warning btn-sm m-1" id="send-credentials-btn">
+            <i class="fa fa-envelope" aria-hidden="true"></i> Email Akses
+        </button>
+        <form id="send-credentials-form" action="{{ route('users.send-credentials', $user) }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     @endcan
 @endpush
 @section('content')
@@ -65,3 +71,25 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    $('#send-credentials-btn').on('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Kirim Email Akses?',
+            text: "Apakah Anda yakin ingin mengirim email akses ke {{ $user->email }}?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Kirim!',
+            cancelButtonText: 'Tidak'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#send-credentials-form').submit();
+            }
+        });
+    });
+</script>
+@endpush

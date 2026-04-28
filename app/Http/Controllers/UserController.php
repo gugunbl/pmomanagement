@@ -171,4 +171,16 @@ class UserController extends Controller
         flash('Profile updated successfully!')->success();
         return back();
     }
+
+    /**
+     * Send access credentials email to user.
+     */
+    public function sendAccessCredentials(User $user)
+    {
+        \Illuminate\Support\Facades\Mail::to($user->email)
+            ->send(new \App\Mail\SendAccessCredentials($user));
+
+        flash('Email akses berhasil dikirim ke ' . $user->email)->success();
+        return back();
+    }
 }

@@ -52,6 +52,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     | User & Access Management
     */
     Route::resource('users', 'UserController');
+    Route::post('/users/{user}/send-credentials', 'UserController@sendAccessCredentials')->name('users.send-credentials');
     Route::get('/profile/{user}', 'UserController@profile')->name('profile.edit');
     Route::post('/profile/{user}', 'UserController@profileUpdate')->name('profile.update');
 

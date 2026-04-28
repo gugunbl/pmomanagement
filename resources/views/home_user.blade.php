@@ -168,6 +168,15 @@
                     </tbody>
                 </table>
             </div>
+            <div class="card-footer bg-white py-2 px-3">
+                <small class="d-flex align-items-center" style="gap: 6px;">
+                    <span style="display:inline-block; width:14px; height:14px; background-color:#DEB887; border:1px solid #ccc; border-radius:2px;"></span>
+                    Manage Service
+                    <span class="mx-2">|</span>
+                    <span style="display:inline-block; width:14px; height:14px; background-color:#4169E1; border:1px solid #ccc; border-radius:2px;"></span>
+                    PM-CM
+                </small>
+            </div>
         </div>
     </div>
 </div>

@@ -156,6 +156,24 @@
             </div>
 
             <div class="card mb-5">
+                <div class="card-header bg-transparent"><h4 class="mb-0">Ticketing System Settings</h4></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{Form::label('ticketing_url', 'Ticketing System URL', ['class' => 'form-control-label'])}}
+                                {{ Form::text('ticketing_url', setting('ticketing_url', config('app.url')), ['class'=>"form-control", 'placeholder' => 'http://103.87.67.192/'])}}
+                                <small class="text-muted">This URL will be included in the access credentials email.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-4 text-right">
+                            {!! Form::submit('Update Settings', ['class'=> 'btn btn-primary']) !!}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-5">
                 <div class="card-header bg-transparent"><h4 class="mb-0">WhatsApp Sharing Settings</h4></div>
                 <div class="card-body">
                     <div class="row">
