@@ -60,7 +60,11 @@ class LoginController extends Controller
         if(Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $request->remember)){
             $userStatus = Auth::User()->status;
             if($userStatus==1) {
-                return redirect()->intended(url('/home'));
+                if(Auth::user()->can('menu-dashboard')) {
+                    return redirect()->intended(url('/home'));
+                } else {
+                    return redirect()->intended(url('/home_user'));
+                }
             }else{
                 Auth::logout();
                 flash('You are temporary blocked. please contact to admin')->warning();

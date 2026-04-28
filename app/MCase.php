@@ -28,6 +28,7 @@ class MCase extends Model
         'status',
         'evidence_photo',
         'rca_file',
+        'mop_file',
     ];
 
     public function project()

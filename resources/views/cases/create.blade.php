@@ -18,7 +18,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Project</label>
+                            <label class="form-control-label">Project <span class="text-danger">*</span></label>
                             @if($fixedProject)
                                 {{ Form::select('id_project', $projects, null, ['class' => 'form-control', 'readonly' => 'readonly', 'id' => 'project_select']) }}
                                 <small class="text-info">Project ini sudah ditentukan untuk akun Anda.</small>
@@ -30,7 +30,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Tgl Open Case</label>
+                            <label class="form-control-label">Tgl Open Case <span class="text-danger">*</span></label>
                             <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i:s') }}" step="1">
                             @error('open_date') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
@@ -54,7 +54,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="form-control-label">Type</label>
+                                <label class="form-control-label">Type <span class="text-danger">*</span></label>
                                 {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
                                 @error('type') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
@@ -64,14 +64,14 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label class="form-control-label">Subject Case</label>
+                                <label class="form-control-label">Subject Case <span class="text-danger">*</span></label>
                                 {{ Form::text('subject', null, ['class' => 'form-control', 'placeholder' => 'Subject case...', 'required']) }}
                                 @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label class="form-control-label">Detail Case</label>
+                                <label class="form-control-label">Detail Case <span class="text-danger">*</span></label>
                                 {{ Form::textarea('detail', null, ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Jelaskan detail case...', 'required']) }}
                                 @error('detail') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
@@ -176,14 +176,14 @@
                 <div class="row mt-4">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Severity</label>
+                            <label class="form-control-label">Severity <span class="text-danger">*</span></label>
                             {{ Form::select('severity', ['Minor' => 'Minor', 'Major' => 'Major', 'Critical' => 'Critical'], 'Minor', ['class' => 'form-control']) }}
                             @error('severity') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="form-control-label">Status</label>
+                            <label class="form-control-label">Status <span class="text-danger">*</span></label>
                             {{ Form::select('status', ['Open' => 'Open', 'In Progress' => 'In Progress', 'Closed' => 'Closed'], 'Open', ['class' => 'form-control', 'id' => 'status_select']) }}
                             @error('status') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
@@ -210,7 +210,7 @@
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">DOKUMENTASI & EVIDENCE</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Foto Evidence (PNG, JPG, JPEG)</label>
                             <div class="custom-file">
@@ -221,7 +221,7 @@
                             @error('evidence_photo') <br><small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File RCA / Document (PDF)</label>
                             <div class="custom-file">
@@ -230,6 +230,17 @@
                             </div>
                             <small class="text-muted">Maksimal file size: 10 MB</small>
                             @error('rca_file') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Upload File MOP (PDF)</label>
+                            <div class="custom-file">
+                                <input type="file" name="mop_file" class="custom-file-input" id="mop_file" accept=".pdf">
+                                <label class="custom-file-label" for="mop_file">Pilih File MOP...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 10 MB</small>
+                            @error('mop_file') <br><small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>

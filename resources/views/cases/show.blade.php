@@ -217,7 +217,7 @@
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">Dokumentasi & Evidence</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Foto Evidence</label>
                             @if($case->evidence_photo)
@@ -232,7 +232,7 @@
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File RCA / Document</label>
                             @if($case->rca_file)
@@ -260,6 +260,37 @@
                                 </div>
                             @else
                                 <p class="form-control-static text-muted"><em>Tidak ada file RCA.</em></p>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">File MOP</label>
+                            @if($case->mop_file)
+                                <div class="mt-2">
+                                    <div class="card card-stats mb-4 mb-xl-0 border shadow-sm">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="icon icon-shape bg-success text-white rounded-circle shadow">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="col ml--2">
+                                                    <h5 class="card-title text-uppercase text-muted mb-0">MOP Document</h5>
+                                                    <span class="h4 font-weight-bold mb-0">Attachment PDF</span>
+                                                </div>
+                                            </div>
+                                            <p class="mt-3 mb-0 text-muted text-sm">
+                                                <a href="{{ asset('storage/' . $case->mop_file) }}" target="_blank" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-download mr-1"></i> Download / Lihat File
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="form-control-static text-muted"><em>Tidak ada file MOP.</em></p>
                             @endif
                         </div>
                     </div>

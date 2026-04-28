@@ -28,9 +28,17 @@
                 <ul class="navbar-nav">
                     @can('menu-dashboard')
                     <li class="nav-item">
-                        <a class="nav-link {{ (request()->is('home*')) ? 'active' : '' }}" href="{{route('home')}}">
+                        <a class="nav-link {{ (request()->is('home')) ? 'active' : '' }}" href="{{route('home')}}">
                             <i class="ni ni-shop text-primary"></i>
                             <span class="nav-link-text">Dashboard</span>
+                        </a>
+                    </li>
+                    @endcan
+                    @can('menu-dashboard-user')
+                    <li class="nav-item">
+                        <a class="nav-link {{ (request()->is('home_user')) ? 'active' : '' }}" href="{{route('home_user')}}">
+                            <i class="ni ni-shop text-info"></i>
+                            <span class="nav-link-text">Dashboard User</span>
                         </a>
                     </li>
                     @endcan

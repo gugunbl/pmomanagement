@@ -118,6 +118,7 @@ class CaseController extends Controller
             'status' => 'required|in:Open,In Progress,Closed',
             'evidence_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'rca_file' => 'nullable|mimes:pdf|max:10240',
+            'mop_file' => 'nullable|mimes:pdf|max:10240',
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -132,6 +133,12 @@ class CaseController extends Controller
         if ($request->hasFile('rca_file')) {
             $path = $request->file('rca_file')->store('cases/files', 'public');
             $validated['rca_file'] = $path;
+        }
+
+        // Handle MOP File Upload
+        if ($request->hasFile('mop_file')) {
+            $path = $request->file('mop_file')->store('cases/files', 'public');
+            $validated['mop_file'] = $path;
         }
 
         MCase::create($validated);
@@ -224,6 +231,7 @@ class CaseController extends Controller
             'status' => 'required|in:Open,In Progress,Closed',
             'evidence_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'rca_file' => 'nullable|mimes:pdf|max:10240',
+            'mop_file' => 'nullable|mimes:pdf|max:10240',
         ]);
 
         // Handle Photo Upload
@@ -244,6 +252,16 @@ class CaseController extends Controller
             }
             $path = $request->file('rca_file')->store('cases/files', 'public');
             $validated['rca_file'] = $path;
+        }
+
+        // Handle MOP File Upload
+        if ($request->hasFile('mop_file')) {
+            // Delete old file if exists
+            if ($caseModel->mop_file) {
+                Storage::disk('public')->delete($caseModel->mop_file);
+            }
+            $path = $request->file('mop_file')->store('cases/files', 'public');
+            $validated['mop_file'] = $path;
         }
 
         $caseModel->update($validated);

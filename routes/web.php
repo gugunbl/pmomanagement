@@ -10,7 +10,12 @@ use Illuminate\Support\Facades\Auth;
 */
 
 Route::get('/', function () {
-    return redirect()->route('home');
+    if (Auth::check()) {
+        return Auth::user()->can('menu-dashboard') 
+            ? redirect()->route('home') 
+            : redirect()->route('home_user');
+    }
+    return redirect()->route('login');
 });
 
 Auth::routes(['verify' => true]);
@@ -34,6 +39,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     | Dashboard
     */
     Route::get('/home', 'HomeController@index')->name('home');
+    Route::get('/home_user', 'HomeController@homeUser')
+        ->name('home_user')
+        ->middleware('permission:menu-dashboard-user');
 
     /*
     | UI Components

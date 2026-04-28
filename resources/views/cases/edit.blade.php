@@ -212,7 +212,7 @@
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">DOKUMENTASI & EVIDENCE</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Foto Evidence (PNG, JPG, JPEG)</label>
                             @if($case->evidence_photo)
@@ -229,7 +229,7 @@
                             @error('evidence_photo') <br><small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File RCA / Document (PDF)</label>
                             @if($case->rca_file)
@@ -245,6 +245,24 @@
                             </div>
                             <small class="text-muted">Maksimal file size: 10 MB. Kosongkan jika tidak ingin merubah.</small>
                             @error('rca_file') <br><small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">Upload File MOP (PDF)</label>
+                            @if($case->mop_file)
+                                <div class="mb-2">
+                                    <a href="{{ asset('storage/' . $case->mop_file) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-file-pdf mr-1"></i> Lihat MOP Saat Ini
+                                    </a>
+                                </div>
+                            @endif
+                            <div class="custom-file">
+                                <input type="file" name="mop_file" class="custom-file-input" id="mop_file" accept=".pdf">
+                                <label class="custom-file-label" for="mop_file">Ganti File MOP...</label>
+                            </div>
+                            <small class="text-muted">Maksimal file size: 10 MB. Kosongkan jika tidak ingin merubah.</small>
+                            @error('mop_file') <br><small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
                 </div>
