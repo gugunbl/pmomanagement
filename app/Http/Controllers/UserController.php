@@ -177,10 +177,21 @@ class UserController extends Controller
      */
     public function sendAccessCredentials(User $user)
     {
-        \Illuminate\Support\Facades\Mail::to($user->email)
-            ->send(new \App\Mail\SendAccessCredentials($user));
+        \Log::info('Attempting to send access credentials to user ID: ' . $user->id);
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)
+                ->send(new \App\Mail\SendAccessCredentials($user));
 
-        flash('Email akses berhasil dikirim ke ' . $user->email)->success();
+            flash('Email akses berhasil dikirim ke ' . $user->email)->success();
+            // Also add manual session flash as a backup
+            session()->flash('success', 'Email akses berhasil dikirim ke ' . $user->email);
+
+        } catch (\Exception $e) {
+            flash('Gagal mengirim email: ' . $e->getMessage())->error();
+            session()->flash('error', 'Gagal mengirim email: ' . $e->getMessage());
+            \Log::error('Mail Error: ' . $e->getMessage());
+        }
+
         return back();
     }
 }

@@ -4,7 +4,7 @@
         <a class="btn btn-info btn-sm m-1" data-toggle="tooltip" data-placement="top" title="Edit user details" href="{{route('users.edit',$user)}}">
             <i class="fa fa-edit" aria-hidden="true"></i> Edit User
         </a>
-        <button class="btn btn-warning btn-sm m-1" id="send-credentials-btn">
+        <button class="btn btn-warning btn-sm m-1" onclick="handleEmailAkses(event)">
             <i class="fa fa-envelope" aria-hidden="true"></i> Email Akses
         </button>
         <form id="send-credentials-form" action="{{ route('users.send-credentials', $user) }}" method="POST" style="display: none;">
@@ -74,8 +74,17 @@
 
 @push('scripts')
 <script>
-    $('#send-credentials-btn').on('click', function(e) {
+    function handleEmailAkses(e) {
         e.preventDefault();
+        console.log('Tombol Email diklik');
+        
+        if (typeof Swal === 'undefined') {
+            if (confirm("Kirim email akses ke {{ $user->email }}?")) {
+                document.getElementById('send-credentials-form').submit();
+            }
+            return;
+        }
+
         Swal.fire({
             title: 'Kirim Email Akses?',
             text: "Apakah Anda yakin ingin mengirim email akses ke {{ $user->email }}?",
@@ -87,9 +96,10 @@
             cancelButtonText: 'Tidak'
         }).then((result) => {
             if (result.isConfirmed) {
-                $('#send-credentials-form').submit();
+                console.log('Form disubmit...');
+                document.getElementById('send-credentials-form').submit();
             }
         });
-    });
+    }
 </script>
 @endpush
