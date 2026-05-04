@@ -68,6 +68,17 @@
                                         ]) }}
                                     </div>
                                 </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        {{ Form::label('team_support', 'Team Support', ['class' => 'form-control-label']) }}
+                                        <div id="team_support_container" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                            <div class="text-muted small mb-2">Pilih project terlebih dahulu untuk melihat team support yang tersedia.</div>
+                                            <div id="team_support_list">
+                                                <!-- Dynamic Content -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <hr class="my-4" />
@@ -171,7 +182,49 @@
                     $('#project_select').prop('disabled', false);
                 }
                 $('#project_select').selectpicker('refresh');
+                updateTeamSupportList();
             });
+
+            $('#project_select').on('change', function() {
+                updateTeamSupportList();
+            });
+
+            function updateTeamSupportList() {
+                let projectIds = $('#project_select').val();
+                let isAllProjects = $('#all_projects_check').is(':checked');
+                
+                // If All Projects is checked, projectIds will be null/empty, 
+                // but the controller handles empty projectIds as "all active team supports"
+                
+                $.ajax({
+                    url: "{{ route('projects.get-team-supports') }}",
+                    method: "GET",
+                    data: {
+                        project_ids: isAllProjects ? [] : projectIds
+                    },
+                    success: function(response) {
+                        let listHtml = '';
+                        if (response.length > 0) {
+                            response.forEach(function(team) {
+                                listHtml += `
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" name="team_support[]" value="${team.id}" class="custom-control-input" id="team_${team.id}">
+                                        <label class="custom-control-label" for="team_${team.id}">${team.name}</label>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            listHtml = '<div class="text-muted small">Tidak ada team support yang terhubung dengan project ini.</div>';
+                        }
+                        $('#team_support_list').html(listHtml);
+                    }
+                });
+            }
+
+            // Initial call if needed
+            if($('#all_projects_check').is(':checked')) {
+                updateTeamSupportList();
+            }
         })
     </script>
 @endpush

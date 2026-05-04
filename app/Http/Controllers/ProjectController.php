@@ -825,4 +825,24 @@ public function update(Request $request, Project $project)
         $filename = 'Monitoring-BA-'.$activeTab.'-'.date('Ymd').'.xlsx';
         return Excel::download(new MonitoringBAExport($listBA), $filename);
     }
+
+    public function getTeamSupports(Request $request)
+    {
+        $projectIds = $request->project_ids;
+
+        if (empty($projectIds)) {
+            // If no projects selected, return all active team supports
+            $teamSupports = TeamSupport::where('status', 1)->orderBy('name')->get(['id', 'name']);
+        } else {
+            // Get team supports linked to the selected projects
+            $teamSupports = TeamSupport::where('status', 1)
+                ->whereHas('projects', function ($q) use ($projectIds) {
+                    $q->whereIn('id_project', $projectIds);
+                })
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
+        return response()->json($teamSupports);
+    }
 }

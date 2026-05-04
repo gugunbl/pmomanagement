@@ -117,12 +117,14 @@
                     </li>
                     @endcan
 
+                    @can('menu-team-support')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('team-support*')) ? 'active' : '' }}" href="{{route('team-support.index')}}">
                             <i class="fas text-primary fa-users-cog"></i>
                             <span class="nav-link-text">Manage Team Support</span>
                         </a>
                     </li>
+                    @endcan
 <!-- Manage Data Perangkat -->
                     @canany(['view-perangkat', 'view-summary-perangkat','view-warehouse','perangkat-warehouse'])
                         <li class="nav-item">

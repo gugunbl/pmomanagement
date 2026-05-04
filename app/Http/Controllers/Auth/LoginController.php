@@ -53,11 +53,30 @@ class LoginController extends Controller
             $this->fireLockoutEvent($request);
             flash('You are locked! Too many attempts. please try '. setting('lockout_delay') .' mintutes later.')->warning();
             return redirect()->route('login')->withInput();
-            return $this->sendLockoutResponse($request);
         }
 
         $credentials = $request->only('email', 'password');
-        if(Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $request->remember)){
+        $user = \App\User::where('email', $credentials['email'])->first();
+        $authenticated = false;
+
+        if ($user) {
+            try {
+                // Try to decrypt the password
+                $decryptedPassword = \Illuminate\Support\Facades\Crypt::decryptString($user->password);
+                if ($decryptedPassword === $credentials['password']) {
+                    Auth::login($user, $request->remember);
+                    $authenticated = true;
+                }
+            } catch (\Exception $e) {
+                // If decryption fails, it might be an old hashed password or something else
+                if (\Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+                    Auth::login($user, $request->remember);
+                    $authenticated = true;
+                }
+            }
+        }
+
+        if($authenticated){
             $userStatus = Auth::User()->status;
             if($userStatus==1) {
                 if(Auth::user()->can('menu-dashboard')) {

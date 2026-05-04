@@ -49,9 +49,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function setPasswordAttribute($password)
     {
-        if(Hash::needsRehash($password)){
-            $password = Hash::make($password);
-            $this->attributes['password'] = $password;
+        if ($password) {
+            $this->attributes['password'] = \Illuminate\Support\Facades\Crypt::encryptString($password);
         }
     }
     public function categories()
@@ -66,5 +65,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'id_project');
+    }
+
+    public function teamSupports()
+    {
+        return $this->belongsToMany(TeamSupport::class, 'user_team_support', 'user_id', 'team_support_id');
     }
 }

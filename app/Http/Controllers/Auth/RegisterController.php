@@ -70,7 +70,7 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => $data['password'],
         ]);
         if (setting('register_notification_email')) {
             Mail::to($data['email'])->send( new UserRegistered($user));

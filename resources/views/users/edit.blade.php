@@ -86,6 +86,17 @@
                                         ]) }}
                                     </div>
                                 </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        {{ Form::label('team_support', 'Team Support', ['class' => 'form-control-label']) }}
+                                        <div id="team_support_container" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                            <div id="team_support_list">
+                                                <!-- Dynamic Content -->
+                                                <div class="text-center py-2"><i class="fa fa-spinner fa-spin"></i> Loading...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <hr class="my-4" />
@@ -186,6 +197,9 @@
             // Initialize selectpicker
             $('.selectpicker').selectpicker();
 
+            // Selected team supports for this user
+            let selectedTeamSupports = {!! json_encode($user->teamSupports->pluck('id')->toArray()) !!};
+
             $('#all_projects_check').on('change', function() {
                 if($(this).is(':checked')) {
                     $('#project_select').selectpicker('deselectAll');
@@ -194,6 +208,54 @@
                     $('#project_select').prop('disabled', false);
                 }
                 $('#project_select').selectpicker('refresh');
+                updateTeamSupportList();
+            });
+
+            $('#project_select').on('change', function() {
+                updateTeamSupportList();
+            });
+
+            function updateTeamSupportList() {
+                let projectIds = $('#project_select').val();
+                let isAllProjects = $('#all_projects_check').is(':checked');
+                
+                $.ajax({
+                    url: "{{ route('projects.get-team-supports') }}",
+                    method: "GET",
+                    data: {
+                        project_ids: isAllProjects ? [] : projectIds
+                    },
+                    success: function(response) {
+                        let listHtml = '';
+                        if (response.length > 0) {
+                            response.forEach(function(team) {
+                                let checked = selectedTeamSupports.includes(team.id) ? 'checked' : '';
+                                listHtml += `
+                                    <div class="custom-control custom-checkbox mb-2">
+                                        <input type="checkbox" name="team_support[]" value="${team.id}" ${checked} class="custom-control-input" id="team_${team.id}">
+                                        <label class="custom-control-label" for="team_${team.id}">${team.name}</label>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            listHtml = '<div class="text-muted small">Tidak ada team support yang terhubung dengan project ini.</div>';
+                        }
+                        $('#team_support_list').html(listHtml);
+                    }
+                });
+            }
+
+            // Initial call
+            updateTeamSupportList();
+
+            // Track changes to selected team supports if user checks/unchecks
+            $(document).on('change', 'input[name="team_support[]"]', function() {
+                let val = parseInt($(this).val());
+                if($(this).is(':checked')) {
+                    if(!selectedTeamSupports.includes(val)) selectedTeamSupports.push(val);
+                } else {
+                    selectedTeamSupports = selectedTeamSupports.filter(id => id !== val);
+                }
             });
         })
     </script>

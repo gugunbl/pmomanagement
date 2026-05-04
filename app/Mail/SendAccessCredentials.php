@@ -18,10 +18,14 @@ class SendAccessCredentials extends Mailable
      *
      * @return void
      */
-    public function __construct($user, $defaultPassword = 'kenangan')
+    public function __construct($user)
     {
         $this->user = $user;
-        $this->defaultPassword = $defaultPassword;
+        try {
+            $this->defaultPassword = \Illuminate\Support\Facades\Crypt::decryptString($user->password);
+        } catch (\Exception $e) {
+            $this->defaultPassword = '(Password tidak dapat didekripsi, kemungkinan masih menggunakan hash lama. Silakan reset password terlebih dahulu.)';
+        }
     }
 
     /**

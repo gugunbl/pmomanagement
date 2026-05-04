@@ -87,6 +87,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::resource('team-support', 'TeamSupportController')->except('show');
     Route::resource('post', 'PostController');
     Route::resource('project', 'ProjectController');
+    Route::get('/projects/get-team-supports', 'ProjectController@getTeamSupports')->name('projects.get-team-supports');
     /*
     | Settings & Logs
     */

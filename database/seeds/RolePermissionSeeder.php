@@ -41,9 +41,10 @@ class RolePermissionSeeder extends Seeder
             'create-post',
             'update-post',
             'destroy-post',
+            'menu-team-support',
         ];
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
         // Create Super user & role
         $admin= Role::create(['name' => 'super-admin']);

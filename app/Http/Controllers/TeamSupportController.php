@@ -7,6 +7,11 @@ use App\TeamSupport;
 
 class TeamSupportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:menu-team-support');
+    }
+
     public function index(Request $request)
     {
         $search = $request->search;
@@ -44,6 +49,7 @@ class TeamSupportController extends Controller
 
     public function edit(TeamSupport $teamSupport)
     {
+        $teamSupport->load('projects');
         $title = 'Edit Team Support';
         return view('team_support.edit', compact('title', 'teamSupport'));
     }

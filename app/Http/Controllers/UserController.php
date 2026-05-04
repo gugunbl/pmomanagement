@@ -46,7 +46,7 @@ class UserController extends Controller
     {
         $title = 'Create user';
         $roles = Role::pluck('name', 'id');
-        $projects = \App\Project::where('status_maintenance', 1)->pluck('nama_project', 'id_project');
+        $projects = \App\Project::where('status_maintenance', '<', 2)->orderBy('nama_project')->pluck('nama_project', 'id_project');
         return view('users.create', compact('roles', 'title', 'projects'));
     }
 
@@ -67,6 +67,10 @@ class UserController extends Controller
 
         if ($request->has('id_project') && is_array($request->id_project)) {
             $user->projects()->sync($request->id_project);
+        }
+
+        if ($request->has('team_support') && is_array($request->team_support)) {
+            $user->teamSupports()->sync($request->team_support);
         }
 
         flash('User created successfully!')->success();
@@ -97,7 +101,7 @@ class UserController extends Controller
     {
         $title = "User Details";
         $roles = Role::pluck('name', 'id');
-        $projects = \App\Project::where('status_maintenance', 1)->pluck('nama_project', 'id_project')->toArray();
+        $projects = \App\Project::where('status_maintenance', '<', 2)->orderBy('nama_project')->pluck('nama_project', 'id_project')->toArray();
         return view('users.edit', compact('user','title', 'roles', 'projects'));
     }
 
@@ -126,6 +130,12 @@ class UserController extends Controller
             $user->projects()->sync($request->id_project);
         } else {
             $user->projects()->sync([]);
+        }
+
+        if ($request->has('team_support') && is_array($request->team_support)) {
+            $user->teamSupports()->sync($request->team_support);
+        } else {
+            $user->teamSupports()->sync([]);
         }
 
         flash('User updated successfully!')->success();
@@ -182,14 +192,29 @@ class UserController extends Controller
             \Illuminate\Support\Facades\Mail::to($user->email)
                 ->send(new \App\Mail\SendAccessCredentials($user));
 
-            flash('Email akses berhasil dikirim ke ' . $user->email)->success();
-            // Also add manual session flash as a backup
-            session()->flash('success', 'Email akses berhasil dikirim ke ' . $user->email);
+            $message = 'Email akses berhasil dikirim ke ' . $user->email;
+            flash($message)->success();
+            session()->flash('success', $message);
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
 
         } catch (\Exception $e) {
-            flash('Gagal mengirim email: ' . $e->getMessage())->error();
-            session()->flash('error', 'Gagal mengirim email: ' . $e->getMessage());
+            $errorMsg = 'Gagal mengirim email: ' . $e->getMessage();
+            flash($errorMsg)->error();
+            session()->flash('error', $errorMsg);
             \Log::error('Mail Error: ' . $e->getMessage());
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMsg
+                ], 500);
+            }
         }
 
         return back();
