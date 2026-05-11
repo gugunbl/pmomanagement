@@ -241,11 +241,11 @@
                     @canany(['view-user', 'create-user'])
 
                         <li class="nav-item">
-                            <a class="nav-link {{ (request()->is('users*')) ? 'active' : '' }}" href="#navbar-users"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-users">
+                            <a class="nav-link {{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'active' : '' }}" href="#navbar-users"  data-toggle="collapse" role="button" aria-expanded="{{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'true' : 'false' }}" aria-controls="navbar-users">
                                 <i class="fas text-primary fa-tasks"></i>
                                 <span class="nav-link-text">Manage Users</span>
                             </a>
-                            <div class="collapse" id="navbar-users">
+                            <div class="collapse {{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'show' : '' }}" id="navbar-users">
                                 <ul class="nav nav-sm flex-column">
                                  @can('view-user')
                                     <li class="nav-item">
@@ -257,6 +257,12 @@
                                         <a href="{{route('users.create')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Add New User</span></a>
                                     </li>
                                     @endcan
+                                    <li class="nav-item">
+                                        <a href="{{route('dashboard.utilisasi')}}" class="nav-link">
+                                            <span class="sidenav-mini-icon">D </span>
+                                            <span class="sidenav-normal">Dashboard Utilisasi</span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </li>

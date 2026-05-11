@@ -85,130 +85,183 @@
                 </div>
 
                 <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Informasi Pelapor & Customer</h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Nama Pelapor</label>
-                            <p class="form-control-static">{{ $case->reporter_name ?? '-' }}</p>
+                <h6 class="heading-small text-muted mb-4 d-flex justify-content-between align-items-center" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseReporterCustomer" aria-expanded="false">
+                    Informasi Pelapor & Customer
+                    <i class="fas fa-chevron-down"></i>
+                </h6>
+                <div class="collapse" id="collapseReporterCustomer">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Nama Pelapor</label>
+                                <p class="form-control-static">{{ $case->reporter_name ?? '-' }}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">No Tlp/Email Pelapor</label>
-                            <p class="form-control-static">{{ $case->reporter_contact ?? '-' }}</p>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">No Tlp/Email Pelapor</label>
+                                <p class="form-control-static">{{ $case->reporter_contact ?? '-' }}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">NCM Customer</label>
-                            <p class="form-control-static">{{ $case->ncm_customer ?? '-' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">Detail Case</h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Type</label>
-                            <p class="form-control-static">
-                                @if($case->type == 'Problem/Incident')
-                                    <span class="badge badge-warning">Problem/Incident</span>
-                                @elseif($case->type == 'Request/Kegiatan')
-                                    <span class="badge badge-info">Request/Kegiatan</span>
-                                @else
-                                    <span class="badge badge-secondary">-</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <label class="form-control-label">Subject Case</label>
-                            <p class="form-control-static">{{ $case->subject }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-control-label">Perangkat Terdampak (SN)</label>
-                            <p class="form-control-static">{{ $case->affected_sn ?? '-' }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-control-label">Lokasi Perangkat</label>
-                            <p class="form-control-static">{{ $case->location ?? '-' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Detail Case</label>
-                            <div class="p-3 bg-secondary rounded">
-                                {!! nl2br(e($case->detail)) !!}
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">NCM Customer</label>
+                                <p class="form-control-static">{{ $case->ncm_customer ?? '-' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Severity</label>
-                            <p class="form-control-static">
-                                <span class="badge badge-dot mr-4">
-                                    @if($case->severity == 'Minor')
-                                        <i class="bg-success"></i>
-                                    @elseif($case->severity == 'Major')
-                                        <i class="bg-warning"></i>
-                                    @elseif($case->severity == 'Critical')
-                                        <i class="bg-danger"></i>
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4 d-flex justify-content-between align-items-center" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseDetailCase" aria-expanded="true">
+                    Detail Case
+                    <i class="fas fa-chevron-down"></i>
+                </h6>
+                <div class="collapse show" id="collapseDetailCase">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Type</label>
+                                <p class="form-control-static">
+                                    @if($case->type == 'Problem/Incident')
+                                        <span class="badge badge-warning">Problem/Incident</span>
+                                    @elseif($case->type == 'Request/Kegiatan')
+                                        <span class="badge badge-info">Request/Kegiatan</span>
                                     @else
-                                        <i class="bg-info"></i>
+                                        <span class="badge badge-secondary">-</span>
                                     @endif
-                                    <span class="status">{{ $case->severity }}</span>
-                                </span>
-                            </p>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-control-label">Subject Case</label>
+                                <p class="form-control-static">{{ $case->subject }}</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Status</label>
-                            <p class="form-control-static">
-                                <span class="badge badge-dot mr-4">
-                                    @if($case->status == 'Open')
-                                        <i class="bg-danger"></i>
-                                    @elseif($case->status == 'In Progress')
-                                        <i class="bg-warning"></i>
-                                    @elseif($case->status == 'Closed')
-                                        <i class="bg-success"></i>
-                                    @endif
-                                    <span class="status">{{ $case->status }}</span>
-                                </span>
-                            </p>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Perangkat Terdampak (SN)</label>
+                                <p class="form-control-static">{{ $case->affected_sn ?? '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Lokasi Perangkat</label>
+                                <p class="form-control-static">{{ $case->location ?? '-' }}</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">No. Tiket Prinsipal</label>
-                            <p class="form-control-static">{{ $case->principal_ticket_no ?? '-' }}</p>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Detail Case</label>
+                                <div class="p-3 bg-secondary rounded text-dark">
+                                    {!! nl2br(e($case->detail)) !!}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Severity</label>
+                                <p class="form-control-static">
+                                    <span class="badge badge-dot mr-4">
+                                        @if($case->severity == 'Minor')
+                                            <i class="bg-success"></i>
+                                        @elseif($case->severity == 'Major')
+                                            <i class="bg-warning"></i>
+                                        @elseif($case->severity == 'Critical')
+                                            <i class="bg-danger"></i>
+                                        @else
+                                            <i class="bg-info"></i>
+                                        @endif
+                                        <span class="status">{{ $case->severity }}</span>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Status</label>
+                                <p class="form-control-static">
+                                    <span class="badge badge-dot mr-4">
+                                        @if($case->status == 'Open')
+                                            <i class="bg-danger"></i>
+                                        @elseif($case->status == 'In Progress')
+                                            <i class="bg-warning"></i>
+                                        @elseif($case->status == 'Closed')
+                                            <i class="bg-success"></i>
+                                        @endif
+                                        <span class="status">{{ $case->status }}</span>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">No. Tiket Prinsipal</label>
+                                <p class="form-control-static">{{ $case->principal_ticket_no ?? '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-control-label">Detail Penyelesaian</label>
+                                <div class="p-3 bg-secondary rounded text-dark">
+                                    {!! nl2br(e($case->resolution_detail ?? '-')) !!}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row mt-4">
                     <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Detail Penyelesaian</label>
-                            <div class="p-3 bg-secondary rounded">
-                                {!! nl2br(e($case->resolution_detail ?? '-')) !!}
+                        <div class="card bg-secondary border-0 mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="text-uppercase text-muted ls-1 mb-1">Activity</h6>
+                                <ul class="nav nav-tabs nav-tabs-sm border-0" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active font-weight-bold" href="javascript:void(0)">Comments</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body pt-0">
+                                <!-- Comment List -->
+                                <div class="comment-list mt-3">
+                                    @foreach($case->comments as $comment)
+                                        <div class="comment-item mb-4 pl-3 border-left border-info" style="border-width: 4px !important;">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="avatar avatar-sm rounded-circle mr-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                                                </div>
+                                                <div class="comment-meta">
+                                                    <span class="font-weight-bold text-primary mr-1">{{ $comment->user->name }}</span>
+                                                    <span class="text-muted small">added a comment - {{ $comment->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="comment-content pl-5 text-dark">
+                                                {!! nl2br(e($comment->comment)) !!}
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    
+                                    @if($case->comments->isEmpty())
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fas fa-comments fa-2x mb-2 opacity-5"></i>
+                                            <p>No activity yet.</p>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -352,6 +405,24 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+.fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+[aria-expanded="false"] .fa-chevron-down {
+    transform: rotate(-90deg);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+}
+</style>
+@endpush
 
 @endsection
 

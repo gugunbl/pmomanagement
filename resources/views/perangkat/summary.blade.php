@@ -66,7 +66,7 @@
                                         <td>{{ ($summaryperangkats->currentPage() - 1) * $summaryperangkats->perPage() + $key + 1 }}</td>
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
-                                                <a href="{{ route('perangkat.index', ['id_project' => $perangkat->id_project]) }}" class="font-weight-bold text-primary">
+                                                <a href="{{ route('perangkat.view-detail-summary', ['id_project' => $perangkat->id_project, 'merk' => $perangkat->merk, 'type' => $perangkat->type]) }}" class="font-weight-bold text-primary">
                                                     {{$perangkat->project->nama_project ?? '-'}}
                                                 </a>
                                             </div>
@@ -110,7 +110,7 @@
                                         <td>{{ ($summaryperangkats->currentPage() - 1) * $summaryperangkats->perPage() + $key + 1 }}</td>
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
-                                                <a href="{{ route('perangkat.index', ['id_project' => $project->id_project]) }}" class="font-weight-bold {{ $project->status_maintenance != '1' ? 'text-white' : 'text-primary' }}" title="{{ $project->nama_project }}" data-toggle="tooltip">
+                                                <a href="{{ route('perangkat.view-detail-summary', ['id_project' => $project->id_project]) }}" class="font-weight-bold {{ $project->status_maintenance != '1' ? 'text-white' : 'text-primary' }}" title="{{ $project->nama_project }}" data-toggle="tooltip">
                                                     {{ \Illuminate\Support\Str::limit($project->nama_project, 60) }}
                                                 </a>
                                             </div>

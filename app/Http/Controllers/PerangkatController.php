@@ -22,9 +22,9 @@ class PerangkatController extends Controller
     {
         $this->middleware('permission:view-perangkat');
         $this->middleware('permission:create-perangkat', ['only' => ['create', 'store']]);
-        $this->middleware('permission:edit-perangkat', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:edit-perangkat', ['only' => ['edit', 'update', 'viewDetailSummaryUpdate']]);
         $this->middleware('permission:delete-perangkat', ['only' => ['destroy']]);
-        $this->middleware('permission:view-summary-perangkat', ['only' => ['summary']]);
+        $this->middleware('permission:view-summary-perangkat', ['only' => ['summary', 'viewDetailSummary']]);
     }
 
     public function show($perangkat)
@@ -262,7 +262,7 @@ public function index(Request $request)
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required|mimes:xlsx,xls'
+            'file_excel' => 'required|mimes:xlsx,xls,csv,txt'
         ]);
 
         $file = $request->file('file_excel');
@@ -403,6 +403,166 @@ public function index(Request $request)
 
         flash('Perangkat has been deleted successfully!')->success();
         return redirect()->route('perangkat.index');
+    }
+
+    public function viewDetailSummary(Request $request)
+    {
+        $id_project = $request->id_project;
+        $merk = $request->merk;
+        $type = $request->type;
+
+        $project = Project::findOrFail($id_project);
+        
+        $query = Perangkat::where('id_project', $id_project);
+        if ($merk) {
+            $query->where('merk', $merk);
+        }
+        if ($type) {
+            $query->where('type', $type);
+        }
+        
+        $perangkats = $query->get();
+        
+        // Base info from the first perangkat found or default
+        // We take the first one to populate the "Informasi Perangkat" section
+        $basePerangkat = $perangkats->first();
+
+        $projectes = Project::pluck('nama_project', 'id_project');
+        $jenisperangkates = Jenisperangkat::pluck('jns_perangkat', 'id_jenis');
+        $lokasis = Lokasi::all();
+        
+        $title = "Detail Summary Perangkat: " . $project->nama_project;
+        
+        return view('perangkat.view-detail-summary', compact(
+            'project', 'perangkats', 'basePerangkat', 'projectes', 
+            'jenisperangkates', 'lokasis', 'title', 'merk', 'type', 'id_project'
+        ));
+    }
+
+    public function viewDetailSummaryUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'id_project' => 'required|exists:m_project,id_project',
+            'jenis' => 'required|exists:m_jenis_perangkat,id_jenis',
+            'merk' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
+            'dimensi' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|string',
+            'foto_1' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_2' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'foto_3' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            // Grid Details
+            'units' => 'required|array',
+            'units.*.id_perangkat' => 'nullable', // Null if new
+            'units.*.sn' => 'required|string|max:255',
+            'units.*.sik' => 'nullable|string|max:255',
+            'units.*.hostname' => 'nullable|string|max:255',
+            'units.*.id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
+            'units.*.koordinat' => 'nullable|string|max:255',
+            'units.*.lantai' => 'nullable|string|max:255',
+            'units.*.status_server' => 'nullable|string|max:255',
+            'units.*.type_lisensi' => 'nullable|string|max:255',
+            'units.*.start_warranty' => 'nullable|date',
+            'units.*.end_warranty' => 'nullable|date',
+            'units.*.tgl_online' => 'nullable|date',
+        ]);
+
+        $userId = Auth::id();
+        
+        // Handle Photos (Keep existing if not uploaded)
+        // For multi-update, we might need to handle this carefully if photos are shared
+        // But for now let's assume they are shared across units in this "summary view" 
+        // as per the requirement "baik informasi perangkat atau spesifikasi detail"
+        
+        // Find existing photos from first unit if any
+        $firstUnitId = collect($request->units)->pluck('id_perangkat')->filter()->first();
+        $existingPerangkat = $firstUnitId ? Perangkat::find($firstUnitId) : null;
+        
+        $foto1Path = $existingPerangkat ? $existingPerangkat->foto_1 : null;
+        $foto2Path = $existingPerangkat ? $existingPerangkat->foto_2 : null;
+        $foto3Path = $existingPerangkat ? $existingPerangkat->foto_3 : null;
+
+        if ($request->hasFile('foto_1')) {
+            $foto1Path = $request->file('foto_1')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_2')) {
+            $foto2Path = $request->file('foto_2')->store('uploads/perangkat', 'public');
+        }
+        if ($request->hasFile('foto_3')) {
+            $foto3Path = $request->file('foto_3')->store('uploads/perangkat', 'public');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $updatedCount = 0;
+            $newCount = 0;
+
+            foreach ($request->units as $unit) {
+                $data = [
+                    'id_project' => $validated['id_project'],
+                    'jenis' => $validated['jenis'],
+                    'merk' => $validated['merk'],
+                    'type' => $validated['type'],
+                    'dimensi' => $validated['dimensi'],
+                    'site' => \App\Lokasi::where('id_lokasi', $unit['id_lokasi'])->value('nama_lokasi') ?? '-',
+                    'id_lokasi' => $unit['id_lokasi'],
+                    'keterangan' => $validated['keterangan'],
+                    'foto_1' => $foto1Path,
+                    'foto_2' => $foto2Path,
+                    'foto_3' => $foto3Path,
+                    'user_id' => $userId,
+                    
+                    // Unit Specific Info
+                    'serialnumber' => $unit['sn'],
+                    'sik' => $unit['sik'] ?? null,
+                    'hostname' => $unit['hostname'] ?? null,
+                    'koordinat' => $unit['koordinat'] ?? null,
+                    'lantai' => $unit['lantai'] ?? null,
+                    'status_server' => $unit['status_server'] ?? 'New Device',
+                    'type_lisensi' => $unit['type_lisensi'] ?? null,
+                    'start_warranty' => $unit['start_warranty'] ?? null,
+                    'end_warranty' => $unit['end_warranty'] ?? null,
+                    'tgl_online' => $unit['tgl_online'] ?? null,
+                    'status' => 1,
+                ];
+
+                if (!empty($unit['id_perangkat'])) {
+                    $p = Perangkat::find($unit['id_perangkat']);
+                    if ($p) {
+                        // Check if anything changed
+                        $changed = false;
+                        foreach($data as $key => $val) {
+                            if ($p->{$key} != $val) {
+                                $changed = true;
+                                break;
+                            }
+                        }
+                        if ($changed) {
+                            $p->update($data);
+                            $updatedCount++;
+                        }
+                    }
+                } else {
+                    // Check if SN already exists to avoid duplicate error
+                    $exists = Perangkat::where('serialnumber', $unit['sn'])->first();
+                    if (!$exists) {
+                        Perangkat::create($data);
+                        $newCount++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            flash("Success: $newCount new devices added, $updatedCount devices updated.")->success();
+            return redirect()->route('perangkat.summary');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            flash('Error updating perangkat units: ' . $e->getMessage())->error();
+            return back()->withInput();
+        }
     }
 
     private function formatDateExcel($value)

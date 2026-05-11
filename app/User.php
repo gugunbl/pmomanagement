@@ -71,4 +71,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(TeamSupport::class, 'user_team_support', 'user_id', 'team_support_id');
     }
+
+    public function caseComments()
+    {
+        return $this->hasMany(CaseComment::class, 'user_id', 'id');
+    }
 }

@@ -46,4 +46,9 @@ class MCase extends Model
         // Many cases can belong to one device (SN)
         return $this->belongsTo(Perangkat::class, 'affected_sn', 'serialnumber');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(CaseComment::class, 'case_id', 'id_case')->orderBy('created_at', 'desc');
+    }
 }

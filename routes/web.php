@@ -55,6 +55,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/users/{user}/send-credentials', 'UserController@sendAccessCredentials')->name('users.send-credentials');
     Route::get('/profile/{user}', 'UserController@profile')->name('profile.edit');
     Route::post('/profile/{user}', 'UserController@profileUpdate')->name('profile.update');
+    Route::get('/dashboard-utilisasi', 'UtilizationDashboardController@index')->name('dashboard.utilisasi');
 
     Route::resource('roles', 'RoleController')->except('show');
     Route::resource('permissions', 'PermissionController')->except(['show','destroy','update']);
@@ -112,6 +113,12 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/perangkat/summary', 'PerangkatController@summary')
         ->name('perangkat.summary');
 
+    Route::get('/perangkat/view-detail-summary', 'PerangkatController@viewDetailSummary')
+        ->name('perangkat.view-detail-summary');
+
+    Route::post('/perangkat/view-detail-summary-update', 'PerangkatController@viewDetailSummaryUpdate')
+        ->name('perangkat.view-detail-summary-update');
+
     Route::get('/perangkat/template', 'PerangkatController@templateExport')
         ->name('perangkat.template');
 
@@ -122,6 +129,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->name('perangkat.export');
 
     Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
+    Route::post('/cases/{case}/comments', 'CaseController@storeComment')->name('cases.comments.store');
     Route::resource('cases', 'CaseController');
     Route::resource('interference-ratio', 'InterferenceRatioController');
 

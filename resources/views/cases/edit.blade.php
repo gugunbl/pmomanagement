@@ -20,28 +20,33 @@
             <div class="card-body">
                 {!! Form::model($case, ['route' => ['cases.update', $case->id_case], 'method' => 'PUT', 'id' => 'formCase', 'files' => true]) !!}
                 
-                <h6 class="heading-small text-muted mb-4">INFORMASI USER & PROJECT</h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Project</label>
-                            @if(count(Auth::user()->projects) == 1)
-                                {{ Form::select('id_project', $projects, null, ['class' => 'form-control', 'readonly' => 'readonly', 'id' => 'project_select']) }}
-                            @else
-                                {{ Form::select('id_project', ['' => 'Pilih Project...'] + $projects->toArray(), null, ['class' => 'form-control select2', 'id' => 'project_select']) }}
-                            @endif
+                <h6 class="heading-small text-muted mb-4 d-flex justify-content-between align-items-center" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseUserProject" aria-expanded="true">
+                    INFORMASI USER & PROJECT
+                    <i class="fas fa-chevron-down"></i>
+                </h6>
+                <div class="collapse show" id="collapseUserProject">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Project</label>
+                                @if(count(Auth::user()->projects) == 1)
+                                    {{ Form::select('id_project', $projects, null, ['class' => 'form-control', 'readonly' => 'readonly', 'id' => 'project_select']) }}
+                                @else
+                                    {{ Form::select('id_project', ['' => 'Pilih Project...'] + $projects->toArray(), null, ['class' => 'form-control select2', 'id' => 'project_select']) }}
+                                @endif
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Tgl Open Case</label>
-                            <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i:s', strtotime($case->open_date)) }}" step="1">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Tgl Open Case</label>
+                                <input type="datetime-local" name="open_date" class="form-control" required value="{{ date('Y-m-d\TH:i:s', strtotime($case->open_date)) }}" step="1">
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Tgl Closed Case</label>
-                            <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="{{ $case->closed_date ? date('Y-m-d\TH:i:s', strtotime($case->closed_date)) : '' }}" step="1" {{ $case->status == 'Closed' ? '' : 'disabled' }}>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Tgl Closed Case</label>
+                                <input type="datetime-local" name="closed_date" id="closed_date" class="form-control" value="{{ $case->closed_date ? date('Y-m-d\TH:i:s', strtotime($case->closed_date)) : '' }}" step="1" {{ $case->status == 'Closed' ? '' : 'disabled' }}>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -82,98 +87,103 @@
                 </div>
 
                 <hr class="my-4" />
-                <h6 class="heading-small text-muted mb-4">INFORMASI PELAPOR & CUSTOMER</h6>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">Nama Pelapor</label>
-                            {{ Form::text('reporter_name', null, ['class' => 'form-control', 'placeholder' => 'Nama pelapor...']) }}
-                            @error('reporter_name') <small class="text-danger">{{ $message }}</small> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">No Tlp/Email Pelapor</label>
-                            {{ Form::text('reporter_contact', null, ['class' => 'form-control', 'placeholder' => 'No tlp atau email...']) }}
-                            @error('reporter_contact') <small class="text-danger">{{ $message }}</small> @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="form-control-label">NCM Customer</label>
-                            {{ Form::text('ncm_customer', null, ['class' => 'form-control', 'placeholder' => 'NCM Customer...']) }}
-                            @error('ncm_customer') <small class="text-danger">{{ $message }}</small> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="selection-container mt-4">
-                    @php
-                        $isPerangkat = !empty($case->affected_sn);
-                        $isLokasi = !$isPerangkat && !empty($case->location) && $lokasis->contains('nama_lokasi', $case->location);
-                        $isManual = !$isPerangkat && !$isLokasi;
-                    @endphp
-
-                    <!-- Option 1: Perangkat -->
-                    <div class="row align-items-center mb-3 selection-row" data-type="perangkat">
-                        <div class="col-md-5">
-                            <div class="custom-control custom-radio custom-control-alternative">
-                                <input name="selection_type" class="custom-control-input" id="radioPerangkat" type="radio" value="perangkat" {{ $isPerangkat ? 'checked' : '' }}>
-                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioPerangkat">
-                                    <span class="square-indicator"></span>
-                                    Pilih Perangkat terdampak dari list
-                                </label>
+                <h6 class="heading-small text-muted mb-4 d-flex justify-content-between align-items-center" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseReporterCustomer" aria-expanded="false">
+                    INFORMASI PELAPOR & CUSTOMER
+                    <i class="fas fa-chevron-down"></i>
+                </h6>
+                <div class="collapse" id="collapseReporterCustomer">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Nama Pelapor</label>
+                                {{ Form::text('reporter_name', null, ['class' => 'form-control', 'placeholder' => 'Nama pelapor...']) }}
+                                @error('reporter_name') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
-                        <div class="col-md-7">
-                            <div class="form-group mb-0">
-                                <label class="text-xs text-muted mb-1 d-block">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
-                                {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn, $isPerangkat ? '' : 'disabled']) }}
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">No Tlp/Email Pelapor</label>
+                                {{ Form::text('reporter_contact', null, ['class' => 'form-control', 'placeholder' => 'No tlp atau email...']) }}
+                                @error('reporter_contact') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">NCM Customer</label>
+                                {{ Form::text('ncm_customer', null, ['class' => 'form-control', 'placeholder' => 'NCM Customer...']) }}
+                                @error('ncm_customer') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
                     </div>
 
-                    <!-- Option 2: Lokasi List -->
-                    <div class="row align-items-center mb-3 selection-row" data-type="lokasi">
-                        <div class="col-md-5">
-                            <div class="custom-control custom-radio custom-control-alternative">
-                                <input name="selection_type" class="custom-control-input" id="radioLokasi" type="radio" value="lokasi" {{ $isLokasi ? 'checked' : '' }}>
-                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioLokasi">
-                                    <span class="square-indicator"></span>
-                                    Pilih Lokasi Terdampak dari list
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-7">
-                            <div class="form-group mb-0">
-                                <label class="text-xs text-muted mb-1 d-block">Pilih Site / Lokasi Terdaftar</label>
-                                <select id="location_dropdown" class="form-control select2" {{ $isLokasi ? '' : 'disabled' }}>
-                                    <option value="">Pilih Lokasi...</option>
-                                    @foreach($lokasis as $lok)
-                                        <option value="{{ $lok->nama_lokasi }}" {{ ($case->location == $lok->nama_lokasi) ? 'selected' : '' }}>
-                                            {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="selection-container mt-4">
+                        @php
+                            $isPerangkat = !empty($case->affected_sn);
+                            $isLokasi = !$isPerangkat && !empty($case->location) && $lokasis->contains('nama_lokasi', $case->location);
+                            $isManual = !$isPerangkat && !$isLokasi;
+                        @endphp
 
-                    <!-- Option 3: Manual -->
-                    <div class="row align-items-center mb-3 selection-row" data-type="manual">
-                        <div class="col-md-5">
-                            <div class="custom-control custom-radio custom-control-alternative">
-                                <input name="selection_type" class="custom-control-input" id="radioManual" type="radio" value="manual" {{ $isManual ? 'checked' : '' }}>
-                                <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioManual">
-                                    <span class="square-indicator"></span>
-                                    Input Lokasi Manual (Gunakan jika data perangkat tidak ditemukan di sistem)
-                                </label>
+                        <!-- Option 1: Perangkat -->
+                        <div class="row align-items-center mb-3 selection-row" data-type="perangkat">
+                            <div class="col-md-5">
+                                <div class="custom-control custom-radio custom-control-alternative">
+                                    <input name="selection_type" class="custom-control-input" id="radioPerangkat" type="radio" value="perangkat" {{ $isPerangkat ? 'checked' : '' }}>
+                                    <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioPerangkat">
+                                        <span class="square-indicator"></span>
+                                        Pilih Perangkat terdampak dari list
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="form-group mb-0">
+                                    <label class="text-xs text-muted mb-1 d-block">Perangkat Terdampak (Jenis - Merk - SN - Lantai/Rak)</label>
+                                    {{ Form::select('affected_sn', [], null, ['class' => 'form-control select2', 'id' => 'sn_select', 'data-selected' => $case->affected_sn, $isPerangkat ? '' : 'disabled']) }}
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-7">
-                            <div class="form-group mb-0">
-                                <label class="text-xs text-muted mb-1 d-block">Ketik Lokasi Perangkat (Manual)</label>
-                                {{ Form::text('location_manual_input', $isManual ? $case->location : '', ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20', $isManual ? '' : 'disabled']) }}
+
+                        <!-- Option 2: Lokasi List -->
+                        <div class="row align-items-center mb-3 selection-row" data-type="lokasi">
+                            <div class="col-md-5">
+                                <div class="custom-control custom-radio custom-control-alternative">
+                                    <input name="selection_type" class="custom-control-input" id="radioLokasi" type="radio" value="lokasi" {{ $isLokasi ? 'checked' : '' }}>
+                                    <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioLokasi">
+                                        <span class="square-indicator"></span>
+                                        Pilih Lokasi Terdampak dari list
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="form-group mb-0">
+                                    <label class="text-xs text-muted mb-1 d-block">Pilih Site / Lokasi Terdaftar</label>
+                                    <select id="location_dropdown" class="form-control select2" {{ $isLokasi ? '' : 'disabled' }}>
+                                        <option value="">Pilih Lokasi...</option>
+                                        @foreach($lokasis as $lok)
+                                            <option value="{{ $lok->nama_lokasi }}" {{ ($case->location == $lok->nama_lokasi) ? 'selected' : '' }}>
+                                                {{ $lok->nama_lokasi }} - {{ $lok->alamat }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Option 3: Manual -->
+                        <div class="row align-items-center mb-3 selection-row" data-type="manual">
+                            <div class="col-md-5">
+                                <div class="custom-control custom-radio custom-control-alternative">
+                                    <input name="selection_type" class="custom-control-input" id="radioManual" type="radio" value="manual" {{ $isManual ? 'checked' : '' }}>
+                                    <label class="custom-control-label font-weight-bold d-flex align-items-center" for="radioManual">
+                                        <span class="square-indicator"></span>
+                                        Input Lokasi Manual (Gunakan jika data perangkat tidak ditemukan di sistem)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="form-group mb-0">
+                                    <label class="text-xs text-muted mb-1 d-block">Ketik Lokasi Perangkat (Manual)</label>
+                                    {{ Form::text('location_manual_input', $isManual ? $case->location : '', ['class' => 'form-control', 'id' => 'location_manual', 'placeholder' => 'Contoh: DC GTI - LT 20', $isManual ? '' : 'disabled']) }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -196,6 +206,61 @@
                         <div class="form-group">
                             <label class="form-control-label">No. Tiket Prinsipal (Opsional)</label>
                             {{ Form::text('principal_ticket_no', null, ['class' => 'form-control', 'placeholder' => 'Tiket prinsipal...']) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card bg-secondary border-0 mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="text-uppercase text-muted ls-1 mb-1">Activity</h6>
+                                <ul class="nav nav-tabs nav-tabs-sm border-0" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active font-weight-bold" href="javascript:void(0)">Comments</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body pt-0">
+                                <!-- Comment List -->
+                                <div class="comment-list mt-3">
+                                    @foreach($case->comments as $comment)
+                                        <div class="comment-item mb-4 pl-3 border-left border-info" style="border-width: 4px !important;">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="avatar avatar-sm rounded-circle mr-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                                                </div>
+                                                <div class="comment-meta">
+                                                    <span class="font-weight-bold text-primary mr-1">{{ $comment->user->name }}</span>
+                                                    <span class="text-muted small">added a comment - {{ $comment->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="comment-content pl-5 text-dark">
+                                                {!! nl2br(e($comment->comment)) !!}
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    
+                                    @if($case->comments->isEmpty())
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fas fa-comments fa-2x mb-2 opacity-5"></i>
+                                            <p>No activity yet.</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Add Comment Form -->
+                                <div class="add-comment-box mt-4 bg-white p-3 rounded shadow-sm">
+                                    <div class="form-group mb-2">
+                                        <textarea id="new_comment_text" class="form-control border-0" rows="2" placeholder="Add a comment or follow up..."></textarea>
+                                    </div>
+                                    <div class="text-right">
+                                        <button type="button" class="btn btn-primary btn-sm px-4" id="btnSubmitComment">
+                                            <i class="fas fa-paper-plane mr-1"></i> Send Comment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -564,6 +629,35 @@ $(document).ready(function() {
             return false;
         }
         return true;
+    });
+
+    // Comment submission logic
+    $('#btnSubmitComment').on('click', function() {
+        let comment = $('#new_comment_text').val();
+        if (!comment.trim()) {
+            Swal.fire('Error', 'Comment cannot be empty!', 'error');
+            return;
+        }
+
+        let url = "{{ route('cases.comments.store', $case->id_case) }}";
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                comment: comment,
+                _token: '{{ csrf_token() }}'
+            },
+            beforeSend: function() {
+                $('#btnSubmitComment').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+            },
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr) {
+                $('#btnSubmitComment').prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Send Comment');
+                Swal.fire('Error', 'Failed to add comment. Please try again.', 'error');
+            }
+        });
     });
 
     // Initial trigger

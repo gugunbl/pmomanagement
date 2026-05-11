@@ -269,4 +269,20 @@ class CaseController extends Controller
         flash('Case berhasil diupdate!')->success();
         return redirect()->route('cases.index');
     }
+
+    public function storeComment(Request $request, $case)
+    {
+        $request->validate([
+            'comment' => 'required|string'
+        ]);
+
+        \App\CaseComment::create([
+            'case_id' => $case,
+            'user_id' => Auth::id(),
+            'comment' => $request->comment
+        ]);
+
+        flash('Comment added successfully!')->success();
+        return back();
+    }
 }
