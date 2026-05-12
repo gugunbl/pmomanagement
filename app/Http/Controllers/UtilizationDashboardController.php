@@ -64,4 +64,82 @@ class UtilizationDashboardController extends Controller
 
         return view('dashboard.utilisasi', compact('reports', 'activities', 'employees'));
     }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            
+            // Explicitly use the 'public' disk so it goes to storage/app/public/task_reports
+            $path = $file->storeAs('task_reports', $filename, 'public');
+            
+            // Resolve the absolute path correctly for the public disk
+            $fullPath = storage_path('app/public/' . $path);
+            
+            // Call Gemini Vision Service
+            $aiService = new \App\Services\AI\GeminiVisionService();
+            $result = $aiService->extractFromImage($fullPath);
+            
+            if ($result['success'] && $result['data']) {
+                $data = $result['data'];
+                
+                // Insert into daily_task_reports
+                $reportId = DB::table('daily_task_reports')->insertGetId([
+                    'employee_name' => $data['employee_name'] ?? 'Unknown',
+                    'report_date' => $data['report_date'] ?? date('Y-m-d'),
+                    'day_name' => $data['day_name'] ?? null,
+                    'total_productive_time' => $data['total_productive_time'] ?? null,
+                    'work_utilization_percentage' => $data['work_utilization_percentage'] ?? null,
+                    'effective_work_hours' => $data['effective_work_hours'] ?? 8,
+                    'image_path' => $path,
+                    'ocr_method' => 'gemini',
+                    'ai_confidence_score' => $result['confidence'],
+                    'raw_ai_response' => json_encode($result['raw_response']),
+                    'extracted_entities' => json_encode($data),
+                    'status' => 'ai_parsed',
+                    'processed_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                // Insert activities
+                if (!empty($data['activities']) && is_array($data['activities'])) {
+                    $activitiesToInsert = [];
+                    foreach ($data['activities'] as $activity) {
+                        // Calculate duration if start and end time exist
+                        $duration = null;
+                        if (!empty($activity['start_time']) && !empty($activity['end_time'])) {
+                            $start = \Carbon\Carbon::parse($activity['start_time']);
+                            $end = \Carbon\Carbon::parse($activity['end_time']);
+                            $duration = $start->diffInMinutes($end);
+                        }
+
+                        $activitiesToInsert[] = [
+                            'report_id' => $reportId,
+                            'start_time' => $activity['start_time'] ?? '00:00',
+                            'end_time' => $activity['end_time'] ?? '00:00',
+                            'activity_description' => $activity['description'] ?? '',
+                            'duration_minutes' => $duration,
+                            'is_parallel' => $activity['is_parallel'] ?? false,
+                            'created_at' => now(),
+                        ];
+                    }
+                    if (count($activitiesToInsert) > 0) {
+                        DB::table('task_activities')->insert($activitiesToInsert);
+                    }
+                }
+                
+                return redirect()->back()->with('success', 'Screenshot berhasil diproses oleh Gemini AI. Data telah ditambahkan.');
+            } else {
+                return redirect()->back()->with('error', 'Gagal memproses gambar dengan AI: ' . ($result['error'] ?? 'Unknown error'));
+            }
+        }
+
+        return redirect()->back()->with('error', 'Gagal mengunggah file.');
+    }
 }

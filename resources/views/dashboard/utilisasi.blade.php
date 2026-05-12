@@ -35,6 +35,9 @@
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-primary">Filter</button>
                             <a href="{{ route('dashboard.utilisasi') }}" class="btn btn-secondary">Reset</a>
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalImport">
+                                <i class="fas fa-file-upload mr-1"></i> Upload
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -153,6 +156,50 @@
 </div>
 @endsection
 
+<!-- Modal Import -->
+<div class="modal fade" id="modalImport" tabindex="-1" role="dialog" aria-labelledby="modalImportLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalImportLabel">Upload Screenshot Daily Report</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formAIImport" action="{{ route('dashboard.utilisasi.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-control-label">File Gambar (Screenshot)</label>
+                        <input type="file" name="file" class="form-control" required accept="image/png, image/jpeg, image/jpg">
+                        <small class="text-muted">Upload screenshot task report (contoh: dari chat WhatsApp). Sistem akan memproses gambar menggunakan Gemini AI.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    <button type="submit" id="btnProsesAI" class="btn btn-primary">
+                        <i class="fas fa-brain mr-1"></i> Proses dengan AI
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="aiLoadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+    <div style="background:#fff; border-radius:16px; padding:40px 50px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <div style="margin-bottom:20px;">
+            <div class="spinner-border text-primary" role="status" style="width:3rem; height:3rem;">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <h5 style="margin-bottom:8px; color:#333;"><i class="fas fa-brain mr-1"></i> Memproses dengan Gemini AI</h5>
+        <p style="color:#666; margin-bottom:5px; font-size:14px;">Sedang menganalisis gambar dan mengekstrak data...</p>
+        <p style="color:#999; margin:0; font-size:12px;" id="aiLoadingTimer">Waktu berjalan: 0 detik</p>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -270,6 +317,33 @@ $(document).ready(function() {
 
     // Initialize tooltips for truncated descriptions
     $('[data-toggle="tooltip"]').tooltip();
+
+    // AI Processing Loading Overlay
+    $('#formAIImport').on('submit', function(e) {
+        var fileInput = $(this).find('input[name="file"]');
+        if (!fileInput.val()) return false;
+
+        // Disable button & show spinner inside it
+        var btn = $('#btnProsesAI');
+        btn.prop('disabled', true);
+        btn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
+
+        // Show fullscreen loading overlay
+        $('#aiLoadingOverlay').css('display', 'flex');
+
+        // Close modal backdrop so overlay is visible
+        $('#modalImport').modal('hide');
+
+        // Timer counter
+        var seconds = 0;
+        var timer = setInterval(function() {
+            seconds++;
+            $('#aiLoadingTimer').text('Waktu berjalan: ' + seconds + ' detik');
+        }, 1000);
+
+        // Store timer for cleanup
+        $(this).data('timer', timer);
+    });
 });
 </script>
 @endpush
