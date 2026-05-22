@@ -17,19 +17,26 @@
                     <div class="row align-items-end">
                         <div class="col-md-4">
                             <div class="form-group mb-0">
-                                <label class="form-control-label">Employee Name</label>
-                                <select name="employee_name" class="form-control select2">
-                                    <option value="">All Employees</option>
+                                <label class="form-control-label">Employee Name(s)</label>
+                                <select name="employee_name[]" class="form-control select2" multiple data-placeholder="Select Employees">
                                     @foreach($employees as $emp)
-                                        <option value="{{ $emp }}" {{ request('employee_name') == $emp ? 'selected' : '' }}>{{ $emp }}</option>
+                                        <option value="{{ $emp }}" {{ is_array(request('employee_name')) && in_array($emp, request('employee_name')) ? 'selected' : '' }}>{{ $emp }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-5">
                             <div class="form-group mb-0">
-                                <label class="form-control-label">Report Date</label>
-                                <input type="date" name="report_date" class="form-control" value="{{ request('report_date') }}">
+                                <label class="form-control-label">Report Date Range</label>
+                                <div class="input-daterange datepicker row align-items-center">
+                                    <div class="col">
+                                        <input class="form-control" name="start_date" placeholder="Start date" type="date" value="{{ $start_date }}">
+                                    </div>
+                                    <div class="col-auto">to</div>
+                                    <div class="col">
+                                        <input class="form-control" name="end_date" placeholder="End date" type="date" value="{{ $end_date }}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -47,7 +54,13 @@
                 <!-- Tabs -->
                 <ul class="nav nav-pills nav-fill flex-column flex-sm-row mb-4" id="tabs-text" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link mb-sm-3 mb-md-0 {{ !request('page') ? 'active' : '' }}" id="tabs-dashboard-tab" data-toggle="tab" href="#tabs-dashboard" role="tab" aria-controls="tabs-dashboard" aria-selected="{{ !request('page') ? 'true' : 'false' }}">Dashboard Chart</a>
+                        <a class="nav-link mb-sm-3 mb-md-0 {{ !request('page') ? 'active' : '' }}" id="tabs-dashboard-tab" data-toggle="tab" href="#tabs-dashboard" role="tab" aria-controls="tabs-dashboard" aria-selected="{{ !request('page') ? 'true' : 'false' }}">Dashboard Chart Trend Daily</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-weekly-tab" data-toggle="tab" href="#tabs-weekly" role="tab" aria-controls="tabs-weekly" aria-selected="false">Dashboard Chart Trend Weekly</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-highlevel-tab" data-toggle="tab" href="#tabs-highlevel" role="tab" aria-controls="tabs-highlevel" aria-selected="false">High Level Report</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link mb-sm-3 mb-md-0 {{ request('page') ? 'active' : '' }}" id="tabs-detail-tab" data-toggle="tab" href="#tabs-detail" role="tab" aria-controls="tabs-detail" aria-selected="{{ request('page') ? 'true' : 'false' }}">Detail Grid</a>
@@ -55,7 +68,7 @@
                 </ul>
 
                 <div class="tab-content" id="myTabContent">
-                    <!-- Tab 1: Chart -->
+                    <!-- Tab 1: Chart Daily -->
                     <div class="tab-pane fade {{ !request('page') ? 'show active' : '' }}" id="tabs-dashboard" role="tabpanel" aria-labelledby="tabs-dashboard-tab">
                         <div class="chart-container mb-5" style="position: relative; height:400px; width:100%">
                             <canvas id="utilizationChart"></canvas>
@@ -101,9 +114,106 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="card-footer py-4">
+                            <div class="d-flex justify-content-end">
+                                {{ $reports->links() }}
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Tab 2: Grid -->
+                    <!-- Tab 2: Chart Weekly -->
+                    <div class="tab-pane fade" id="tabs-weekly" role="tabpanel" aria-labelledby="tabs-weekly-tab">
+                        <div class="chart-container mb-5" style="position: relative; height:400px; width:100%">
+                            <canvas id="weeklyUtilizationChart"></canvas>
+                        </div>
+
+                        <div class="table-responsive mt-4">
+                            <h4 class="mb-3">Summary Reports (Weekly)</h4>
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Employee Name</th>
+                                        <th>Week</th>
+                                        <th>Productive Time</th>
+                                        <th>Utilization (%)</th>
+                                        <th>Total Activities</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($weeklyReports as $rep)
+                                        <tr>
+                                            <td><span class="badge badge-dot mr-4"><i style="background-color: hsl(0, 0%, 0%);"></i> {{ $rep->employee_name }}</span></td>
+                                            <td>Week {{ $rep->report_week }} ({{ date('d-m-Y', strtotime($rep->week_start)) }} - {{ date('d-m-Y', strtotime($rep->week_end)) }})</td>
+                                            <td>{{ $rep->total_productive_formatted }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="mr-2">{{ $rep->avg_utilization }}%</span>
+                                                    <div>
+                                                        <div class="progress">
+                                                            <div class="progress-bar bg-info" role="progressbar" aria-valuenow="{{ $rep->avg_utilization }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $rep->avg_utilization }}%;"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $rep->total_activities }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center">No data found</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: High Level Report -->
+                    <div class="tab-pane fade" id="tabs-highlevel" role="tabpanel" aria-labelledby="tabs-highlevel-tab">
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered align-items-center">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width: 50px;">No</th>
+                                        <th>TW Name</th>
+                                        @foreach($highLevelWeeks as $index => $yw)
+                                            <th class="text-center" style="min-width: 150px; border-left: 2px solid #dee2e6; {{ $index % 2 == 0 ? 'background-color: #f8f9fe;' : 'background-color: #ffffff;' }}">
+                                                <div style="font-size: 1rem; font-weight: 800; color: #32325d;">Week {{ $weekLabels[$yw]['week_num'] }}</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">{{ $weekLabels[$yw]['start'] }} - {{ $weekLabels[$yw]['end'] }}</div>
+                                            </th>
+                                        @endforeach
+                                        <th class="text-center" style="width: 100px; border-left: 2px solid #dee2e6; background-color: #f8f9fe; vertical-align: middle;">
+                                            <div style="font-size: 1rem; font-weight: 800; color: #32325d;">Average</div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php $no = 1; @endphp
+                                    @foreach($targetEmployees as $emp)
+                                        <tr>
+                                            <td class="text-center">{{ $no++ }}</td>
+                                            <td style="font-weight: 600;">{{ $emp }}</td>
+                                            @foreach($highLevelWeeks as $index => $yw)
+                                                @php $val = $highLevelData[$emp][$yw] ?? 0; @endphp
+                                                <td class="p-0" style="position: relative; vertical-align: middle; border-left: 2px solid #dee2e6; {{ $index % 2 == 0 ? 'background-color: #fcfcfe;' : 'background-color: #ffffff;' }}">
+                                                    @if($val > 0)
+                                                        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: {{ min($val, 100) }}%; background-color: rgba(94, 114, 228, 0.15); border-right: 2px solid #5e72e4;"></div>
+                                                    @endif
+                                                    <div class="px-3 py-3 text-right" style="position: relative; z-index: 1; font-weight: bold;">
+                                                        {{ $val > 0 ? $val . '%' : '-' }}
+                                                    </div>
+                                                </td>
+                                            @endforeach
+                                            <td class="text-center font-weight-bold bg-light" style="border-left: 2px solid #dee2e6;">
+                                                {{ $employeeAverages[$emp] }}%
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Grid -->
                     <div class="tab-pane fade {{ request('page') ? 'show active' : '' }}" id="tabs-detail" role="tabpanel" aria-labelledby="tabs-detail-tab">
                         <div class="table-responsive">
                             <table class="table align-items-center table-flush">
@@ -161,7 +271,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalImportLabel">Upload Screenshot Daily Report</h5>
+                <h5 class="modal-title" id="modalImportLabel">Upload Screenshot / Foto Daily Report</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -170,9 +280,15 @@
                 @csrf
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-control-label">File Gambar (Screenshot)</label>
+                        <label class="form-control-label font-weight-bold">File Gambar</label>
                         <input type="file" name="file" class="form-control" required accept="image/png, image/jpeg, image/jpg">
-                        <small class="text-muted">Upload screenshot task report (contoh: dari chat WhatsApp). Sistem akan memproses gambar menggunakan Gemini AI.</small>
+                        <small class="text-muted d-block mt-1">
+                            Upload screenshot atau foto template laporan harian. Sistem akan memproses gambar menggunakan Gemini AI dan mengekstrak semua tanggal &amp; aktivitas secara otomatis.
+                        </small>
+                    </div>
+                    <div class="alert alert-info py-2 px-3 mb-0" style="font-size: 0.8rem;">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Format yang didukung:</strong> Screenshot template laporan (tabel dengan kolom Tanggal, Aktivitas, Waktu, Durasi) <em>atau</em> screenshot chat/WhatsApp dengan rentang waktu (08:00 - 09:00).
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -206,11 +322,12 @@
 $(document).ready(function() {
     $('.select2').select2({
         theme: 'bootstrap4',
-        width: '100%'
+        width: '100%',
+        allowClear: true
     });
 
     const ctx = document.getElementById('utilizationChart').getContext('2d');
-    const reports = @json($reports);
+    const reports = @json($reportsForChart);
     
     // Get unique dates for labels
     const labels = [...new Set(reports.map(r => r.report_date))].sort();
@@ -227,10 +344,13 @@ $(document).ready(function() {
         return `hsl(${h}, 70%, 50%)`;
     };
 
-    // Create datasets for each employee (Bar Chart)
-    const datasets = employees.map(emp => {
+    // Create datasets for each employee
+    const datasets = [];
+    employees.forEach(emp => {
         const color = getEmployeeColor(emp);
-        return {
+        
+        // Bar dataset for Utilization %
+        datasets.push({
             label: emp + ' (%)',
             type: 'bar',
             data: labels.map(date => {
@@ -241,26 +361,23 @@ $(document).ready(function() {
             borderColor: color.replace('50%', '40%'),
             borderWidth: 1,
             yAxisID: 'y'
-        };
-    });
+        });
 
-    // Add dataset for Total Activities (Line Chart - Aggregated per date)
-    const aggregatedActivities = labels.map(date => {
-        return reports
-            .filter(r => r.report_date === date)
-            .reduce((sum, r) => sum + r.total_activities, 0);
-    });
-
-    datasets.push({
-        label: 'Sum of Activities',
-        data: aggregatedActivities,
-        type: 'line',
-        borderColor: 'rgba(251, 99, 64, 1)',
-        backgroundColor: 'transparent',
-        pointBackgroundColor: 'rgba(251, 99, 64, 1)',
-        borderWidth: 2,
-        yAxisID: 'y1',
-        tension: 0.1
+        // Line dataset for Activity Count
+        datasets.push({
+            label: emp + ' (Activities)',
+            type: 'line',
+            data: labels.map(date => {
+                const report = reports.find(r => r.report_date === date && r.employee_name === emp);
+                return report ? report.total_activities : 0;
+            }),
+            borderColor: color,
+            backgroundColor: 'transparent',
+            pointBackgroundColor: color,
+            borderWidth: 2,
+            yAxisID: 'y1',
+            tension: 0.1
+        });
     });
 
     new Chart(ctx, {
@@ -313,6 +430,95 @@ $(document).ready(function() {
     $('.badge-dot i').each(function() {
         const empName = $(this).parent().text().trim();
         $(this).css('background-color', getEmployeeColor(empName));
+    });
+
+    // Weekly Chart Logic
+    const ctxWeekly = document.getElementById('weeklyUtilizationChart').getContext('2d');
+    const weeklyReports = @json($weeklyReports);
+    
+    const weeklyLabelsRaw = [...new Set(weeklyReports.map(r => `${r.report_year}-W${r.report_week}`))].sort();
+    
+    const datasetsWeekly = [];
+    employees.forEach(emp => {
+        const color = getEmployeeColor(emp);
+        
+        // Bar dataset for Avg Utilization %
+        datasetsWeekly.push({
+            label: emp + ' (%)',
+            type: 'bar',
+            data: weeklyLabelsRaw.map(weekStr => {
+                const [year, week] = weekStr.split('-W');
+                const report = weeklyReports.find(r => r.report_year == year && r.report_week == week && r.employee_name === emp);
+                return report ? report.avg_utilization : 0;
+            }),
+            backgroundColor: color,
+            borderColor: color.replace('50%', '40%'),
+            borderWidth: 1,
+            yAxisID: 'y'
+        });
+
+        // Line dataset for Total Activity Count
+        datasetsWeekly.push({
+            label: emp + ' (Activities)',
+            type: 'line',
+            data: weeklyLabelsRaw.map(weekStr => {
+                const [year, week] = weekStr.split('-W');
+                const report = weeklyReports.find(r => r.report_year == year && r.report_week == week && r.employee_name === emp);
+                return report ? report.total_activities : 0;
+            }),
+            borderColor: color,
+            backgroundColor: 'transparent',
+            pointBackgroundColor: color,
+            borderWidth: 2,
+            yAxisID: 'y1',
+            tension: 0.1
+        });
+    });
+
+    new Chart(ctxWeekly, {
+        data: {
+            labels: weeklyLabelsRaw.map(w => {
+                const parts = w.split('-W');
+                return 'Week ' + parts[1] + ' (' + parts[0] + ')';
+            }),
+            datasets: datasetsWeekly
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Avg Utilization (%)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Activities Count'
+                    }
+                }
+            }
+        }
     });
 
     // Initialize tooltips for truncated descriptions

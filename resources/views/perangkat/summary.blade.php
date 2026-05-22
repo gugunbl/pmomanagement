@@ -24,7 +24,7 @@
                             @endif
 
                             <div class="form-group mb-0">
-                                {{ Form::text('search', $search, ['class' => 'form-control form-control-sm', 'placeholder'=>'Search...']) }}
+                                {{ Form::text('search', $search, ['class' => 'form-control form-control-sm', 'placeholder'=>'Search by nama project...']) }}
                             </div>
                             <div class="form-group mb-0 ml-2">
                                 <button type="submit" class="btn btn-sm btn-primary">Filter</button>
@@ -55,6 +55,7 @@
                                 <tr>
                                     <th scope="col" width="5%">No</th>
                                     <th scope="col">Nama Project</th>
+                                    <th scope="col">Jenis Perangkat</th>
                                     <th scope="col">Merk </th>
                                     <th scope="col">Type</th>
                                     <th scope="col">Jumlah</th>
@@ -66,11 +67,14 @@
                                         <td>{{ ($summaryperangkats->currentPage() - 1) * $summaryperangkats->perPage() + $key + 1 }}</td>
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
-                                                <a href="{{ route('perangkat.view-detail-summary', ['id_project' => $perangkat->id_project, 'merk' => $perangkat->merk, 'type' => $perangkat->type]) }}" class="font-weight-bold text-primary">
-                                                    {{$perangkat->project->nama_project ?? '-'}}
+                                                <a href="{{ route('perangkat.view-detail-summary', ['id_project' => $perangkat->id_project, 'merk' => $perangkat->merk, 'type' => $perangkat->type]) }}" class="font-weight-bold text-primary" title="{{ $perangkat->project->nama_project ?? '' }}" data-toggle="tooltip">
+                                                    {{ \Illuminate\Support\Str::limit($perangkat->project->nama_project ?? '-', 90) }}
                                                 </a>
                                             </div>
                                         </th>
+                                        <td>
+                                            {{ $perangkat->jenisPerangkat->jns_perangkat ?? '-' }}
+                                        </td>
                                         <td class="budget">
                                             {{$perangkat->merk}}
                                         </td>
@@ -86,7 +90,7 @@
                                 </tbody>
                                 <tfoot >
                                 <tr>
-                                    <td colspan="5">
+                                    <td colspan="6">
                                         {{$summaryperangkats->links()}}
                                     </td>
                                 </tr>
@@ -111,7 +115,7 @@
                                         <th scope="row">
                                             <div class="mx-w-440 d-flex flex-wrap">
                                                 <a href="{{ route('perangkat.view-detail-summary', ['id_project' => $project->id_project]) }}" class="font-weight-bold {{ $project->status_maintenance != '1' ? 'text-white' : 'text-primary' }}" title="{{ $project->nama_project }}" data-toggle="tooltip">
-                                                    {{ \Illuminate\Support\Str::limit($project->nama_project, 60) }}
+                                                    {{ \Illuminate\Support\Str::limit($project->nama_project, 90) }}
                                                 </a>
                                             </div>
                                         </th>

@@ -57,6 +57,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/profile/{user}', 'UserController@profileUpdate')->name('profile.update');
     Route::get('/dashboard-utilisasi', 'UtilizationDashboardController@index')->name('dashboard.utilisasi');
     Route::post('/dashboard-utilisasi/import', 'UtilizationDashboardController@import')->name('dashboard.utilisasi.import');
+    Route::post('/dashboard-utilisasi/import-excel', 'UtilizationDashboardController@importExcel')->name('dashboard.utilisasi.import.excel');
 
     Route::resource('roles', 'RoleController')->except('show');
     Route::resource('permissions', 'PermissionController')->except(['show','destroy','update']);

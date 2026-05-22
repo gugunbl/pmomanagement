@@ -223,16 +223,22 @@ public function index(Request $request)
             $title = 'Summary Perangkat (By Project)';
             return view('perangkat.summary', compact('summaryperangkats', 'title', 'activeTab', 'customers', 'customerFilter', 'search'));
         } else {
-             $query = Perangkat::with(['project' => function($query) {
-                $query->select('id_project', 'nama_project');
-            }])
+             $query = Perangkat::with([
+                'project' => function($query) {
+                    $query->select('id_project', 'nama_project');
+                },
+                'jenisPerangkat' => function($query) {
+                    $query->select('id_jenis', 'jns_perangkat');
+                }
+            ])
             ->select(
                 'id_project', 
+                'jenis',
                 'merk', 
                 'type', 
                 DB::raw('COUNT(serialnumber) as jml')
             )
-            ->groupBy('id_project', 'merk', 'type');
+            ->groupBy('id_project', 'jenis', 'merk', 'type');
             
             if ($search) {
                 $query->whereHas('project', function($q) use ($search) {
