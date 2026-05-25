@@ -34,6 +34,8 @@ class Project extends Model
         'keterangan',
         'top_impl_total',
         'top_maintenance_total',
+        'top_maintenance_signer_total',
+        'top_maintenance_notes',
         'project_report_total',
         'tipe_maintenance',
     ];
@@ -85,6 +87,11 @@ public function topMaintenance()
             'project_id',
             'id_project'
         );
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(\App\ProjectComment::class, 'project_id', 'id_project')->orderBy('created_at', 'desc');
     }
 
 

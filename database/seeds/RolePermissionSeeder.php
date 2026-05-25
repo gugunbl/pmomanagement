@@ -38,6 +38,8 @@ class RolePermissionSeeder extends Seeder
             'update-category',
             'destroy-category',
             'view-post',
+            'monitoring-laporan-upload-laporan',
+            'tombol_upload_laporan',
             'create-post',
             'update-post',
             'destroy-post',

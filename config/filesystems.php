@@ -28,6 +28,9 @@ return [
 
     'cloud' => env('FILESYSTEM_CLOUD', 's3'),
 
+    'project_report_disk' => env('PROJECT_REPORT_STORAGE_DISK', 'public'),
+    'project_report_path' => env('PROJECT_REPORT_STORAGE_PATH', 'project_reports/files'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -63,6 +66,28 @@ return [
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
+        ],
+
+        'project_reports_synology_ftp' => [
+            'driver' => 'ftp',
+            'host' => env('PROJECT_REPORT_FTP_HOST'),
+            'username' => env('PROJECT_REPORT_FTP_USERNAME'),
+            'password' => env('PROJECT_REPORT_FTP_PASSWORD'),
+            'port' => env('PROJECT_REPORT_FTP_PORT', 21),
+            'root' => env('PROJECT_REPORT_FTP_ROOT', '/'),
+            'passive' => env('PROJECT_REPORT_FTP_PASSIVE', true),
+            'ssl' => env('PROJECT_REPORT_FTP_SSL', false),
+            'timeout' => env('PROJECT_REPORT_FTP_TIMEOUT', 30),
+        ],
+
+        'project_reports_synology_sftp' => [
+            'driver' => 'sftp',
+            'host' => env('PROJECT_REPORT_SFTP_HOST'),
+            'username' => env('PROJECT_REPORT_SFTP_USERNAME'),
+            'password' => env('PROJECT_REPORT_SFTP_PASSWORD'),
+            'port' => env('PROJECT_REPORT_SFTP_PORT', 22),
+            'root' => env('PROJECT_REPORT_SFTP_ROOT', '/'),
+            'timeout' => env('PROJECT_REPORT_SFTP_TIMEOUT', 30),
         ],
 
     ],

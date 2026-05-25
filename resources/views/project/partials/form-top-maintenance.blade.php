@@ -4,14 +4,37 @@
         <h6 class="heading-small text-muted mb-3">TOP Maintenance</h6>
 
         {{-- TOTAL TOP MAINTENANCE --}}
-        <div class="form-group col-md-3 px-0">
-            <label>Total TOP Maintenance</label>
-            <input type="number"
-                   name="top_maintenance_total"
-                   class="form-control"
-                   min="1"
-                   max="60"
-                   value="{{ old('top_maintenance_total', $project->top_maintenance_total ?? 12) }}">
+        <div class="form-row">
+            <div class="form-group col-md-3 px-0">
+                <label class="font-weight-bold">Total TOP Maintenance</label>
+                <input type="number"
+                       name="top_maintenance_total"
+                       class="form-control"
+                       min="1"
+                       max="60"
+                       value="{{ old('top_maintenance_total', $project->top_maintenance_total ?? 12) }}">
+            </div>
+
+            <div class="form-group col-md-3 px-0">
+                <label class="font-weight-bold">Jumlah User Tanda Tangan</label>
+                <input type="number"
+                       id="top_maintenance_signer_total"
+                       name="top_maintenance_signer_total"
+                       class="form-control"
+                       min="0"
+                       max="10"
+                       value="{{ old('top_maintenance_signer_total', $project->top_maintenance_signer_total ?? 0) }}">
+            </div>
+
+            <div class="form-group col-md-6 px-0">
+                <label class="font-weight-bold">Nama User Tanda Tangan</label>
+                <input type="text"
+                       name="top_maintenance_notes"
+                       class="form-control"
+                       placeholder="Misal: Team Lead SCR; Dept Head; Group Head INF"
+                       value="{{ old('top_maintenance_notes', $project->top_maintenance_notes ?? '') }}">
+                <small class="form-text text-muted">Pisahkan dengan titik koma (;) sesuai jumlah user tanda tangan</small>
+            </div>
         </div>
 
         @php
@@ -19,6 +42,11 @@
                 'top_maintenance_total',
                 $project->top_maintenance_total ?? 12
             );
+
+            $savedSignerValues = [];
+            foreach ($project->topMaintenance as $signerRow) {
+                $savedSignerValues[$signerRow->top_ke] = $signerRow->signers ? array_flip(json_decode($signerRow->signers, true) ?? []) : [];
+            }
         @endphp
 
         <table class="table table-sm table-bordered mt-3">
@@ -28,7 +56,7 @@
                     <th>Periode Start</th>
                     <th>Periode End</th>
                     <th>Status</th>
-                    <th>Keterangan</th>
+                    <th>Checklist Tanda Tangan</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,7 +68,7 @@
                     $isPaid = ($currentStatus === 'paid');
                 @endphp
 
-                <tr class="{{ $isPaid ? 'table-success' : '' }}">
+                <tr class="top-maintenance-row {{ $isPaid ? 'table-success' : '' }}" data-row="{{ $i }}">
                     <td>{{ $i }}</td>
 
                     <td>
@@ -80,15 +108,11 @@
                             <input type="hidden" name="top_maintenance[{{ $i }}][status]" value="paid">
                         @endif
                     </td>
-                    <td>
-                        <textarea name="top_maintenance[{{ $i }}][keterangan]"
-                                  class="form-control top-maintenance-keterangan"
-                                  data-row="{{ $i }}"
-                                  rows="1"
-                                  {{ $isPaid ? 'disabled' : '' }}>{{ old("top_maintenance.$i.keterangan", $row->keterangan ?? '') }}</textarea>
-                        @if($isPaid)
-                            <input type="hidden" name="top_maintenance[{{ $i }}][keterangan]" value="{{ $row->keterangan ?? '' }}">
-                        @endif
+
+                    <td style="vertical-align: middle;">
+                        <div class="signer-checkboxes" 
+                             id="top-maintenance-signers-{{ $i }}"
+                             style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
                     </td>
                 </tr>
             @endfor
@@ -109,37 +133,62 @@ $(document).ready(function() {
         return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
     }
 
-    // Map status to narration label
-    var statusLabels = {
-        'submitted': 'Submitted',
-        'revision': 'Revision',
-        'paid': 'Paid'
-    };
+    // Render dynamic checklist items inside each TOP row based on the signer count
+    var savedSignerValues = {!! json_encode($savedSignerValues) !!};
+    var oldSignerValues = {!! json_encode(old('top_maintenance_signers', [])) !!};
+    var signerValues = Object.assign({}, savedSignerValues, oldSignerValues);
+
+    function renderSignerChecklist(count) {
+        count = parseInt(count, 10) || 0;
+
+        $('.top-maintenance-row').each(function() {
+            var rowIndex = $(this).data('row');
+            var container = $('#top-maintenance-signers-' + rowIndex);
+            var statusSelect = $(this).find('.top-maintenance-status');
+            var currentStatus = statusSelect.val();
+            var isPaid = (currentStatus === 'paid');
+            
+            container.empty();
+
+            if (count <= 0) {
+                container.html('<p class="text-muted mb-0" style="font-size: 0.85rem; grid-column: 1/-1;">-</p>');
+                return;
+            }
+
+            for (var j = 1; j <= count; j++) {
+                var checked = signerValues[rowIndex] && signerValues[rowIndex][j] ? 'checked' : '';
+                var fieldId = 'top_maintenance_signer_' + rowIndex + '_' + j;
+                var disabledAttr = isPaid ? 'disabled' : '';
+                var itemHtml =
+                    '<div class="form-check">' +
+                        '<input class="form-check-input" type="checkbox" name="top_maintenance_signers[' + rowIndex + '][' + j + ']" id="' + fieldId + '" value="1" ' + checked + ' ' + disabledAttr + '>' +
+                        '<label class="form-check-label text-nowrap" for="' + fieldId + '" style="font-size: 0.9rem; ' + (isPaid ? 'color: #6c757d;' : '') + '">User ' + j + '</label>' +
+                    '</div>';
+                container.append(itemHtml);
+            }
+        });
+    }
+
+    $('#top_maintenance_signer_total').on('input change', function() {
+        renderSignerChecklist($(this).val());
+    });
+
+    renderSignerChecklist($('#top_maintenance_signer_total').val());
 
     $(document).on('change', '.top-maintenance-status', function() {
         var newStatus = $(this).val();
-        var oldStatus = $(this).data('old-status');
-        var rowIndex = $(this).data('row');
-        var keteranganEl = $('.top-maintenance-keterangan[data-row="' + rowIndex + '"]');
-
-        // Only append narration when changing TO submitted/revision/paid (not when already that status)
-        if (newStatus !== oldStatus && statusLabels[newStatus]) {
-            var narration = statusLabels[newStatus] + ' ' + formatNarrationDate();
-            var currentText = keteranganEl.val().trim();
-            if (currentText) {
-                keteranganEl.val(currentText + '\n' + narration);
-            } else {
-                keteranganEl.val(narration);
-            }
-        }
+        var row = $(this).closest('tr');
 
         // Toggle green highlight for paid status
-        var row = $(this).closest('tr');
         if (newStatus === 'paid') {
             row.addClass('table-success');
         } else {
             row.removeClass('table-success');
         }
+
+        // Re-render signer checkboxes to update disabled state
+        var count = parseInt($('#top_maintenance_signer_total').val(), 10) || 0;
+        renderSignerChecklist(count);
 
         // Update the tracked old status
         $(this).data('old-status', newStatus);

@@ -64,6 +64,7 @@
 
                     <td>
                         <select name="project_reports[{{ $i }}][status]" class="form-control">
+                            <option value="open"      {{ old("project_reports.$i.status", optional($report)->status)=='open'?'selected':'' }}>Open</option>
                             <option value="progress"  {{ old("project_reports.$i.status", optional($report)->status)=='progress'?'selected':'' }}>Progress</option>
                             <option value="submitted" {{ old("project_reports.$i.status", optional($report)->status)=='submitted'?'selected':'' }}>Submitted</option>
                             <option value="signoff"   {{ old("project_reports.$i.status", optional($report)->status)=='signoff'?'selected':'' }}>Signoff</option>

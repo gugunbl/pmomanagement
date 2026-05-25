@@ -66,21 +66,39 @@
                             </div>
                         </div>
                     </form>
+                    <div class="alert alert-info py-2 mt-2 mb-0" role="alert">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Kolom Signer Dinamis:</strong> Nama user diambil dari field "Nama User Tanda Tangan" di edit project (dipisahkan dengan titik koma). Checklist aktif berwarna hijau, tidak aktif berwarna kuning.
+                    </div>
                 </div>
 
+                @php
+                    $signerColumns = $listBA->getCollection()->pluck('project.top_maintenance_signer_total')
+                        ->map(function ($value) {
+                            return intval($value);
+                        })
+                        ->max() ?? 0;
+                    $signerColumns = max(0, $signerColumns);
+                    $totalColumns = 10 + $signerColumns;
+                @endphp
+
                 <div class="table-responsive">
-                    <table class="table align-items-center table-flush table-bordered">
+                    <table class="table align-items-center table-flush table-bordered table-hover">
                         <thead class="thead-light">
                             <tr>
                                 <th scope="col">No</th>
-                                <th scope="col">Nama Project</th>
+                                <th scope="col" style="min-width: 140px;">Nama Project</th>
                                 <th scope="col">Nomor SPK</th>
                                 <th scope="col">PM Maintenance</th>
                                 <th scope="col">TOP Ke</th>
                                 <th scope="col">Start Date BA</th>
                                 <th scope="col">End Date BA</th>
-                                <th scope="col">Status</th>
+                                <th scope="col" style="width: 140px;">Status</th>
+                                @for ($i = 1; $i <= $signerColumns; $i++)
+                                    <th scope="col">User {{ $i }}</th>
+                                @endfor
                                 <th scope="col">Keterangan</th>
+                                <th scope="col" style="width: 120px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="list">
@@ -89,6 +107,8 @@
                                 $projectCounter = $startProjectCounter ?? 0;
                                 $prevProject = null;
                                 $isSilver = false;
+                                $signerColumns = $listBA->getCollection()->pluck('project.top_maintenance_signer_total')->max() ?? 0;
+                                $totalColumns = 10 + $signerColumns;
                             @endphp
                             @forelse($listBA as $ba)
                                 @php
@@ -115,11 +135,15 @@
                                     }
                                     
                                     $rowspan = $projectCounts[$ba->project_id] ?? 1;
+                                    $signers = json_decode($ba->signers ?? '[]', true) ?: [];
+                                    $teamLeadDone = in_array(1, $signers);
+                                    $deptHeadDone = in_array(2, $signers);
+                                    $noteText = $ba->comments->first()->comment ?? ($ba->keterangan ?? '-');
                                 @endphp
                                 <tr class="{{ $isSilver ? 'bg-silver' : '' }}">
                                     @if($isFirst)
                                         <td rowspan="{{ $rowspan }}">{{ $projectCounter }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="text-wrap font-weight-bold" style="min-width: 200px; font-size: 1.05rem;">
+                                        <td rowspan="{{ $rowspan }}" class="text-wrap font-weight-bold" style="min-width: 150px; font-size: 1.05rem;">
                                             <a href="{{ route('project.edit', $ba->project_id) }}">
                                                 {{ $ba->project->nama_project ?? '-' }}
                                             </a>
@@ -130,25 +154,206 @@
                                     <td class="text-center">{{ $ba->top_ke }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_start ? \Carbon\Carbon::parse($ba->periode_start)->format('d M Y') : '-' }}</td>
                                     <td class="{{ $highlight }}">{{ $ba->periode_end ? \Carbon\Carbon::parse($ba->periode_end)->format('d M Y') : '-' }}</td>
-                                    <td>
-                                        <span class="badge badge-dot mr-4">
-                                            <i class="{{ $ba->status == 'paid' ? 'bg-success' : ($ba->status == 'submitted' ? 'bg-info' : 'bg-warning') }}"></i>
-                                            <span class="status">{{ strtoupper($ba->status) }}</span>
-                                        </span>
+                                    <td style="width: 140px;">
+                                        <select class="form-control form-control-sm editable" data-id="{{ $ba->id }}" data-field="status">
+                                            <option value="planned" {{ $ba->status == 'planned' ? 'selected' : '' }}>Planned</option>
+                                            <option value="submitted" {{ $ba->status == 'submitted' ? 'selected' : '' }}>Submitted</option>
+                                            <option value="revision" {{ $ba->status == 'revision' ? 'selected' : '' }}>Revision</option>
+                                            <option value="paid" {{ $ba->status == 'paid' ? 'selected' : '' }}>Paid</option>
+                                        </select>
                                     </td>
-                                    <td style="min-width: 250px;">
-                                        <div style="max-height: 4.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-height: 1.5em; white-space: normal;">
-                                            {{ $ba->keterangan ?? '-' }}
-                                        </div>
-                                    </td>
+                                    @php
+                                        $projectSignerTotal = intval($ba->project->top_maintenance_signer_total ?? 0);
+                                        $selectedSigners = json_decode($ba->signers ?? '[]', true) ?: [];
+                                        $isPaid = $ba->status === 'paid';
+                                        $signerLabels = [];
+                                        if (!empty($ba->project->top_maintenance_notes)) {
+                                            $signerLabels = array_map('trim', explode(';', $ba->project->top_maintenance_notes));
+                                        }
+                                    @endphp
+                                    @for ($signerIndex = 1; $signerIndex <= $signerColumns; $signerIndex++)
+                                        @if ($signerIndex <= $projectSignerTotal)
+                                            @php
+                                                $checked = in_array($signerIndex, $selectedSigners);
+                                                $cellClass = $checked ? 'bg-success text-white' : 'bg-warning text-dark';
+                                            @endphp
+                                            <td class="text-center {{ $cellClass }}">
+                                                <div class="custom-control custom-checkbox d-inline-block" style="vertical-align: middle;">
+                                                    <input type="checkbox"
+                                                           class="custom-control-input project-signer-checkbox"
+                                                           id="signer_checkbox_{{ $ba->id }}_{{ $signerIndex }}"
+                                                           data-ba-id="{{ $ba->id }}"
+                                                           data-signer-index="{{ $signerIndex }}"
+                                                           {{ $checked ? 'checked' : '' }}
+                                                           {{ $isPaid ? 'disabled' : '' }}
+                                                           value="1">
+                                                    <label class="custom-control-label" for="signer_checkbox_{{ $ba->id }}_{{ $signerIndex }}"></label>
+                                                </div>
+                                                <div style="font-size: 0.8rem; margin-top: 0.2rem;">
+                                                    {{ $signerLabels[$signerIndex - 1] ?? 'User ' . $signerIndex }}
+                                                </div>
+                                            </td>
+                                        @else
+                                            <td></td>
+                                        @endif
+                                    @endfor
+                                    @if($isFirst)
+                                        @php
+                                            $latestComments = $ba->project->comments->take(3);
+                                        @endphp
+                                        <td rowspan="{{ $rowspan }}" style="min-width: 320px; max-width: 420px;">
+                                            @if($latestComments->isEmpty())
+                                                <div class="text-muted small">Belum ada komentar untuk project ini.</div>
+                                            @else
+                                                <div class="comment-activity">
+                                                    @foreach($latestComments as $comment)
+                                                        <div class="media py-3 border-bottom" style="min-height: 82px;">
+                                                            <div class="avatar rounded-circle bg-primary text-white mr-3 d-flex align-items-center justify-content-center" style="width:40px; height:40px; font-weight:600; font-size:0.95rem;">
+                                                                {{ strtoupper(substr($comment->user->name ?? 'U', 0, 1)) }}
+                                                            </div>
+                                                            <div class="media-body">
+                                                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                                                    <strong class="text-dark">{{ $comment->user->name ?? 'Unknown' }}</strong>
+                                                                    <small class="text-muted">{{ $comment->created_at ? $comment->created_at->format('d M Y H:i') : '' }}</small>
+                                                                </div>
+                                                                <div class="text-sm" style="white-space: pre-wrap;">{!! nl2br(e($comment->comment)) !!}</div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                    @if($ba->project->comments->count() > 3)
+                                                        <div class="text-right mt-2">
+                                                            <small class="text-muted">Menampilkan 3 komentar terakhir dari {{ $ba->project->comments->count() }}.</small>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td rowspan="{{ $rowspan }}" class="text-center align-middle">
+                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-toggle="modal" data-target="#projectCommentsModal{{ $ba->project_id }}">
+                                                Komentar ({{ $ba->project->comments->count() }})
+                                            </button>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center">Tidak ada data BA di tab ini.</td>
+                                    <td colspan="{{ $totalColumns }}" class="text-center">Tidak ada data BA di tab ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                @foreach($listBA->getCollection()->groupBy('project_id') as $projectId => $projectPendingBAs)
+                    @php
+                        $modalBA = $projectPendingBAs->first();
+                    @endphp
+                    @if($modalBA)
+                        <div class="modal fade" id="projectCommentsModal{{ $projectId }}" tabindex="-1" role="dialog" aria-labelledby="projectCommentsModalLabel{{ $projectId }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="projectCommentsModalLabel{{ $projectId }}">
+                                            Komentar Project - {{ Str::limit($modalBA->project->nama_project ?? '-', 35) }}
+                                        </h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-4">
+                                            <h6>Detail TOP</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label class="font-weight-bold mb-1">Nama Project</label>
+                                                        <div>{{ $modalBA->project->nama_project ?? '-' }}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label class="font-weight-bold mb-1">Nomor SPK</label>
+                                                        <div>{{ $modalBA->project->nomor_spk ?? '-' }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label class="font-weight-bold mb-1">PM Maintenance</label>
+                                                        <div>{{ $modalBA->project->mPMMaintenance->nama_pm ?? '-' }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive mt-3">
+                                                <table class="table table-sm table-bordered mb-0">
+                                                    <thead class="thead-light">
+                                                        <tr>
+                                                            <th>TOP Ke</th>
+                                                            <th>Start Date BA</th>
+                                                            <th>End Date BA</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($projectPendingBAs as $pendingBA)
+                                                            <tr>
+                                                                <td>{{ $pendingBA->top_ke }}</td>
+                                                                <td>{{ $pendingBA->periode_start ? \Carbon\Carbon::parse($pendingBA->periode_start)->format('d M Y') : '-' }}</td>
+                                                                <td>{{ $pendingBA->periode_end ? \Carbon\Carbon::parse($pendingBA->periode_end)->format('d M Y') : '-' }}</td>
+                                                                <td>{{ ucfirst($pendingBA->status) }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="mb-4 project-comment-history">
+                                            <h6>Riwayat Komentar</h6>
+                                            @forelse($modalBA->project->comments as $comment)
+                                                <div class="media mb-3">
+                                                    <div class="avatar rounded-circle bg-primary text-white mr-3" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:600;">
+                                                        {{ strtoupper(substr($comment->user->name ?? 'U',0,1)) }}
+                                                    </div>
+                                                    <div class="media-body">
+                                                        <div class="d-flex justify-content-between">
+                                                            <div>
+                                                                <strong>{{ $comment->user->name ?? 'Unknown' }}</strong>
+                                                                <div class="text-muted small">{{ $comment->created_at->format('d M Y H:i') }}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-1">{!! nl2br(e($comment->comment)) !!}</div>
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <div class="text-center text-muted py-4">
+                                                    <i class="fas fa-comments fa-2x mb-2"></i>
+                                                    <p class="mb-0">Belum ada komentar untuk project ini.</p>
+                                                </div>
+                                            @endforelse
+                                        </div>
+
+                                        <form action="{{ route('project.comments.store', $projectId) }}" method="POST">
+                                            @csrf
+                                            <div class="form-group">
+                                                <label for="comment_project_{{ $projectId }}">Komentar / Keterangan</label>
+                                                <textarea id="comment_project_{{ $projectId }}" name="comment" class="form-control" rows="3" placeholder="Masukkan komentar atau alasan perubahan status"></textarea>
+                                            </div>
+                                            <input type="hidden" name="tab" value="{{ $activeTab }}">
+                                            <div class="text-right">
+                                                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-primary">Simpan Komentar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+
+                <div id="save-notification" class="save-toast">
+                    <i class="fas fa-check-circle mr-2"></i> Data berhasil disimpan
                 </div>
 
                 <div class="card-footer py-4">
@@ -205,5 +410,125 @@
         line-height: 1;
         vertical-align: middle;
     }
+
+    .project-comment-history {
+        max-height: 360px;
+        overflow-y: auto;
+        padding-right: .5rem;
+    }
+</style>
+@endpush
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        function showNotification() {
+            var toast = $('#save-notification');
+            toast.addClass('show');
+            setTimeout(function() {
+                toast.removeClass('show');
+            }, 3000);
+        }
+
+        $('.editable').on('change', function() {
+            var id = $(this).data('id');
+            var field = $(this).data('field');
+            var value = $(this).val();
+            var element = $(this);
+
+            element.addClass('is-loading');
+
+            $.ajax({
+                url: '/project/monitoring-ba/' + id + '/update',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    status: value,
+                    field: field
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showNotification();
+                        if (response.reload) {
+                            location.reload();
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error updating data');
+                    console.error(xhr);
+                },
+                complete: function() {
+                    element.removeClass('is-loading');
+                }
+            });
+        });
+
+        $('[data-toggle="tooltip"]').tooltip();
+
+        $(document).on('click', '.project-comment-open', function() {
+            var button = $(this);
+            var projectId = button.data('project-id');
+            var projectName = button.data('project-name');
+            var spk = button.data('spk');
+            var pm = button.data('pm');
+            var topKe = button.data('top-ke');
+            var startDate = button.data('start-date');
+            var endDate = button.data('end-date');
+            var status = button.data('status');
+
+            $('#projectCommentProjectName' + projectId).text(projectName);
+            $('#projectCommentSpk' + projectId).text(spk);
+            $('#projectCommentPm' + projectId).text(pm);
+            $('#projectCommentTopKe' + projectId).text(topKe);
+            $('#projectCommentStartDate' + projectId).text(startDate);
+            $('#projectCommentEndDate' + projectId).text(endDate);
+            $('#projectCommentStatus' + projectId).text(status);
+        });
+
+        $(document).on('change', '.project-signer-checkbox', function() {
+            var checkbox = $(this);
+            var baId = checkbox.data('ba-id');
+            var row = checkbox.closest('tr');
+            var selected = [];
+
+            row.find('.project-signer-checkbox:checked').each(function() {
+                selected.push($(this).data('signer-index'));
+            });
+
+            $.ajax({
+                url: '/project/monitoring-ba/' + baId + '/signers',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    signers: selected
+                },
+                success: function(response) {
+                    if (response.success) {
+                        if (response.reload) {
+                            location.reload();
+                            return;
+                        }
+
+                        row.find('.project-signer-checkbox').each(function() {
+                            var cell = $(this).closest('td');
+                            if ($(this).is(':checked')) {
+                                cell.removeClass('bg-warning text-dark').addClass('bg-success text-white');
+                            } else {
+                                cell.removeClass('bg-success text-white').addClass('bg-warning text-dark');
+                            }
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr);
+                }
+            });
+        });
+    });
+</script>
+<style>
+    .is-loading { opacity: 0.5; border-color: #5e72e4; }
+    .save-toast { visibility: hidden; min-width: 250px; background-color: #2dce89; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 9999; right: 30px; bottom: 30px; font-size: 14px; box-shadow: 0 4px 6px rgba(50,50,93,0.11), 0 1px 3px rgba(0,0,0,0.08); transition: all 0.3s ease; opacity: 0; transform: translateY(20px); }
+    .save-toast.show { visibility: visible; opacity: 1; transform: translateY(0); }
 </style>
 @endpush

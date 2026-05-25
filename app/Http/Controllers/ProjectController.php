@@ -10,6 +10,11 @@ use App\Status;
 use App\ProjectTopImplementasi;
 use App\ProjectTopMaintenance;
 use App\ProjectReport;
+use App\ProjectReportComment;
+use App\ProjectReportStatusLog;
+use App\ProjectTopMaintenanceComment;
+use App\ProjectTopMaintenanceStatusLog;
+use App\ProjectComment;
 use App\Mprojectmanager;
 use App\MCustomer;
 use App\MSales;
@@ -18,6 +23,7 @@ use App\Http\Requests\CategoryRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB; // Jika ingin transaction
+use Illuminate\Support\Facades\Storage;
 use App\Exports\MonitoringBAExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -438,14 +444,20 @@ public function edit(Project $project)
 public function update(Request $request, Project $project)
 {
     $request->validate([
-        'pm_implementasi'  => 'required|exists:m_project_manager,id_pm',
-        'pm_maintenance'   => 'required|exists:m_project_manager,id_pm',
-        'nama_project'     => 'required|string|max:255',
-        'nomor_spk'        => 'required|string|max:255',
-        'tanggal_spk'      => 'required|date_format:Y-m-d',
-        'tipe_maintenance' => 'nullable|string|in:Manage Service,PM-CM',
-        'team_support'     => 'nullable|array',
-        'team_support.*'   => 'exists:m_team_supports,id',
+        'pm_implementasi'          => 'required|exists:m_project_manager,id_pm',
+        'pm_maintenance'           => 'required|exists:m_project_manager,id_pm',
+        'nama_project'             => 'required|string|max:255',
+        'nomor_spk'                => 'required|string|max:255',
+        'tanggal_spk'              => 'required|date_format:Y-m-d',
+        'tipe_maintenance'         => 'nullable|string|in:Manage Service,PM-CM',
+        'top_maintenance_total'    => 'required|integer|min:1|max:60',
+        'top_maintenance_signer_total' => 'nullable|integer|min:0|max:10',
+        'top_maintenance_notes'    => 'nullable|string|max:1000',
+        'top_maintenance_signers'  => 'nullable|array',
+        'top_maintenance_signers.*'=> 'nullable|array',
+        'top_maintenance_signers.*.*' => 'nullable|in:1',
+        'team_support'             => 'nullable|array',
+        'team_support.*'           => 'exists:m_team_supports,id',
     ]);
 
     DB::transaction(function () use ($request, $project) {
@@ -454,23 +466,25 @@ public function update(Request $request, Project $project)
          * 1️⃣ UPDATE PROJECT INFO
          * =============================== */
         $project->update([
-            'nama_project'          => $request->nama_project,
-            'nomor_spk'             => $request->nomor_spk,
-            'tanggal_spk'           => $request->tanggal_spk,
-            'status_implementation' => $request->status_implementation,
-            'status_maintenance'    => $request->status_maintenance,
-            'customer'              => $request->customer,
-            'category'              => $request->category,
-            'pm_implementasi'       => $request->pm_implementasi,
-            'pm_maintenance'        => $request->pm_maintenance,
-            'sales'                 => $request->sales,
-            'link_dokumen'          => $request->link_dokumen,
-            'keterangan'            => $request->keterangan,
+            'nama_project'                  => $request->nama_project,
+            'nomor_spk'                     => $request->nomor_spk,
+            'tanggal_spk'                   => $request->tanggal_spk,
+            'status_implementation'         => $request->status_implementation,
+            'status_maintenance'            => $request->status_maintenance,
+            'customer'                      => $request->customer,
+            'category'                      => $request->category,
+            'pm_implementasi'               => $request->pm_implementasi,
+            'pm_maintenance'                => $request->pm_maintenance,
+            'sales'                         => $request->sales,
+            'link_dokumen'                  => $request->link_dokumen,
+            'keterangan'                    => $request->keterangan,
             'tanggal_kom'                   => $request->tanggal_kom,
             'tanggal_akhir_implementasi'    => $request->tanggal_akhir_implementasi,
             'tanggal_mulai_maintenance'     => $request->tanggal_mulai_maintenance,
             'tanggal_akhir_maintenance'     => $request->tanggal_akhir_maintenance,
             'tipe_maintenance'              => $request->tipe_maintenance,
+            'top_maintenance_signer_total'  => $request->top_maintenance_signer_total ?? 0,
+            'top_maintenance_notes'         => $request->top_maintenance_notes ?? null,
         ]);
 
         // Sync team supports (many-to-many)
@@ -521,9 +535,15 @@ public function update(Request $request, Project $project)
 
             $rows = $request->top_maintenance ?? [];
 
+            $signerRows = $request->top_maintenance_signers ?? [];
+
             for ($i = 1; $i <= $request->top_maintenance_total; $i++) {
 
                 if (!isset($rows[$i]['start'])) continue;
+
+                $signers = isset($signerRows[$i]) ? array_keys(array_filter($signerRows[$i], function ($value) {
+                    return $value == '1';
+                })) : [];
 
                 ProjectTopMaintenance::updateOrCreate(
                     [
@@ -535,6 +555,7 @@ public function update(Request $request, Project $project)
                         'periode_end'   => $rows[$i]['end'] ?? null,
                         'status'        => $rows[$i]['status'] ?? 'planned',
                         'keterangan'    => $rows[$i]['keterangan'] ?? null,
+                        'signers'       => !empty($signers) ? json_encode($signers) : null,
                     ]
                 );
             }
@@ -559,7 +580,13 @@ public function update(Request $request, Project $project)
 
                 if (!isset($rows[$i])) continue;
 
-                \App\ProjectReport::updateOrCreate(
+                $existingReport = \App\ProjectReport::where('project_id', $project->id_project)
+                    ->where('report_ke', $i)
+                    ->first();
+
+                $newStatus = $rows[$i]['status'] ?? 'progress';
+
+                $updatedReport = \App\ProjectReport::updateOrCreate(
                     [
                         'project_id' => $project->id_project,
                         'report_ke'  => $i,
@@ -568,10 +595,19 @@ public function update(Request $request, Project $project)
                         'period_start'    => $rows[$i]['start'] ?? null,
                         'period_end'      => $rows[$i]['end'] ?? null,
                         'submission_date' => $rows[$i]['submission_date'] ?? null,
-                        'status'          => $rows[$i]['status'] ?? 'progress',
+                        'status'          => $newStatus,
                         'keterangan'      => $rows[$i]['keterangan'] ?? null,
                     ]
                 );
+
+                if ($existingReport && $existingReport->status !== $newStatus) {
+                    ProjectReportStatusLog::create([
+                        'project_report_id' => $updatedReport->id,
+                        'user_id' => Auth::id(),
+                        'old_status' => $existingReport->status,
+                        'new_status' => $newStatus,
+                    ]);
+                }
             }
 
             \App\ProjectReport::where('project_id', $project->id_project)
@@ -590,7 +626,7 @@ public function update(Request $request, Project $project)
     public function show(Project $project)
     {
         $title = "Informasi Detail Project";
-        $project->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance','teamSupports']);
+        $project->load(['statusImplementation','statusMaintenance','mcategory','mPMImplementasi','mPMMaintenance','teamSupports','reports.comments.user','reports.statusLogs.user']);
         return view('project.show', compact('title', 'project'));
     }
 
@@ -642,37 +678,155 @@ public function update(Request $request, Project $project)
     }
 
 
-    public function reportMonitoring()
+    public function reportMonitoring(Request $request)
     {
-        $reports = \App\ProjectReport::with('project')
-            ->orderBy('period_end', 'desc')
-            ->get();
-            
+        $query = ProjectReport::with(['project.comments.user', 'comments.user'])
+            ->whereHas('project');
+
+        $mainQuery = clone $query;
+        $mainQuery->join('m_project', 'project_reports.project_id', '=', 'm_project.id_project')
+            ->select('project_reports.*')
+            ->selectRaw('(SELECT MIN(period_end) FROM project_reports as pr2 WHERE pr2.project_id = project_reports.project_id) as min_period_end')
+            ->orderBy('min_period_end', 'asc')
+            ->orderBy('m_project.nama_project', 'asc')
+            ->orderBy('project_reports.period_end', 'asc');
+
+        $queryForOffset = clone $mainQuery;
+
+        $reports = $mainQuery->paginate(15)->appends($request->query());
+
+        $offset = ($reports->currentPage() - 1) * $reports->perPage();
+        $startProjectCounter = 0;
+        if ($offset > 0) {
+            $prevReports = $queryForOffset->limit($offset)->pluck('project_reports.project_id');
+            $startProjectCounter = collect($prevReports)->unique()->count();
+            if ($reports->count() > 0 && collect($prevReports)->last() == $reports->first()->project_id) {
+                $startProjectCounter--;
+            }
+        }
+
         $title = 'Monitoring Laporan';
-        return view('project.monitoring-laporan', compact('reports', 'title'));
+        return view('project.monitoring-laporan', compact('reports', 'title', 'startProjectCounter'));
     }
 
     public function reportMonitoringUpdate(Request $request)
     {
         $request->validate([
             'id' => 'required|exists:project_reports,id',
-            'field' => 'required|in:status,keterangan',
+            'field' => 'required|in:status',
             'value' => 'nullable|string'
         ]);
 
-        $report = \App\ProjectReport::findOrFail($request->id);
-        $report->{$request->field} = $request->value;
-        $report->save();
+        $report = ProjectReport::findOrFail($request->id);
+        $oldStatus = $report->status;
+        $newStatus = $request->value;
+
+        if ($oldStatus !== $newStatus) {
+            $report->status = $newStatus;
+            $report->save();
+
+            ProjectReportStatusLog::create([
+                'project_report_id' => $report->id,
+                'user_id' => Auth::id(),
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+            ]);
+
+            $statusNote = sprintf(
+                'Laporan %s: Status changed from %s to %s oleh %s',
+                $report->report_ke,
+                ucfirst($oldStatus),
+                ucfirst($newStatus),
+                Auth::user()->name ?? 'Unknown'
+            );
+
+            ProjectComment::create([
+                'project_id' => $report->project_id,
+                'user_id' => Auth::id(),
+                'comment' => $statusNote,
+            ]);
+
+            return response()->json(['success' => true, 'reload' => true]);
+        }
 
         return response()->json(['success' => true]);
     }
+
+    public function reportCommentStore(Request $request, ProjectReport $report)
+    {
+        $request->validate([
+            'comment' => 'required|string'
+        ]);
+
+        ProjectReportComment::create([
+            'project_report_id' => $report->id,
+            'user_id' => Auth::id(),
+            'comment' => $request->comment,
+        ]);
+
+        flash('Komentar laporan berhasil disimpan!')->success();
+        return back();
+    }
+
+    public function reportUploadForm(ProjectReport $report)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+
+        return view('project.report-upload', compact('report'));
+    }
+
+    public function reportUpload(Request $request, ProjectReport $report)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+
+        $maxUploadKb = intval(env('PROJECT_REPORT_MAX_UPLOAD_KB', 51200));
+
+        $request->validate([
+            'upload_file' => 'required|file|mimes:pdf|max:' . $maxUploadKb
+        ]);
+
+        if ($request->hasFile('upload_file')) {
+            if ($report->uploaded_file) {
+                Storage::disk($report->uploaded_disk ?: 'public')->delete($report->uploaded_file);
+            }
+
+            $disk = config('filesystems.project_report_disk', 'public');
+            $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
+            $path = $request->file('upload_file')->store($directory, $disk);
+
+            $report->uploaded_file = $path;
+            $report->uploaded_disk = $disk;
+            $report->uploaded_original_name = $request->file('upload_file')->getClientOriginalName();
+            $report->save();
+        }
+
+        flash('File laporan berhasil diupload!')->success();
+        return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    public function reportDownload(ProjectReport $report)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->uploaded_file, 404);
+
+        $disk = $report->uploaded_disk ?: 'public';
+        abort_unless(Storage::disk($disk)->exists($report->uploaded_file), 404);
+
+        return Storage::disk($disk)->download(
+            $report->uploaded_file,
+            $report->uploaded_original_name ?: basename($report->uploaded_file)
+        );
+    }
+
     public function monitoringBA(Request $request)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
         $activeTab = $request->tab ?: 'progress';
 
-        $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
+        $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance', 'project.comments.user', 'comments.user', 'statusLogs.user'])
             ->where('status', '!=', 'paid')
             ->whereHas('project');
 
@@ -824,6 +978,153 @@ public function update(Request $request, Project $project)
 
         $filename = 'Monitoring-BA-'.$activeTab.'-'.date('Ymd').'.xlsx';
         return Excel::download(new MonitoringBAExport($listBA), $filename);
+    }
+
+    public function monitoringBAUpdate(Request $request, ProjectTopMaintenance $ba)
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'comment' => 'nullable|string',
+        ]);
+
+        $oldStatus = $ba->status;
+        $newStatus = $request->status;
+        $commentText = trim($request->comment ?? '');
+
+        if ($oldStatus !== $newStatus) {
+            ProjectTopMaintenanceStatusLog::create([
+                'project_top_maintenance_id' => $ba->id,
+                'user_id' => Auth::id(),
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+            ]);
+
+            $ba->status = $newStatus;
+        }
+
+        if ($commentText) {
+            ProjectTopMaintenanceComment::create([
+                'project_top_maintenance_id' => $ba->id,
+                'user_id' => Auth::id(),
+                'comment' => $commentText,
+            ]);
+            $ba->keterangan = $commentText;
+        } elseif ($oldStatus !== $newStatus) {
+            $statusNote = sprintf(
+                'TOP %s: Status changed from %s to %s oleh %s',
+                $ba->top_ke,
+                ucfirst($oldStatus),
+                ucfirst($newStatus),
+                Auth::user()->name ?? 'Unknown'
+            );
+            ProjectTopMaintenanceComment::create([
+                'project_top_maintenance_id' => $ba->id,
+                'user_id' => Auth::id(),
+                'comment' => $statusNote,
+            ]);
+            ProjectComment::create([
+                'project_id' => $ba->project_id,
+                'user_id' => Auth::id(),
+                'comment' => $statusNote,
+            ]);
+            $ba->keterangan = $statusNote;
+        }
+
+        if ($ba->isDirty()) {
+            $ba->save();
+        }
+
+        flash('Perubahan BA berhasil disimpan!')->success();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'reload' => true]);
+        }
+
+        return redirect()->route('project.ba.monitoring', array_merge(request()->query(), ['tab' => $request->tab ?: 'progress']));
+    }
+
+    public function monitoringBASignersUpdate(Request $request, ProjectTopMaintenance $ba)
+    {
+        $request->validate([
+            'signers' => 'nullable|array',
+            'signers.*' => 'nullable|integer|min:1',
+        ]);
+
+        $oldSigners = json_decode($ba->signers ?? '[]', true) ?: [];
+        $oldSigners = array_map('intval', $oldSigners);
+
+        $signers = array_values(array_filter($request->input('signers', []), function ($value) {
+            return is_numeric($value) && intval($value) > 0;
+        }));
+        $signers = array_map('intval', $signers);
+
+        $addedSigners = array_values(array_diff($signers, $oldSigners));
+        $removedSigners = array_values(array_diff($oldSigners, $signers));
+
+        $ba->signers = !empty($signers) ? json_encode($signers) : null;
+        $ba->save();
+
+        if (!empty($addedSigners) || !empty($removedSigners)) {
+            $signerLabels = [];
+            if (!empty($ba->project->top_maintenance_notes)) {
+                $signerLabels = array_map('trim', explode(';', $ba->project->top_maintenance_notes));
+            }
+
+            foreach ($addedSigners as $signerIndex) {
+                $label = $signerLabels[$signerIndex - 1] ?? 'User ' . $signerIndex;
+                ProjectComment::create([
+                    'project_id' => $ba->project_id,
+                    'user_id' => Auth::id(),
+                    'comment' => sprintf('TOP %s: %s dicentang oleh %s', $ba->top_ke, $label, Auth::user()->name ?? 'Unknown'),
+                ]);
+            }
+
+            foreach ($removedSigners as $signerIndex) {
+                $label = $signerLabels[$signerIndex - 1] ?? 'User ' . $signerIndex;
+                ProjectComment::create([
+                    'project_id' => $ba->project_id,
+                    'user_id' => Auth::id(),
+                    'comment' => sprintf('TOP %s: %s di-uncheck oleh %s', $ba->top_ke, $label, Auth::user()->name ?? 'Unknown'),
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'reload' => true]);
+    }
+
+    public function monitoringBACommentStore(Request $request, ProjectTopMaintenance $ba)
+    {
+        $request->validate([
+            'comment' => 'required|string',
+        ]);
+
+        ProjectTopMaintenanceComment::create([
+            'project_top_maintenance_id' => $ba->id,
+            'user_id' => Auth::id(),
+            'comment' => $request->comment,
+        ]);
+
+        $ba->keterangan = $request->comment;
+        $ba->save();
+
+        flash('Komentar BA berhasil disimpan!')->success();
+        return back();
+    }
+
+    public function projectCommentStore(Request $request, $projectId)
+    {
+        $request->validate([
+            'comment' => 'required|string',
+        ]);
+
+        ProjectComment::create([
+            'project_id' => $projectId,
+            'user_id' => Auth::id(),
+            'comment' => $request->comment,
+        ]);
+
+        flash('Komentar Project berhasil disimpan!')->success();
+        return back();
     }
 
     public function getTeamSupports(Request $request)

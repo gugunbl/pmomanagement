@@ -80,7 +80,26 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/project/report-monitoring/update', 'ProjectController@reportMonitoringUpdate')
         ->name('project.report.monitoring.update');
 
+    Route::post('/project/report-monitoring/{report}/comments', 'ProjectController@reportCommentStore')
+        ->name('project.report.comments.store');
+
+    Route::get('/project/report-monitoring/{report}/upload', 'ProjectController@reportUploadForm')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.upload.form');
+
+    Route::post('/project/report-monitoring/{report}/upload', 'ProjectController@reportUpload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.upload');
+
+    Route::get('/project/report-monitoring/{report}/download', 'ProjectController@reportDownload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.download');
+
     Route::get('/project/monitoring-ba', 'ProjectController@monitoringBA')->name('project.ba.monitoring');
+    Route::post('/project/monitoring-ba/{ba}/update', 'ProjectController@monitoringBAUpdate')->name('project.ba.monitoring.update');
+    Route::post('/project/monitoring-ba/{ba}/signers', 'ProjectController@monitoringBASignersUpdate')->name('project.ba.monitoring.signers.update');
+    Route::post('/project/monitoring-ba/{ba}/comments', 'ProjectController@monitoringBACommentStore')->name('project.ba.comments.store');
+    Route::post('/project/{project}/comments', 'ProjectController@projectCommentStore')->name('project.comments.store');
     Route::get('/project/monitoring-ba/export/pdf', 'ProjectController@exportBAPdf')->name('project.ba.export.pdf');
     Route::get('/project/monitoring-ba/export/excel', 'ProjectController@exportBAExcel')->name('project.ba.export.excel');
 
