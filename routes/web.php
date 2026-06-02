@@ -149,6 +149,12 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/perangkat/export', 'PerangkatController@export')
         ->name('perangkat.export');
 
+    Route::get('/daily-monitoring/{daily_monitoring}/images/{imageIndex}', 'DailyMonitoringController@image')
+        ->where('imageIndex', '[0-9]+')
+        ->name('daily-monitoring.image');
+    Route::get('/daily-monitoring/project/{project}/cases', 'DailyMonitoringController@projectCases')
+        ->name('daily-monitoring.project-cases');
+    Route::resource('daily-monitoring', 'DailyMonitoringController')->except('destroy');
     Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
     Route::post('/cases/{case}/comments', 'CaseController@storeComment')->name('cases.comments.store');
     Route::resource('cases', 'CaseController');

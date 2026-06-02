@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    <FilesMatch "(^\.|composer\.(json|lock)|package(-lock)?\.json|webpack\.mix\.js|phpunit\.xml|server\.php|artisan|README\.md|\.env|\.log|\.sql|\.bak|\.zip|\.tar|\.gz|\.map)$">
+        Require all denied
+    </FilesMatch>
+
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor)(/|$) - [F,L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

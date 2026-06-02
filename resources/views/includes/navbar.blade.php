@@ -274,9 +274,9 @@
                         </li>
                     @endcanany
     
-                    @canany(['view-case', 'create-case'])
+                    @canany(['view-case', 'create-case', 'sub-menu-daily-monitoring'])
                         <li class="nav-item">
-                            <a class="nav-link {{ (request()->is('cases*')) ? 'active' : '' }}" href="#navbar-cases"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-cases">
+                            <a class="nav-link {{ (request()->is('cases*') || request()->is('daily-monitoring*')) ? 'active' : '' }}" href="#navbar-cases"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-cases">
                                 <i class="fas text-primary fa-briefcase"></i>
                                 <span class="nav-link-text">Case Management</span>
                             </a>
@@ -295,6 +295,14 @@
                                         <a href="{{route('cases.create')}}" class="nav-link">
                                             <span class="sidenav-mini-icon">C </span>
                                             <span class="sidenav-normal">Tambah Case</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    @can('sub-menu-daily-monitoring')
+                                    <li class="nav-item">
+                                        <a href="{{route('daily-monitoring.index')}}" class="nav-link">
+                                            <span class="sidenav-mini-icon">D </span>
+                                            <span class="sidenav-normal">Daily Monitoring</span>
                                         </a>
                                     </li>
                                     @endcan

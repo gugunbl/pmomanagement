@@ -23,6 +23,7 @@ class CasePermissionSeeder extends Seeder
             'create-case',
             'edit-case',
             'delete-case',
+            'sub-menu-daily-monitoring',
         ];
 
         foreach ($permissions as $permission) {

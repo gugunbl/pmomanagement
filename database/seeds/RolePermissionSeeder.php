@@ -44,6 +44,7 @@ class RolePermissionSeeder extends Seeder
             'update-post',
             'destroy-post',
             'menu-team-support',
+            'sub-menu-daily-monitoring',
         ];
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
