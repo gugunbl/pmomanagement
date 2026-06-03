@@ -83,11 +83,9 @@ class DailyMonitoringController extends Controller
     private function casesForProject($projectId)
     {
         return MCase::where('id_project', $projectId)
-            ->orderByRaw("
-                CASE WHEN status IN ('Open', 'In Progress') THEN 1 ELSE 2 END ASC,
-                CASE WHEN status IN ('Open', 'In Progress') THEN open_date ELSE '1970-01-01' END DESC,
-                CASE WHEN status = 'Closed' THEN closed_date ELSE '1970-01-01' END DESC
-            ")
+            ->orderByRaw('CASE WHEN open_date IS NULL THEN 1 ELSE 0 END ASC')
+            ->orderBy('open_date', 'asc')
+            ->orderBy('id_case', 'asc')
             ->get()
             ->map(function ($case) {
                 return [

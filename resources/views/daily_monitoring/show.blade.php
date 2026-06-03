@@ -22,7 +22,7 @@
         foreach ($projectCases as $case) {
             $principalTicket = !empty($case['principal_ticket_no']) ? $case['principal_ticket_no'] : '-';
             $statusIcon = in_array($case['status'], ['Open', 'In Progress']) ? '[OPEN]' : '[' . strtoupper($case['status']) . ']';
-            $waText .= "\n- " . $case['open_date'] . " || " . $case['subject'] . " || " . $principalTicket . " || " . $statusIcon;
+            $waText .= "\n- " . $case['open_date'] . " || " . $case['subject'] . " || " . $case['lokasi_perangkat'] . " || " . $statusIcon . " || " . $principalTicket;
         }
     } else {
         $waText .= "\n- Tidak ada ticket aktif";
