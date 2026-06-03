@@ -1,5 +1,178 @@
 /* Custom css */
+:root {
+    --idsolusi-red: #da251d;
+    --idsolusi-red-dark: #b51f18;
+    --idsolusi-charcoal: #333333;
+    --idsolusi-muted: #6b6b6b;
+    --idsolusi-soft: #f7f9fc;
+    --idsolusi-border: #f0d6d4;
+}
+
+body {
+    background-color: var(--idsolusi-soft);
+    color: var(--idsolusi-charcoal);
+}
+
+a,
+.btn-link {
+    color: var(--idsolusi-red);
+}
+
+a:hover,
+.btn-link:hover {
+    color: var(--idsolusi-red-dark);
+}
+
+.text-primary {
+    color: var(--idsolusi-red) !important;
+}
+
+.bg-primary,
+.badge-primary,
+.badge.bg-primary,
+.table .thead-primary th {
+    background-color: var(--idsolusi-red) !important;
+}
+
+.border-primary {
+    border-color: var(--idsolusi-red) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--idsolusi-red) 0%, var(--idsolusi-red-dark) 48%, var(--idsolusi-charcoal) 100%) !important;
+}
+
+.navbar-top.bg-primary,
+.header.bg-primary,
+.header.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--idsolusi-red) 0%, var(--idsolusi-red-dark) 55%, var(--idsolusi-charcoal) 100%) !important;
+}
+
+.btn-primary {
+    color: #ffffff;
+    background-color: var(--idsolusi-red) !important;
+    border-color: var(--idsolusi-red) !important;
+    box-shadow: 0 4px 12px rgba(218, 37, 29, .28);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+    color: #ffffff;
+    background-color: var(--idsolusi-red-dark) !important;
+    border-color: var(--idsolusi-red-dark) !important;
+    box-shadow: 0 6px 16px rgba(181, 31, 24, .34);
+}
+
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:not(:disabled):not(.disabled):active:focus,
+.btn-primary:not(:disabled):not(.disabled).active:focus,
+.show > .btn-primary.dropdown-toggle:focus {
+    box-shadow: 0 0 0 .2rem rgba(218, 37, 29, .28);
+}
+
+.btn-outline-primary {
+    color: var(--idsolusi-red);
+    border-color: var(--idsolusi-red);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:not(:disabled):not(.disabled):active {
+    color: #ffffff;
+    background-color: var(--idsolusi-red);
+    border-color: var(--idsolusi-red);
+}
+
+.form-control:focus,
+.custom-select:focus,
+.bootstrap-select .dropdown-toggle:focus,
+.select2-container--bootstrap4.select2-container--focus .select2-selection,
+.select2-container--bootstrap4.select2-container--open .select2-selection {
+    border-color: var(--idsolusi-red);
+    box-shadow: 0 0 0 .15rem rgba(218, 37, 29, .16);
+}
+
+.custom-control-input:checked ~ .custom-control-label:before {
+    border-color: var(--idsolusi-red);
+    background-color: var(--idsolusi-red);
+}
+
+.custom-control-input:focus ~ .custom-control-label:before {
+    box-shadow: 0 0 0 .2rem rgba(218, 37, 29, .18);
+}
+
+.input-group-text {
+    color: var(--idsolusi-red);
+}
+
+.sidenav .navbar-nav .nav-link.active,
+.sidenav .navbar-nav .nav-link:hover {
+    color: var(--idsolusi-red);
+}
+
+.sidenav .navbar-nav .nav-link.active:before,
+.sidenav .navbar-nav .nav-link:hover:before {
+    border-left-color: var(--idsolusi-red);
+}
+
+.sidenav .navbar-nav .nav-link.active i,
+.sidenav .navbar-nav .nav-link:hover i,
+.sidenav .text-primary {
+    color: var(--idsolusi-red) !important;
+}
+
+.sidenav-toggler-line {
+    background-color: var(--idsolusi-red) !important;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link,
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+    color: #ffffff;
+    background-color: var(--idsolusi-red);
+}
+
+.nav-tabs .nav-link.active,
+.border-bottom.text-primary {
+    border-color: var(--idsolusi-red) !important;
+}
+
+.page-item.active .page-link {
+    background-color: var(--idsolusi-red);
+    border-color: var(--idsolusi-red);
+}
+
+.page-link {
+    color: var(--idsolusi-red);
+}
+
+.page-link:hover {
+    color: var(--idsolusi-red-dark);
+}
+
+.card-header.bg-primary {
+    background-color: var(--idsolusi-red) !important;
+}
+
+.spinner-border.text-primary {
+    color: var(--idsolusi-red) !important;
+}
+
+.progress-bar {
+    background-color: var(--idsolusi-red);
+}
+
+.swal2-confirm.btn-primary,
+.swal2-styled.swal2-confirm {
+    background-color: var(--idsolusi-red) !important;
+}
+
 .mx-w-440{
     max-width: 340px;
 }
-

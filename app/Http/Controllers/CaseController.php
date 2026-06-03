@@ -7,7 +7,11 @@ use Illuminate\Http\Request;
 use App\MCase;
 use App\Project;
 use App\Perangkat;
+use App\User;
+use App\Mail\CaseMentionNotification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class CaseController extends Controller
@@ -39,10 +43,14 @@ class CaseController extends Controller
             $projects = Project::pluck('nama_project', 'id_project');
         }
 
+        $selectedProjects = array_values(array_filter((array) $request->input('id_project', []), function ($idProject) {
+            return $idProject !== null && $idProject !== '';
+        }));
+
         // Project filter from request
-        if ($request->filled('id_project')) {
-            $query->where('id_project', $request->id_project);
-            $summaryQuery->where('id_project', $request->id_project);
+        if (!empty($selectedProjects)) {
+            $query->whereIn('id_project', $selectedProjects);
+            $summaryQuery->whereIn('id_project', $selectedProjects);
         }
 
         // Calculate summaries
@@ -206,7 +214,13 @@ class CaseController extends Controller
             $affectedPerangkats = Perangkat::whereIn('serialnumber', $sns)->get();
         }
 
-        return view('cases.edit', compact('title', 'case', 'projects', 'lokasis', 'affectedPerangkats'));
+        $mentionUsers = User::select('id', 'name', 'email')
+            ->whereNotNull('email')
+            ->where('email', '<>', '')
+            ->orderBy('name')
+            ->get();
+
+        return view('cases.edit', compact('title', 'case', 'projects', 'lokasis', 'affectedPerangkats', 'mentionUsers'));
     }
 
     public function update(Request $request, $case)
@@ -276,13 +290,63 @@ class CaseController extends Controller
             'comment' => 'required|string'
         ]);
 
-        \App\CaseComment::create([
+        $caseModel = MCase::with('project')->findOrFail($case);
+
+        $comment = \App\CaseComment::create([
             'case_id' => $case,
             'user_id' => Auth::id(),
             'comment' => $request->comment
         ]);
 
+        $mentionedUsers = $this->findMentionedUsers($request->comment);
+
+        if ($mentionedUsers->isNotEmpty()) {
+            $comment->load('user');
+            $caseUrl = route('cases.show', $caseModel->id_case);
+
+            foreach ($mentionedUsers as $mentionedUser) {
+                try {
+                    Mail::to($mentionedUser->email)->send(
+                        new CaseMentionNotification($caseModel, $comment, $mentionedUser, $caseUrl)
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send case mention notification', [
+                        'case_id' => $caseModel->id_case,
+                        'comment_id' => $comment->id,
+                        'mentioned_user_id' => $mentionedUser->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'notified_count' => $mentionedUsers->count(),
+            ]);
+        }
+
         flash('Comment added successfully!')->success();
         return back();
+    }
+
+    private function findMentionedUsers($comment)
+    {
+        $commentLower = mb_strtolower($comment);
+
+        return User::select('id', 'name', 'email')
+            ->whereNotNull('email')
+            ->where('email', '<>', '')
+            ->get()
+            ->filter(function ($user) use ($commentLower) {
+                $mentionName = '@' . mb_strtolower($user->name);
+                $mentionEmailName = '@' . mb_strtolower(strtok($user->email, '@'));
+
+                return strpos($commentLower, $mentionName) !== false
+                    || strpos($commentLower, $mentionEmailName) !== false;
+            })
+            ->unique('id')
+            ->values();
     }
 }

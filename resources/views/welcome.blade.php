@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ config('app.name', 'Laravel') }}</title>
         <link rel="stylesheet" href="{{asset('assets/css/dashboard.css')}}" type="text/css">
+        <link rel="stylesheet" href="{{asset('assets/css/custom.css')}}" type="text/css">
         <link rel="stylesheet" href="{{asset('assets/fonts/stylesheet.css')}}">
         <style>
             *{

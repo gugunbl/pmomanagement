@@ -251,8 +251,9 @@
 
                                 <!-- Add Comment Form -->
                                 <div class="add-comment-box mt-4 bg-white p-3 rounded shadow-sm">
-                                    <div class="form-group mb-2">
-                                        <textarea id="new_comment_text" class="form-control border-0" rows="2" placeholder="Add a comment or follow up..."></textarea>
+                                    <div class="form-group mb-2 mention-box">
+                                        <textarea id="new_comment_text" class="form-control border-0" rows="2" placeholder="Add a comment or follow up... Ketik @ untuk mention user"></textarea>
+                                        <div id="mention_suggestions" class="mention-suggestions d-none"></div>
                                     </div>
                                     <div class="text-right">
                                         <button type="button" class="btn btn-primary btn-sm px-4" id="btnSubmitComment">
@@ -484,12 +485,70 @@
 [aria-expanded="false"] .fa-chevron-down {
     transform: rotate(-90deg);
 }
+
+.mention-box {
+    position: relative;
+}
+
+.mention-suggestions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 6px);
+    z-index: 1060;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: .375rem;
+    box-shadow: 0 10px 24px rgba(31, 45, 61, .14);
+}
+
+.mention-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    padding: .65rem .85rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mention-suggestion-item:hover,
+.mention-suggestion-item.active {
+    background: #f8f9fe;
+}
+
+.mention-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    background: #da251d;
+    color: #ffffff;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.mention-user-email {
+    display: block;
+    color: #8898aa;
+    font-size: .75rem;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
 $(document).ready(function() {
+    const mentionUsers = @json($mentionUsers);
+    let activeMention = null;
+
     $('#btnReplaceDevice').on('click', function() {
         let count = {{ count($affectedPerangkats) }};
         
@@ -632,6 +691,151 @@ $(document).ready(function() {
     });
 
     // Comment submission logic
+    function getMentionQuery(text, cursorPosition) {
+        let beforeCursor = text.substring(0, cursorPosition);
+        let match = beforeCursor.match(/(^|\s)@([^\s@]*)$/);
+
+        if (!match) {
+            return null;
+        }
+
+        return {
+            start: cursorPosition - match[2].length - 1,
+            end: cursorPosition,
+            query: match[2].toLowerCase()
+        };
+    }
+
+    function renderMentionSuggestions(users) {
+        let $suggestions = $('#mention_suggestions');
+
+        if (!users.length) {
+            $suggestions.addClass('d-none').empty();
+            return;
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        let html = users.map(function(user, index) {
+            let initial = (user.name || user.email || '?').charAt(0).toUpperCase();
+            return `
+                <button type="button" class="mention-suggestion-item ${index === 0 ? 'active' : ''}" data-user-id="${user.id}">
+                    <span class="mention-avatar">${escapeHtml(initial)}</span>
+                    <span>
+                        <strong>${escapeHtml(user.name)}</strong>
+                        <span class="mention-user-email">${escapeHtml(user.email)}</span>
+                    </span>
+                </button>
+            `;
+        }).join('');
+
+        $suggestions.html(html).removeClass('d-none');
+    }
+
+    function updateMentionSuggestions() {
+        let textarea = document.getElementById('new_comment_text');
+        activeMention = getMentionQuery(textarea.value, textarea.selectionStart);
+
+        if (!activeMention) {
+            $('#mention_suggestions').addClass('d-none').empty();
+            return;
+        }
+
+        let users = mentionUsers.filter(function(user) {
+            let name = (user.name || '').toLowerCase();
+            let email = (user.email || '').toLowerCase();
+
+            return !activeMention.query
+                || name.indexOf(activeMention.query) !== -1
+                || email.indexOf(activeMention.query) !== -1;
+        }).slice(0, 8);
+
+        renderMentionSuggestions(users);
+    }
+
+    function insertMention(user) {
+        let textarea = document.getElementById('new_comment_text');
+        let text = textarea.value;
+        let mentionText = '@' + user.name + ' ';
+
+        if (!activeMention) {
+            return;
+        }
+
+        textarea.value = text.substring(0, activeMention.start) + mentionText + text.substring(activeMention.end);
+        let cursorPosition = activeMention.start + mentionText.length;
+        textarea.focus();
+        textarea.setSelectionRange(cursorPosition, cursorPosition);
+
+        $('#mention_suggestions').addClass('d-none').empty();
+        activeMention = null;
+    }
+
+    $('#new_comment_text').on('keyup click', function(e) {
+        if (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].indexOf(e.key) !== -1) {
+            return;
+        }
+
+        updateMentionSuggestions();
+    });
+
+    $('#new_comment_text').on('keydown', function(e) {
+        let $suggestions = $('#mention_suggestions');
+        let $items = $suggestions.find('.mention-suggestion-item');
+
+        if ($suggestions.hasClass('d-none') || !$items.length) {
+            return;
+        }
+
+        let currentIndex = $items.index($items.filter('.active'));
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            $items.removeClass('active').eq((currentIndex + 1) % $items.length).addClass('active');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            $items.removeClass('active').eq((currentIndex - 1 + $items.length) % $items.length).addClass('active');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            let userId = $items.filter('.active').data('user-id');
+            let user = mentionUsers.find(function(item) {
+                return item.id == userId;
+            });
+            if (user) {
+                insertMention(user);
+            }
+        } else if (e.key === 'Escape') {
+            $suggestions.addClass('d-none').empty();
+            activeMention = null;
+        }
+    });
+
+    $('#mention_suggestions').on('mousedown', '.mention-suggestion-item', function(e) {
+        e.preventDefault();
+        let userId = $(this).data('user-id');
+        let user = mentionUsers.find(function(item) {
+            return item.id == userId;
+        });
+
+        if (user) {
+            insertMention(user);
+        }
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.mention-box').length) {
+            $('#mention_suggestions').addClass('d-none').empty();
+            activeMention = null;
+        }
+    });
+
     $('#btnSubmitComment').on('click', function() {
         let comment = $('#new_comment_text').val();
         if (!comment.trim()) {
