@@ -32,7 +32,13 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
         }
 
         if (isset($this->request['id_project']) && !empty($this->request['id_project'])) {
-            $query->where('id_project', $this->request['id_project']);
+            $selectedProjects = array_values(array_filter((array) $this->request['id_project'], function ($idProject) {
+                return $idProject !== null && $idProject !== '';
+            }));
+
+            if (count($selectedProjects) > 0) {
+                $query->whereIn('id_project', $selectedProjects);
+            }
         }
 
         return $query;

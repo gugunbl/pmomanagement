@@ -20,6 +20,7 @@ class DailyMonitoringController extends Controller
     {
         $title = 'Daily Monitoring';
         $monitorings = DailyMonitoring::with(['project', 'user'])
+            ->withCount('projectCases as ticket_server_warning_count')
             ->orderBy('report_datetime', 'desc')
             ->paginate(10);
 
@@ -57,8 +58,9 @@ class DailyMonitoringController extends Controller
         $title = 'Detail Daily Monitoring';
         $daily_monitoring->load(['project', 'user']);
         $projectCases = $this->casesForProject($daily_monitoring->id_project);
+        $ticketServerWarningCount = $projectCases->count();
 
-        return view('daily_monitoring.show', compact('title', 'daily_monitoring', 'projectCases'));
+        return view('daily_monitoring.show', compact('title', 'daily_monitoring', 'projectCases', 'ticketServerWarningCount'));
     }
 
     public function image(DailyMonitoring $daily_monitoring, $imageIndex)

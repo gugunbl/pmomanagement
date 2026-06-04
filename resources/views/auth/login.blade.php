@@ -3,243 +3,366 @@
 @section('content')
     <style>
         .login-idsolusi-page {
+            --idsolusi-red: #da251d;
+            --idsolusi-red-dark: #b51f18;
+            --idsolusi-charcoal: #333333;
+            --idsolusi-panel: #070b11;
+            --idsolusi-panel-soft: #0f1a24;
+            --idsolusi-line: rgba(255, 255, 255, .62);
             min-height: 100vh;
-            background: #f7f9fc;
-        }
-
-        .login-idsolusi-hero {
-            background: linear-gradient(135deg, #da251d 0%, #b51f18 48%, #333333 100%);
-            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(420px, .88fr);
+            background: var(--idsolusi-panel);
+            color: #ffffff;
             overflow: hidden;
         }
 
-        .login-idsolusi-hero:before {
+        .login-visual {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 7.5vw;
+            background-image:
+                linear-gradient(90deg, rgba(5, 9, 15, .2) 0%, rgba(7, 11, 17, .08) 50%, rgba(7, 11, 17, .85) 100%),
+                linear-gradient(180deg, rgba(7, 11, 17, .35) 0%, rgba(7, 11, 17, .18) 46%, rgba(7, 11, 17, .78) 100%),
+                url("{{ asset('assets/img/idsolusi/login-smart-city.png') }}");
+            background-size: cover;
+            background-position: center;
+        }
+
+        .login-visual:before,
+        .login-visual:after {
             content: "";
             position: absolute;
+            pointer-events: none;
+        }
+
+        .login-visual:before {
             inset: 0;
             background:
-                linear-gradient(120deg, rgba(255, 255, 255, .16) 0, rgba(255, 255, 255, 0) 34%),
-                radial-gradient(circle at 85% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 32%);
+                radial-gradient(circle at 18% 24%, rgba(218, 37, 29, .18), transparent 24%),
+                radial-gradient(circle at 58% 74%, rgba(218, 37, 29, .12), transparent 22%),
+                linear-gradient(90deg, rgba(0, 0, 0, .25), rgba(0, 0, 0, .04));
         }
 
-        .login-idsolusi-hero .container {
+        .login-visual:after {
+            top: 0;
+            right: -1px;
+            bottom: 0;
+            width: 22%;
+            background: linear-gradient(90deg, rgba(7, 11, 17, 0), var(--idsolusi-panel));
+        }
+
+        .login-visual-content {
             position: relative;
             z-index: 1;
-        }
-
-        .login-brandbar {
-            position: relative;
-            z-index: 2;
-            padding: 22px 24px 0;
+            max-width: 760px;
+            margin-top: 9rem;
         }
 
         .login-brand-logo {
-            max-width: 185px;
-            width: 100%;
+            width: 190px;
+            max-width: 55vw;
             height: auto;
-            background: #ffffff;
+            display: block;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, .92);
             border-radius: 8px;
-            padding: 12px 16px;
-            box-shadow: 0 18px 45px rgba(51, 51, 51, .18);
+            padding: 12px 18px;
+            box-shadow: 0 22px 60px rgba(0, 0, 0, .28);
+        }
+
+        .login-visual-copy {
+            max-width: 720px;
+            margin: 0;
+            font-size: 1.08rem;
+            line-height: 1.42;
+            color: rgba(255, 255, 255, .94);
+            text-shadow: 0 2px 18px rgba(0, 0, 0, .52);
+        }
+
+        .login-visual-copy strong {
+            font-weight: 800;
+        }
+
+        .login-panel {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 4.8vw;
+            background:
+                radial-gradient(circle at 12% 68%, rgba(218, 37, 29, .12), transparent 30%),
+                linear-gradient(145deg, var(--idsolusi-panel-soft) 0%, var(--idsolusi-panel) 54%, #030507 100%);
+            box-shadow: -32px 0 90px rgba(0, 0, 0, .35);
+        }
+
+        .login-panel-inner {
+            width: 100%;
+            max-width: 420px;
         }
 
         .login-title {
-            font-weight: 700;
-            line-height: 1.2;
+            margin-bottom: .35rem;
+            color: #ffffff;
+            font-size: 1.38rem;
+            font-weight: 800;
+            line-height: 1.25;
         }
 
         .login-subtitle {
-            color: #6b6b6b;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, .82);
             font-size: 1rem;
-            line-height: 1.5;
         }
 
-        .login-card {
+        .login-panel label {
+            color: #ffffff;
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        .login-field {
+            position: relative;
+        }
+
+        .login-field-icon {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            z-index: 2;
+            color: rgba(255, 255, 255, .88);
+            transform: translateY(-50%);
+        }
+
+        .login-field .form-control {
+            height: 42px;
+            padding-left: 42px;
+            color: #ffffff;
+            background: rgba(16, 27, 39, .88);
+            border: 1px solid rgba(255, 255, 255, .62);
+            border-radius: 4px;
+            box-shadow: none;
+        }
+
+        .login-field .form-control::placeholder {
+            color: rgba(255, 255, 255, .66);
+        }
+
+        .login-field .form-control:focus {
+            border-color: #ffffff;
+            box-shadow: 0 0 0 .16rem rgba(218, 37, 29, .28);
+        }
+
+        .login-password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 11px;
+            z-index: 3;
+            padding: 0;
+            color: rgba(255, 255, 255, .82);
+            background: transparent;
             border: 0;
-            border-radius: 8px;
-            box-shadow: 0 18px 45px rgba(51, 51, 51, .12);
+            transform: translateY(-50%);
         }
 
-        .login-card .card-header {
-            border-bottom: 1px solid #f0d6d4;
+        .login-password-toggle:hover,
+        .login-password-toggle:focus {
+            color: #ffffff;
+            outline: 0;
         }
 
-        .login-card-title {
-            color: #333333;
-            font-weight: 700;
-            line-height: 1.35;
+        .login-field-password .form-control {
+            padding-right: 42px;
         }
 
-        .login-card-title:after {
-            content: "";
-            display: block;
-            width: 48px;
-            height: 3px;
-            margin: 10px auto 0;
-            border-radius: 999px;
-            background: #da251d;
+        .login-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: .35rem;
         }
 
-        .login-card .input-group-text {
-            color: #da251d;
+        .login-panel .custom-control-label {
+            color: rgba(255, 255, 255, .88);
+            font-weight: 500;
         }
 
-        .login-card .form-control:focus {
-            border-color: #da251d;
-            box-shadow: 0 0 0 .15rem rgba(218, 37, 29, .18);
+        .login-panel .custom-control-label:before {
+            border-color: rgba(255, 255, 255, .82);
+            background: transparent;
         }
 
-        .login-card .custom-control-input:checked ~ .custom-control-label:before {
-            border-color: #da251d;
-            background-color: #da251d;
+        .login-panel .custom-control-input:checked ~ .custom-control-label:before {
+            border-color: var(--idsolusi-red);
+            background-color: var(--idsolusi-red);
+        }
+
+        .login-forgot-link {
+            color: rgba(255, 255, 255, .78);
+            font-weight: 600;
+        }
+
+        .login-forgot-link:hover,
+        .login-forgot-link:focus {
+            color: #ffffff;
         }
 
         .btn-idsolusi {
-            background: #da251d;
-            border-color: #da251d;
-            box-shadow: 0 4px 12px rgba(218, 37, 29, .32);
+            width: 100%;
+            height: 42px;
+            margin-top: 1.55rem;
+            background: linear-gradient(90deg, var(--idsolusi-red) 0%, var(--idsolusi-red-dark) 100%);
+            border: 0;
+            border-radius: 4px;
+            box-shadow: 0 12px 24px rgba(218, 37, 29, .26);
+            font-weight: 800;
         }
 
         .btn-idsolusi:hover,
         .btn-idsolusi:focus {
-            background: #b51f18;
-            border-color: #b51f18;
-            box-shadow: 0 6px 16px rgba(181, 31, 24, .38);
+            background: linear-gradient(90deg, #ef3027 0%, var(--idsolusi-red) 100%);
+            box-shadow: 0 14px 28px rgba(218, 37, 29, .34);
         }
 
-        .login-forgot-link {
-            color: #6b6b6b;
+        .login-panel .invalid-feedback {
+            display: block;
+            color: #ffb7b3;
         }
 
-        .login-forgot-link:hover {
-            color: #da251d;
+        .login-panel .alert {
+            border-radius: 4px;
         }
 
-        .login-card-wrap {
-            margin-top: -11rem;
-        }
-
-        @media (max-width: 767.98px) {
-            .login-brandbar {
-                padding: 18px 18px 0;
-                text-align: left;
+        @media (max-width: 991.98px) {
+            .login-idsolusi-page {
+                grid-template-columns: 1fr;
+                overflow: auto;
             }
 
+            .login-visual {
+                min-height: 42vh;
+                padding: 3rem 1.5rem;
+                align-items: flex-end;
+            }
+
+            .login-visual:after {
+                display: none;
+            }
+
+            .login-visual-content {
+                margin-top: 0;
+            }
+
+            .login-panel {
+                min-height: auto;
+                padding: 2.4rem 1.5rem 3rem;
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 575.98px) {
             .login-brand-logo {
-                max-width: 155px;
+                width: 155px;
+                margin-bottom: 1rem;
             }
 
-            .login-card-wrap {
-                margin-top: -9rem;
+            .login-visual-copy {
+                font-size: .95rem;
+            }
+
+            .login-options {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: .65rem;
             }
         }
     </style>
 
-<div class="login-idsolusi-page">
-    <div class="header login-idsolusi-hero pb-7 pb-lg-8">
-        <div class="login-brandbar">
-            <img src="{{ asset('assets/img/idsolusi/logo.png') }}" alt="PT Info Solusindo Data Utama" class="login-brand-logo">
-        </div>
-        <div class="container">
-            <div class="header-body text-center mb-7">
-                <div class="row justify-content-center">
-                    <div class="col-xl-6 col-lg-7 col-md-9 px-5 pt-6 pt-lg-7">
-                        <h1 class="text-white login-title">Selamat Datang di Monitoring System PMO Maintenance</h1>
-                    </div>
-                </div>
+    <div class="login-idsolusi-page">
+        <section class="login-visual" aria-label="Info Solusindo Data Utama">
+            <div class="login-visual-content">
+                <img src="{{ asset('assets/img/idsolusi/logo.png') }}" alt="PT Info Solusindo Data Utama" class="login-brand-logo">
+                <p class="login-visual-copy">
+                    <strong>Monitoring System PMO Maintenance</strong> adalah platform operasional untuk memantau aset, laporan, dan aktivitas maintenance secara terpusat.
+                </p>
             </div>
-        </div>
-        <div class="separator separator-bottom separator-skew zindex-100">
-            <svg x="0" y="0" viewBox="0 0 2560 100" preserveAspectRatio="none" version="1.1" xmlns="http://www.w3.org/2000/svg">
-                <polygon class="fill-white" points="2560 0 2560 100 0 100"></polygon>
-            </svg>
-        </div>
-    </div>
-    <div class="container login-card-wrap pb-5">
-        <!-- Table -->
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8">
-                <div class="card bg-white login-card">
-                    <div class="card-header px-lg-5 bg-transparent">
-                        <h3 class="login-card-title text-center my-2">Silakan masuk menggunakan email dan password akun Anda.</h3>
-                        @include('flash::message')
-                    </div>
-                    <div class="card-body px-lg-5 py-lg-5 pt-2">
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
-                            <div class="form-group">
-                                <div class="input-group input-group-merge input-group-alternative mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="ni ni-email-83"></i></span>
-                                    </div>
-<!--                                    <input id="email" type="email" value="admin@email.com" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
--->
-                                        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-                                    @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group input-group-merge input-group-alternative">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
-                                    </div>
-<!--                                    <input id="password" type="password" value="secret" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
--->
-                                        <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+        </section>
 
-                                    @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror                                </div>
-                            </div>
-                            <div class="custom-control custom-control-alternative custom-checkbox">
-                                <input class="custom-control-input" id=" customCheckLogin"  name="remember" {{ old('remember') ? 'checked' : '' }} type="checkbox">
-                                <label class="custom-control-label" for=" customCheckLogin">
-                                    <span>Remember me</span>
-                                </label>
-                            </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-primary btn-idsolusi mt-4">Login</button>
-                            </div>
-<!--
-                            <div class="form-group mt-4 mb-0">
-                                <div class="alert alert-info">
-                                   Admin Email : admin@email.com , Password: secret!!!
-                                </div>
-                                <div class="alert alert-info">
-                                    User Email : user@email.com , Password: secret
-                                 </div>
-                            </div>
--->
-                        </form>
+        <section class="login-panel" aria-label="Login">
+            <div class="login-panel-inner">
+                <h1 class="login-title">Selamat Datang</h1>
+                <p class="login-subtitle">Silahkan Login dengan akun anda.</p>
+
+                @include('flash::message')
+
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
+
+                    <div class="form-group">
+                        <label for="email">Username</label>
+                        <div class="login-field">
+                            <span class="login-field-icon"><i class="far fa-user"></i></span>
+                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="Input username..." required autocomplete="email" autofocus>
+                        </div>
+                        @error('email')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
                     </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-6">
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="login-field login-field-password">
+                            <span class="login-field-icon"><i class="fas fa-lock"></i></span>
+                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" placeholder="Password" required autocomplete="current-password">
+                            <button type="button" class="login-password-toggle" aria-label="Show password" data-password-toggle>
+                                <i class="far fa-eye"></i>
+                            </button>
+                        </div>
+                        @error('password')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                    </div>
+
+                    <div class="login-options">
+                        <div class="custom-control custom-checkbox">
+                            <input class="custom-control-input" id="customCheckLogin" name="remember" {{ old('remember') ? 'checked' : '' }} type="checkbox">
+                            <label class="custom-control-label" for="customCheckLogin">Remember me</label>
+                        </div>
+
                         @if (Route::has('password.request'))
-                            <a class="login-forgot-link" href="{{ route('password.request') }}">
-                                Forgot Your Password?
-                            </a>
+                            <a class="login-forgot-link" href="{{ route('password.request') }}">Forgot Password?</a>
                         @endif
                     </div>
-                    {{-- <div class="col-6 text-right">
-                        @if (Route::has('register'))
-                            <a class="text-gray" href="{{ route('register') }}">
-                                Create new account
-                            </a>
-                        @endif
-                    </div> --}}
-                </div>
 
-
+                    <button type="submit" class="btn btn-primary btn-idsolusi">Login</button>
+                </form>
             </div>
-        </div>
+        </section>
     </div>
-</div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var toggle = document.querySelector('[data-password-toggle]');
+            var password = document.getElementById('password');
+
+            if (!toggle || !password) {
+                return;
+            }
+
+            toggle.addEventListener('click', function () {
+                var isHidden = password.getAttribute('type') === 'password';
+                password.setAttribute('type', isHidden ? 'text' : 'password');
+                toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+                toggle.innerHTML = isHidden ? '<i class="far fa-eye-slash"></i>' : '<i class="far fa-eye"></i>';
+            });
+        });
+    </script>
 @endsection

@@ -4,6 +4,7 @@
 @php
     $statusOk = in_array($daily_monitoring->status, ['healthy', 'ok']);
     $indicatorOk = $daily_monitoring->health_indicator === 'normal';
+    $firstImageUrl = !empty($daily_monitoring->images) ? route('daily-monitoring.image', [$daily_monitoring->id, 0]) : null;
     $waText = ($daily_monitoring->project->nama_project ?? '-') . " || " . ($daily_monitoring->site_environment_name ?? '-') . "\n"
         . $daily_monitoring->report_name . "\n"
         . "Jam " . ($daily_monitoring->report_datetime ? $daily_monitoring->report_datetime->format('H:i') : '-') . " WIB\n"
@@ -15,7 +16,7 @@
         . "Total Server OFF:-\n"
         . "================================\n"
         . "Health Indicator : Indicator " . ucfirst($daily_monitoring->health_indicator) . "\n"
-        . "Server Warning : " . $daily_monitoring->server_warning . "\n"
+        . "Server Warning : " . $ticketServerWarningCount . "\n"
         . "Alert Status :";
 
     if ($projectCases->isNotEmpty()) {
@@ -45,7 +46,9 @@
                 <h3 class="mb-0">Detail Daily Monitoring</h3>
                 <div>
                     <a href="{{ route('daily-monitoring.edit', $daily_monitoring->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="https://wa.me/?text={{ urlencode($waText) }}" target="_blank" class="btn btn-sm btn-success">Share WA</a>
+                    <button type="button" class="btn btn-sm btn-success" id="share-wa-report-image">
+                        Share WA Report Image
+                    </button>
                     <a href="{{ route('daily-monitoring.index') }}" class="btn btn-sm btn-secondary">Kembali</a>
                 </div>
             </div>
@@ -77,13 +80,16 @@
                         'server_on' => 'Server ON',
                         'offline' => 'Offline',
                         'total_server_off' => 'Total Server OFF',
-                        'server_warning' => 'Server Warning',
                     ] as $field => $label)
                         <div class="col-md-3 mb-3">
                             <label class="text-muted mb-1">{{ $label }}</label>
                             <div class="font-weight-bold">{{ $daily_monitoring->{$field} }}</div>
                         </div>
                     @endforeach
+                    <div class="col-md-3 mb-3">
+                        <label class="text-muted mb-1">Server Warning</label>
+                        <div class="font-weight-bold">{{ $ticketServerWarningCount }}</div>
+                    </div>
                 </div>
 
                 <hr>
@@ -161,6 +167,15 @@
         </div>
     </div>
 </div>
+
+<div id="dailyMonitoringCaptureContainer" style="position: absolute; left: -9999px; top: -9999px;">
+    <div id="dailyMonitoringWaCapture" style="background: white; color: #111; padding: 12px; width: 620px; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.35;">
+        @if($firstImageUrl)
+            <img src="{{ $firstImageUrl }}" style="width: 100%; max-height: 260px; object-fit: contain; margin-bottom: 10px;" alt="Daily monitoring image">
+        @endif
+        <div style="white-space: pre-wrap;">{{ $waText }}</div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -171,4 +186,80 @@
         object-fit: cover;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var shareText = @json($waText);
+
+        $('#share-wa-report-image').on('click', function(e) {
+            e.preventDefault();
+
+            var button = $(this);
+            var originalText = button.html();
+            var encodedText = encodeURIComponent(shareText);
+
+            if (typeof html2canvas === 'undefined') {
+                window.open('https://wa.me/?text=' + encodedText, '_blank');
+                return;
+            }
+
+            button.html('<i class="fas fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
+
+            html2canvas(document.querySelector('#dailyMonitoringWaCapture'), {
+                scale: 2,
+                useCORS: true
+            }).then(function(canvas) {
+                canvas.toBlob(function(blob) {
+                    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+                        try {
+                            var item = new ClipboardItem({ 'image/png': blob });
+                            navigator.clipboard.write([item]).then(function() {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Gambar disalin!',
+                                    text: 'Teks sudah disiapkan. Anda akan dialihkan ke WhatsApp. Silahkan Paste (Ctrl+V) di kolom chat untuk melampirkan gambar.',
+                                    confirmButtonColor: '#28a745',
+                                    confirmButtonText: 'Buka WhatsApp'
+                                }).then(function() {
+                                    window.open('https://wa.me/?text=' + encodedText, '_blank');
+                                    button.html(originalText).prop('disabled', false);
+                                });
+                            }).catch(function() {
+                                fallbackDailyMonitoringDownload(canvas, encodedText, button, originalText);
+                            });
+                        } catch (error) {
+                            fallbackDailyMonitoringDownload(canvas, encodedText, button, originalText);
+                        }
+                    } else {
+                        fallbackDailyMonitoringDownload(canvas, encodedText, button, originalText);
+                    }
+                }, 'image/png');
+            }).catch(function() {
+                window.open('https://wa.me/?text=' + encodedText, '_blank');
+                button.html(originalText).prop('disabled', false);
+            });
+        });
+
+        function fallbackDailyMonitoringDownload(canvas, encodedText, button, originalText) {
+            var link = document.createElement('a');
+            link.download = 'Daily-Monitoring-Report.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Gambar didownload',
+                text: 'Browser tidak mendukung copy gambar otomatis. Gambar report sudah didownload, lanjutkan ke WhatsApp dan sisipkan manual.',
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Buka WhatsApp'
+            }).then(function() {
+                window.open('https://wa.me/?text=' + encodedText, '_blank');
+                button.html(originalText).prop('disabled', false);
+            });
+        }
+    });
+</script>
 @endpush

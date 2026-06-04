@@ -70,9 +70,13 @@ public function index(Request $request)
         });
     }
 
+    $selectedProjects = array_values(array_filter((array) $request->input('id_project', []), function ($idProject) {
+        return $idProject !== null && $idProject !== '';
+    }));
+
     // filter project from request
-    if ($request->filled('id_project')) {
-        $query->where('id_project', $request->id_project);
+    if (count($selectedProjects) > 0) {
+        $query->whereIn('id_project', $selectedProjects);
     }
 
     $perangkats = $query->paginate(15)->withQueryString();

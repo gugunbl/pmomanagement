@@ -20,6 +20,7 @@
                                 <th>Tanggal Report</th>
                                 <th>Input By</th>
                                 <th>Total Server</th>
+                                <th>Server Warning</th>
                                 <th>Status</th>
                                 <th>Health Indicator</th>
                                 <th style="width: 170px;">Aksi</th>
@@ -37,6 +38,11 @@
                                     <td>{{ $row->report_datetime ? $row->report_datetime->format('d-m-Y H:i') : '-' }}</td>
                                     <td>{{ $row->user->name ?? '-' }}</td>
                                     <td>{{ $row->total_server }}</td>
+                                    <td>
+                                        <span class="badge badge-pill badge-warning">
+                                            {{ $row->ticket_server_warning_count ?? 0 }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <span class="badge badge-pill {{ $statusOk ? 'badge-success' : 'badge-warning' }}">
                                             {{ ucwords(str_replace('_', ' ', $row->status)) }}
@@ -58,7 +64,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-4">Tidak ada data daily monitoring.</td>
+                                    <td colspan="9" class="text-center py-4">Tidak ada data daily monitoring.</td>
                                 </tr>
                             @endforelse
                         </tbody>

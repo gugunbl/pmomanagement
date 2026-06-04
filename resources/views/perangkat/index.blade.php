@@ -10,64 +10,49 @@
         <div class="col-md-12">
             <div class="card mb-5">
                 <div class="card-header bg-transparent pb-2">
-                    <div class="row">
-                        <div class="col-lg-8">
+                    <div class="row align-items-center">
+                        <div class="col">
                             <h3 class="mb-0">Data Semua Perangkat</h3>
                         </div>
-                        <div class="col-lg-4">
-{!! Form::open(['route' => 'perangkat.index', 'method'=>'get', 'id'=>'filterForm']) !!}
-<div class="row g-2 align-items-center">
-
-    <div class="col-md-3">
-        {{ Form::select(
-            'id_project',
-            $projectes,
-            request('id_project'),
-            [
-                'class'=> 'selectpicker form-control form-control-sm',
-                'data-live-search' => 'true',
-                'data-width' => '100%',
-                'title' => 'Select Project...',
-                'id' => 'id_project'
-            ]
-        ) }}
-    </div>
-
-    <div class="col-md-4">
-        {{ Form::text(
-            'search',
-            request('search'),
-            [
-                'class' => 'form-control form-control-sm',
-                'placeholder'=>'Search serial / merk / type',
-                'id' => 'search_input'
-            ]
-        ) }}
-    </div>
-
-    <div class="col-md-5 text-end">
-        <div class="btn-group">
-            <button type="submit" class="btn btn-sm btn-primary">
-                <i class="fas fa-search"></i> Search
-            </button>
-            <a href="{{ route('perangkat.export', request()->all()) }}" class="btn btn-sm btn-success">
-                <i class="fas fa-file-excel"></i> Export Excel
-            </a>
-            <a href="{{ route('perangkat.index') }}"
-               class="btn btn-sm btn-outline-secondary">
-                Reset
-            </a>
-        </div>
-    </div>
-
-</div>
-{!! Form::close() !!}
-
-
-                </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body border-top">
+                    <form action="{{ route('perangkat.index') }}" method="GET" class="perangkat-filter mb-4" id="filterForm">
+                        @php
+                            $selectedProjects = (array) request('id_project', []);
+                        @endphp
+                        <div class="row align-items-end">
+                            <div class="col-xl-5 col-lg-6 mb-3">
+                                <div class="form-group mb-0">
+                                    <label for="id_project" class="form-control-label">Filter Project</label>
+                                    <select name="id_project[]" id="id_project" class="form-control select2" multiple data-placeholder="-- Semua Project --">
+                                        @foreach($projectes as $id => $nama)
+                                            <option value="{{ $id }}" {{ in_array($id, $selectedProjects) ? 'selected' : '' }}>{{ $nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-xl-4 col-lg-6 mb-3">
+                                <div class="form-group mb-0">
+                                    <label for="search_input" class="form-control-label">Search Serial / Merk / Type</label>
+                                    <input type="text" name="search" id="search_input" class="form-control" placeholder="Cari..." value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-lg-12 mb-3">
+                                <div class="perangkat-filter-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search mr-1"></i> Cari
+                                    </button>
+                                    <a href="{{ route('perangkat.export', request()->all()) }}" class="btn btn-success">
+                                        <i class="fas fa-file-excel mr-1"></i> Export Excel
+                                    </a>
+                                    <a href="{{ route('perangkat.index') }}" class="btn btn-secondary text-dark">
+                                        Reset
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                     <div class="table-responsive">
                         <div>
                             <table class="table table-hover align-items-center">
@@ -160,12 +145,91 @@
     </div>
 @endsection
 
+@push('styles')
+<style>
+    .perangkat-filter {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: .5rem;
+        padding: 1.25rem 1.25rem .5rem;
+    }
+
+    .perangkat-filter .form-control-label {
+        color: #172b4d;
+        font-size: .78rem;
+        font-weight: 600;
+        margin-bottom: .45rem;
+    }
+
+    .perangkat-filter .form-control,
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection {
+        border-color: #d9e2ec;
+        min-height: 44px;
+    }
+
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection--multiple {
+        max-height: 88px;
+        overflow-y: auto;
+        padding: .25rem .4rem;
+    }
+
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+        max-width: 100%;
+        margin: .12rem .2rem .12rem 0;
+        border: 1px solid #d9e2ec;
+        border-radius: .25rem;
+        background: #f8fafc;
+        color: #334e68;
+        font-size: .76rem;
+        line-height: 1.4;
+        padding: .18rem .45rem .18rem 1.15rem;
+        white-space: normal;
+    }
+
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection--multiple .select2-search--inline {
+        display: inline-block;
+        width: auto;
+    }
+
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection--multiple .select2-search__field {
+        min-width: 180px;
+        width: auto !important;
+        margin-top: .18rem;
+    }
+
+    .perangkat-filter .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+        color: #829ab1;
+        left: .35rem;
+        margin-right: .25rem;
+    }
+
+    .perangkat-filter-actions {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .perangkat-filter-actions .btn {
+        min-height: 44px;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+</style>
+@endpush
+
 
 
 @push('scripts')
 
 <script>
 $(document).ready(function () {
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%',
+        allowClear: true,
+        closeOnSelect: false
+    });
 
     $('#search_input').on('keydown', function (e) {
         if (e.key === 'Enter') {
@@ -176,31 +240,6 @@ $(document).ready(function () {
 
 });
 </script>
-
-
-<script>
-$(document).ready(function () {
-
-    $('#id_project').on('changed.bs.select', function () {
-        $('#filterForm').submit();
-    });
-
-});
-</script>
-
-
-
-<script>
-$(document).ready(function() {
-    $('#project_id').select2({
-        placeholder: 'Pilih Project',
-        allowClear: true,
-        width: '100%'
-    });
-});
-</script>
-
-
 
     <script>
         jQuery(document).ready(function(){

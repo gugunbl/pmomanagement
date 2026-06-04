@@ -45,4 +45,9 @@ class DailyMonitoring extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function projectCases()
+    {
+        return $this->hasMany(MCase::class, 'id_project', 'id_project');
+    }
 }
