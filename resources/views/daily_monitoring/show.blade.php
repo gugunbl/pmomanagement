@@ -22,7 +22,11 @@
     if ($projectCases->isNotEmpty()) {
         foreach ($projectCases as $case) {
             $principalTicket = !empty($case['principal_ticket_no']) ? $case['principal_ticket_no'] : '-';
-            $statusIcon = in_array($case['status'], ['Open', 'In Progress']) ? '[OPEN]' : '[' . strtoupper($case['status']) . ']';
+            $caseStatus = strtolower($case['status']);
+            $statusIcon = in_array($caseStatus, ['open', 'in progress']) ? '[OPEN]' : '[' . strtoupper($case['status']) . ']';
+            if (!empty($case['is_closed'])) {
+                $statusIcon = '*' . $statusIcon . '*';
+            }
             $waText .= "\n- " . $case['open_date'] . " || " . $case['subject'] . " || " . $case['lokasi_perangkat'] . " || " . $statusIcon . " || " . $principalTicket;
         }
     } else {
@@ -139,7 +143,13 @@
                                     <td>{{ $case['lokasi_perangkat'] }}</td>
                                     <td>{{ $case['closed_date'] }}</td>
                                     <td>{{ $case['severity'] }}</td>
-                                    <td>{{ $case['status'] }}</td>
+                                    <td>
+                                        @if(!empty($case['is_closed']))
+                                            <strong>{{ $case['status'] }}</strong>
+                                        @else
+                                            {{ $case['status'] }}
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

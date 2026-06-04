@@ -192,6 +192,7 @@
 
                 var rows = '';
                 $.each(response.cases, function(index, item) {
+                    var status = item.is_closed ? '<strong>' + escapeHtml(item.status) + '</strong>' : escapeHtml(item.status);
                     rows += '<tr>'
                         + '<td>' + (index + 1) + '</td>'
                         + '<td>' + escapeHtml(item.type) + '</td>'
@@ -200,7 +201,7 @@
                         + '<td>' + escapeHtml(item.lokasi_perangkat) + '</td>'
                         + '<td>' + escapeHtml(item.closed_date) + '</td>'
                         + '<td>' + escapeHtml(item.severity) + '</td>'
-                        + '<td>' + escapeHtml(item.status) + '</td>'
+                        + '<td>' + status + '</td>'
                         + '</tr>';
                 });
                 body.html(rows);

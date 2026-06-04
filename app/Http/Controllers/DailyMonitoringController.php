@@ -20,7 +20,9 @@ class DailyMonitoringController extends Controller
     {
         $title = 'Daily Monitoring';
         $monitorings = DailyMonitoring::with(['project', 'user'])
-            ->withCount('projectCases as ticket_server_warning_count')
+            ->withCount(['projectCases as ticket_server_warning_count' => function ($query) {
+                $this->applyVisibleWarningCaseFilter($query);
+            }])
             ->orderBy('report_datetime', 'desc')
             ->paginate(10);
 
@@ -85,6 +87,9 @@ class DailyMonitoringController extends Controller
     private function casesForProject($projectId)
     {
         return MCase::where('id_project', $projectId)
+            ->where(function ($query) {
+                $this->applyVisibleWarningCaseFilter($query);
+            })
             ->orderByRaw('CASE WHEN open_date IS NULL THEN 1 ELSE 0 END ASC')
             ->orderBy('open_date', 'asc')
             ->orderBy('id_case', 'asc')
@@ -99,9 +104,24 @@ class DailyMonitoringController extends Controller
                     'closed_date' => $case->closed_date ? date('d-m-Y H:i', strtotime($case->closed_date)) : '-',
                     'severity' => $case->severity,
                     'status' => $case->status,
+                    'is_closed' => strtolower($case->status) === 'closed',
                     'principal_ticket_no' => $case->principal_ticket_no,
                 ];
             });
+    }
+
+    private function applyVisibleWarningCaseFilter($query)
+    {
+        $closedCutoff = now()->subDays(2);
+
+        return $query->where(function ($caseQuery) use ($closedCutoff) {
+            $caseQuery->whereRaw('LOWER(status) <> ?', ['closed'])
+                ->orWhere(function ($closedQuery) use ($closedCutoff) {
+                    $closedQuery->whereRaw('LOWER(status) = ?', ['closed'])
+                        ->whereNotNull('closed_date')
+                        ->where('closed_date', '>=', $closedCutoff);
+                });
+        });
     }
 
     public function edit(DailyMonitoring $daily_monitoring)
