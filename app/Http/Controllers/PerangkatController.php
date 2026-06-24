@@ -131,6 +131,7 @@ public function index(Request $request)
             'units.*.id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
             'units.*.koordinat' => 'nullable|string|max:255',
             'units.*.lantai' => 'nullable|string|max:255',
+            'units.*.status' => 'required|in:0,1,3',
             'units.*.status_server' => 'nullable|string|max:255',
             'units.*.type_lisensi' => 'nullable|string|max:255',
             'units.*.start_warranty' => 'nullable|date',
@@ -182,7 +183,7 @@ public function index(Request $request)
                     'start_warranty' => $unit['start_warranty'] ?? null,
                     'end_warranty' => $unit['end_warranty'] ?? null,
                     'tgl_online' => $unit['tgl_online'] ?? null,
-                    'status' => 1,
+                    'status' => $unit['status'] ?? 1,
                 ]);
             }
 
@@ -318,11 +319,12 @@ public function index(Request $request)
                         'id_lokasi' => isset($row[3]) ? \App\Lokasi::where('nama_lokasi', 'like', '%' . trim($row[3]) . '%')->value('id_lokasi') : null,
                         'koordinat' => $row[4] ?? '',
                         'lantai' => $row[5] ?? '',
+                        'status' => $this->normalizeImportedPerangkatStatus($row[6] ?? null),
                         'status_server' => 'New Device', // Defaulted as it's hidden from template
-                        'type_lisensi' => $row[6] ?? '',
                         'start_warranty' => $this->formatDateExcel($row[7]),
                         'end_warranty' => $this->formatDateExcel($row[8]),
                         'tgl_online' => $this->formatDateExcel($row[9]),
+                        'type_lisensi' => $row[10] ?? '',
                     ];
                 }
             }
@@ -440,12 +442,17 @@ public function index(Request $request)
         $projectes = Project::pluck('nama_project', 'id_project');
         $jenisperangkates = Jenisperangkat::pluck('jns_perangkat', 'id_jenis');
         $lokasis = Lokasi::all();
+        $statusperangkat = [
+            '0' => 'Tidak Aktif',
+            '1' => 'Aktif',
+            '3' => 'Golden Unit/Stock'
+        ];
         
         $title = "Detail Summary Perangkat: " . $project->nama_project;
         
         return view('perangkat.view-detail-summary', compact(
             'project', 'perangkats', 'basePerangkat', 'projectes', 
-            'jenisperangkates', 'lokasis', 'title', 'merk', 'type', 'id_project'
+            'jenisperangkates', 'lokasis', 'statusperangkat', 'title', 'merk', 'type', 'id_project'
         ));
     }
 
@@ -470,6 +477,7 @@ public function index(Request $request)
             'units.*.id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
             'units.*.koordinat' => 'nullable|string|max:255',
             'units.*.lantai' => 'nullable|string|max:255',
+            'units.*.status' => 'required|in:0,1,3',
             'units.*.status_server' => 'nullable|string|max:255',
             'units.*.type_lisensi' => 'nullable|string|max:255',
             'units.*.start_warranty' => 'nullable|date',
@@ -534,7 +542,7 @@ public function index(Request $request)
                     'start_warranty' => $unit['start_warranty'] ?? null,
                     'end_warranty' => $unit['end_warranty'] ?? null,
                     'tgl_online' => $unit['tgl_online'] ?? null,
-                    'status' => 1,
+                    'status' => $unit['status'] ?? 1,
                 ];
 
                 if (!empty($unit['id_perangkat'])) {
@@ -588,5 +596,24 @@ public function index(Request $request)
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    private function normalizeImportedPerangkatStatus($value)
+    {
+        $normalized = strtolower(trim((string) $value));
+
+        if ($normalized === '' || in_array($normalized, ['aktif', 'active', '1'], true)) {
+            return 1;
+        }
+
+        if (in_array($normalized, ['tidak aktif', 'nonaktif', 'non-aktif', 'inactive', '0'], true)) {
+            return 0;
+        }
+
+        if (in_array($normalized, ['golden unit', 'golden unit/stock', 'golden unit stock', 'stock', 'gu', '3'], true)) {
+            return 3;
+        }
+
+        return 1;
     }
 }

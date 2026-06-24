@@ -19,10 +19,11 @@ class PerangkatTemplateExport implements FromArray, WithHeadings, WithTitle
                 'GTI - Ragunan',
                 'RCK-01-A',
                 '4',
-                'Enterprise',
+                'aktif',
                 '2024-01-01',
                 '2027-01-01',
-                '2024-01-15'
+                '2024-01-15',
+                'Enterprise'
             ]
         ];
     }
@@ -36,10 +37,11 @@ class PerangkatTemplateExport implements FromArray, WithHeadings, WithTitle
             'Site / Lokasi (Nama Lokasi)',
             'Koordinat',
             'Lantai/Rak',
-            'License',
+            'Status (aktif/tidak aktif/gu)',
             'Warranty Start (YYYY-MM-DD)',
             'Warranty End (YYYY-MM-DD)',
-            'Tanggal Online (YYYY-MM-DD)'
+            'Tanggal Online (YYYY-MM-DD)',
+            'License'
         ];
     }
 

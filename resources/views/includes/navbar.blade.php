@@ -253,7 +253,7 @@
                                         <a href="{{route('perangkat.index')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Data Semua Perangkat</span></a>
                                     </li>
                                     @endcan
-                                    @can( 'summary-perangkat')
+                                    @can( 'view-summary-perangkat')
                                     <li class="nav-item">
                                         <a href="{{route('perangkat.summary')}}" class="nav-link"><span class="sidenav-mini-icon">D </span><span class="sidenav-normal">Summary Perangkat</span></a>
                                     </li>

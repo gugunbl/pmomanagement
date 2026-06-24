@@ -1,0 +1,6 @@
+sheets ['Template Import Perangkat']
+sheet Template Import Perangkat 4 10
+('Serial Number', 'SIK', 'Hostname', 'Site / Lokasi (Nama Lokasi)', 'Koordinat', 'Lantai/Rak', 'License', 'Warranty Start (YYYY-MM-DD)', 'Warranty End (YYYY-MM-DD)', 'Tanggal Online (YYYY-MM-DD)')
+('[SAMPLE - AKAN DI-SKIP] SN12345678', 'SIK-999', 'SRV-HOST-01', 'GTI - Ragunan', 'RCK-01-A', 4, 'Enterprise', '2024-01-01', '2027-01-01', '2024-01-15')
+(9998000823, 10397504, 'CWAF-9998000823', 'DC CIBITUNG', 1, 1, 'Standard - 10 Mbps - 1 Application - Monthly Fee', datetime.datetime(2026, 6, 8, 0, 0), datetime.datetime(2027, 6, 7, 0, 0), datetime.datetime(2026, 6, 8, 0, 0))
+(9998000834, 10397504, 'CWAF-9998000834', 'DC CIBITUNG', 1, 1, 'Standard - 10 Applications Add-On - Monthly', datetime.datetime(2026, 6, 8, 0, 0), datetime.datetime(2027, 6, 7, 0, 0), datetime.datetime(2026, 6, 8, 0, 0))

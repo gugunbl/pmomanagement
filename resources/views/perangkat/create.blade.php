@@ -150,11 +150,11 @@
                                         <th style="min-width: 200px;">Site / Alamat Lokasi</th>
                                         <th style="min-width: 120px;">Koordinat</th>
                                         <th style="min-width: 120px;">Lantai/Rak</th>
-                                        <th style="min-width: 140px;" class="d-none">Status Server</th>
-                                        <th style="min-width: 140px;" id="license_header">License</th>
+                                        <th style="min-width: 160px;">Status</th>
                                         <th style="min-width: 150px;">Warranty Start</th>
                                         <th style="min-width: 150px;">Warranty End</th>
                                         <th style="min-width: 150px;">Tanggal Online</th>
+                                        <th style="min-width: 140px;" id="license_header">License</th>
                                     </tr>
                                 </thead>
                                 <tbody id="unit_tbody">
@@ -173,16 +173,17 @@
                                         </td>
                                         <td><input type="text" name="units[0][koordinat]" class="form-control form-control-sm" placeholder="RCK-..."></td>
                                         <td><input type="text" name="units[0][lantai]" class="form-control form-control-sm"></td>
-                                        <td class="d-none">
-                                            <select name="units[0][status_server]" class="form-control form-control-sm">
-                                                <option value="New Device" selected>New Device</option>
-                                                <option value="Used Device">Used Device</option>
+                                        <td>
+                                            <select name="units[0][status]" class="form-control form-control-sm" required>
+                                                @foreach($statusperangkat as $statusValue => $statusLabel)
+                                                    <option value="{{ $statusValue }}" {{ (string) $statusValue === '1' ? 'selected' : '' }}>{{ $statusLabel }}</option>
+                                                @endforeach
                                             </select>
                                         </td>
-                                        <td><input type="text" name="units[0][type_lisensi]" class="form-control form-control-sm"></td>
                                         <td><input type="date" name="units[0][start_warranty]" class="form-control form-control-sm row-date-start"></td>
                                         <td><input type="date" name="units[0][end_warranty]" class="form-control form-control-sm row-date-end"></td>
                                         <td><input type="date" name="units[0][tgl_online]" class="form-control form-control-sm row-date-online"></td>
+                                        <td><input type="text" name="units[0][type_lisensi]" class="form-control form-control-sm"></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -322,16 +323,17 @@ $(document).ready(function () {
                         </td>
                         <td><input type="text" name="units[${i}][koordinat]" class="form-control form-control-sm" placeholder="RCK-..."></td>
                         <td><input type="text" name="units[${i}][lantai]" class="form-control form-control-sm"></td>
-                        <td class="d-none">
-                            <select name="units[${i}][status_server]" class="form-control form-control-sm">
-                                <option value="New Device" selected>New Device</option>
-                                <option value="Used Device">Used Device</option>
+                        <td>
+                            <select name="units[${i}][status]" class="form-control form-control-sm" required>
+                                <option value="0">Tidak Aktif</option>
+                                <option value="1" selected>Aktif</option>
+                                <option value="3">Golden Unit/Stock</option>
                             </select>
                         </td>
-                        <td><input type="text" name="units[${i}][type_lisensi]" class="form-control form-control-sm" placeholder="${placeholder}"></td>
                         <td><input type="date" name="units[${i}][start_warranty]" class="form-control form-control-sm row-date-start"></td>
                         <td><input type="date" name="units[${i}][end_warranty]" class="form-control form-control-sm row-date-end"></td>
                         <td><input type="date" name="units[${i}][tgl_online]" class="form-control form-control-sm row-date-online"></td>
+                        <td><input type="text" name="units[${i}][type_lisensi]" class="form-control form-control-sm" placeholder="${placeholder}"></td>
                     </tr>
                 `;
                 tbody.append(html);
@@ -436,11 +438,11 @@ $(document).ready(function () {
                         $(`input[name="units[${index}][koordinat]"]`).val(row.koordinat);
                         $(`input[name="units[${index}][lantai]"]`).val(row.lantai);
                         $(`select[name="units[${index}][id_lokasi]"]`).val(row.id_lokasi).trigger('change');
-                        $(`select[name="units[${index}][status_server]"]`).val(row.status_server);
-                        $(`input[name="units[${index}][type_lisensi]"]`).val(row.type_lisensi);
+                        $(`select[name="units[${index}][status]"]`).val(String(row.status ?? 1));
                         $(`input[name="units[${index}][start_warranty]"]`).val(row.start_warranty);
                         $(`input[name="units[${index}][end_warranty]"]`).val(row.end_warranty);
                         $(`input[name="units[${index}][tgl_online]"]`).val(row.tgl_online);
+                        $(`input[name="units[${index}][type_lisensi]"]`).val(row.type_lisensi);
                     });
 
                     var statsText = `${data.length} units imported correctly.`;

@@ -69,5 +69,6 @@ return [
     */
     'defaults' => [
         'foo' => 'bar',
+        'ticketing_url' => env('TICKETING_URL', 'https://pmomaintenance.web.id'),
     ]
 ];

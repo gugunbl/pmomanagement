@@ -1,0 +1,120 @@
+pages 4
+---PAGE 1---
+PT Bank Pembangunan Daerah Jawa Barat & Banten TBK
+Bank Bjb TowerJl. Naripan 12-14,
+40111 BANDUNG, INDONESIA
+Grant Number: 18003590-NAI
+Dear PT Bank Pembangunan Daerah Jawa Barat & Banten TBK,
+Thank you for purchasing Trellix/Skyhigh Security product(s) and/or services.
+This Grant Letter contains your Grant Number (referenced above) and confirms your right to receive certain products and
+services from Trellix/Skyhigh Security as referenced in the chart below.
+You will need your Grant Number to: (i) download and receive support on products, (ii) access the cloud services and/or (iii)
+confirm your right to receive certain professional services. This Grant Letter also constitutes full and complete delivery of any
+software licenses, subscriptions, or cloud services purchased by you.
+The Trellix and/or Skyhigh Security-branded products/services identified in this Grant Letter are subject to the following "Terms
+of Sale" as applicable:
+• End User License Agreement: https://www.trellix.com/about/legal/end-user-license-agreement/
+• Cloud Terms of Service: https://www.trellix.com/about/legal/cloud-terms-of-service/
+• Professional Service Terms and Conditions:
+https://www.trellix.com/assets/legal/trellix-professional-service-terms-and-conditions.pdf
+• Technical Support and Maintenance Terms and Conditions:
+https://www.trellix.com/assets/legal/technical-support-and-maintenance-terms-and-conditions.pdf
+These and other terms of sale are available at https://www.trellix.com/en-us/about/legal.html.
+For clarity, prior grant letters/other agreements for former McAfee Enterprise or FireEye-branded products/services do not apply
+to Trellix and/or Skyhigh Security-branded products/services.
+License Key Delivery
+• For Network Security Platform IPS Software/Virtual IPS Software, license file(s) will be made available on the download site
+(https://www.trellix.com/downloads/my-products/) and must be imported to a Network Security Manager under a valid support
+contract.
+• For certain other product solution purchases, you will receive a separate license activation communication with instructions on
+how to activate their product. The Grant Number can be used to access Technical Support.
+Support
+• Follow this link to login and register for any purchased support: https://thrive.trellix.com. Your Grant Number is required to
+register for support. If you purchased support through an authorized partner, youwill receive a follow-up email with support
+contact information for the applicable support delivered by that partner.
+Cloud Services
+• If you have purchased Cloud services, then please follow the instructions below to access this service:
+• Click the Cloud service dashboard URL https://auth.ui.trellix.com/ and use the tenant ID credentials emailed to you to access
+solutions you purchased.
+• The 'Help Portal' provides information on the cloud products and is available within the dashboard. Follow these steps:
+o Click your name at the top-right corner
+o Select 'Help'
+Please distribute this important document to the required individuals within your organization. This Grant Number is "private" and
+should not be shared outside of company/employees who require the information. The download site will validate a downloader's
+domain of the person who receives this letter.
+tables 0
+---PAGE 2---
+Sincerely,
+Trellix/Skyhigh Security
+CC
+Reseller: PT Info Solusindo Data Utama
+Distributor: PT Ingram Micro Indonesia
+Letter Status - Final
+Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status
+Users Support Level PRODUCT Serial Number
+(POL) / Proof of Serial
+Number (POS) (if applicable)
+FO75X03ECE-AT 3 JAN/14/26 - JAN/13/27 Delivered
+NS7500 (3Gbps) FO 1:1 TE
+FO75X03ZKM-AT 3 JAN/14/26 - JAN/13/27 Delivered
+NS7500 (3Gbps) FO 1yr TE for SUB BUSINESS
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150120 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147050 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150134 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150126 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150136 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147052 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150117 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150133 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+NMSECE-AA 2 JAN/14/26 - JAN/13/27 Delivered
+tables 1
+TABLE 0 [["Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status\nUsers Support Level PRODUCT Serial Number\n(POL) / Proof of Serial\nNumber (POS) (if applicable)"], ["FO75X03ECE-AT 3 JAN/14/26 - JAN/13/27 Delivered\nNS7500 (3Gbps) FO 1:1 TE\nFO75X03ZKM-AT 3 JAN/14/26 - JAN/13/27 Delivered\nNS7500 (3Gbps) FO 1yr TE for SUB BUSINESS\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150120 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147050 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150134 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150126 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150136 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147052 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150117 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150133 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nNMSECE-AA 2 JAN/14/26 - JAN/13/27 Delivered"]]
+---PAGE 3---
+Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status
+Users Support Level PRODUCT Serial Number
+(POL) / Proof of Serial
+Number (POS) (if applicable)
+Net Sec Mngr Stnd SW 1:1 TE Sub
+NMSZKM-AA 2 JAN/14/26 - JAN/13/27 Delivered
+Net Sec Mngr Stnd SW 1yr TE for SUB Sub BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147071 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150159 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147070 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5144013 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147051 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150121 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5145078 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147069 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+NS75X03ECE-AT 6 JAN/14/26 - JAN/13/27 Delivered
+NS7500 (3Gbps) 1:1 TE
+NS75X03ZKM-AT 6 JAN/14/26 - JAN/13/27 Delivered
+NS7500 (3Gbps) 1yr TE for SUB BUSINESS
+RBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147049 Delivered
+NS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP
+tables 1
+TABLE 0 [["Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status\nUsers Support Level PRODUCT Serial Number\n(POL) / Proof of Serial\nNumber (POS) (if applicable)"], ["Net Sec Mngr Stnd SW 1:1 TE Sub\nNMSZKM-AA 2 JAN/14/26 - JAN/13/27 Delivered\nNet Sec Mngr Stnd SW 1yr TE for SUB Sub BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147071 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150159 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147070 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5144013 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147051 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150121 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5145078 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147069 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP\nNS75X03ECE-AT 6 JAN/14/26 - JAN/13/27 Delivered\nNS7500 (3Gbps) 1:1 TE\nNS75X03ZKM-AT 6 JAN/14/26 - JAN/13/27 Delivered\nNS7500 (3Gbps) 1yr TE for SUB BUSINESS\nRBIAC4P1GMM50MOD 1 JAN/14/26 - JAN/13/27 A0C5147049 Delivered\nNS 4port FO Mod 10-1GigE 850nm 50um1yRMA NEXT BUSINESS DAY SHIP"]]
+---PAGE 4---
+Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status
+Users Support Level PRODUCT Serial Number
+(POL) / Proof of Serial
+Number (POS) (if applicable)
+RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150119 Delivered
+Net Sec IPS-NS7500 Appl 1Yr NBD BUSINESS
+tables 1
+TABLE 0 [["Product SKU/Description Quantity / License, Subscription, or Support Term / MFG Serial Number / Status\nUsers Support Level PRODUCT Serial Number\n(POL) / Proof of Serial\nNumber (POS) (if applicable)"], ["RBIPSNS7500NBD 1 JAN/14/26 - JAN/13/27 A092150119 Delivered\nNet Sec IPS-NS7500 Appl 1Yr NBD BUSINESS"]]

@@ -31,6 +31,8 @@ class SettingController extends Controller
             // Handle logo specifically if it exists in the loop
             if ($key == 'company_logo' && !empty($value)) {
                 $settingValue = parse_url($value, PHP_URL_PATH);
+            } elseif ($key == 'ticketing_url') {
+                $settingValue = $this->normalizeTicketingUrl($value);
             } else {
                 $settingValue = $value;
             }
@@ -51,6 +53,22 @@ class SettingController extends Controller
         flash('Settings updated successfully!')->success();
         return back();
     }
+
+    private function normalizeTicketingUrl($value)
+    {
+        $url = trim((string) $value);
+
+        if ($url === '') {
+            return config('settings.defaults.ticketing_url');
+        }
+
+        if (!preg_match('/^https?:\/\//i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        return rtrim($url, '/');
+    }
+
     public function activity(Request $request){
         $title= 'Activity Logs';
         activity('activity')

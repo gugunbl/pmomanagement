@@ -20,7 +20,7 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
 
     public function query()
     {
-        $query = Perangkat::with(['project', 'lokasi']);
+        $query = Perangkat::with(['project', 'lokasi', 'jenisPerangkat']);
 
         if (isset($this->request['search']) && !empty($this->request['search'])) {
             $search = $this->request['search'];
@@ -48,6 +48,8 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
     {
         return [
             'Nama Project',
+            'Jenis Perangkat',
+            'SIK',
             'Merk',
             'Type',
             'Serial Number',
@@ -66,6 +68,8 @@ class PerangkatExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
     {
         return [
             $perangkat->project->nama_project ?? '-',
+            $perangkat->jenisPerangkat->jns_perangkat ?? '-',
+            $perangkat->sik,
             $perangkat->merk,
             $perangkat->type,
             $perangkat->serialnumber,

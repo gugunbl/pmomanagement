@@ -103,6 +103,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-0">
                         <h6 class="heading-small text-muted mb-0">Input Detail Unit (Per Serial Number)</h6>
                         <div class="btn-group">
+                            <a href="{{ route('perangkat.template') }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-file-excel mr-1"></i> Download Template
+                            </a>
                             <button type="button" class="btn btn-sm btn-outline-success" id="btn_export_current">
                                 <i class="fas fa-file-excel mr-1"></i> Download Detail
                             </button>
@@ -116,6 +119,10 @@
                     <div class="alert alert-secondary py-2 px-3 mt-2 mb-0" style="font-size: 0.75rem; border-left: 3px solid #f5365c;">
                         <i class="fas fa-info-circle mr-1 text-danger"></i> 
                         <strong>Petunjuk:</strong> Anda dapat mengedit data langsung pada tabel atau melalui Import Excel. Gunakan "Download Detail" untuk mendapatkan data saat ini.
+                    </div>
+                    <div class="alert alert-secondary py-2 px-3 mt-1 mb-0" style="font-size: 0.75rem; border-left: 3px solid #2dce89;">
+                        <i class="fas fa-info-circle mr-1 text-success"></i> 
+                        <strong>Template:</strong> Gunakan "Download Template". Baris ke-2 adalah sample dan akan di-skip saat import.
                     </div>
                     
                     <div class="custom-control custom-checkbox pt-2 mb-3 text-right">
@@ -133,10 +140,11 @@
                                     <th style="min-width: 200px;">Site / Alamat Lokasi</th>
                                     <th style="min-width: 120px;">Koordinat</th>
                                     <th style="min-width: 120px;">Lantai/Rak</th>
-                                    <th style="min-width: 140px;" id="license_header">License</th>
+                                    <th style="min-width: 160px;">Status</th>
                                     <th style="min-width: 150px;">Warranty Start</th>
                                     <th style="min-width: 150px;">Warranty End</th>
                                     <th style="min-width: 150px;">Tanggal Online</th>
+                                    <th style="min-width: 140px;" id="license_header">License</th>
                                 </tr>
                             </thead>
                             <tbody id="unit_tbody">
@@ -156,10 +164,17 @@
                                     </td>
                                     <td><input type="text" name="units[{{$index}}][koordinat]" class="form-control form-control-sm" value="{{ $unit->koordinat }}"></td>
                                     <td><input type="text" name="units[{{$index}}][lantai]" class="form-control form-control-sm" value="{{ $unit->lantai }}"></td>
-                                    <td><input type="text" name="units[{{$index}}][type_lisensi]" class="form-control form-control-sm" value="{{ $unit->type_lisensi }}"></td>
+                                    <td>
+                                        <select name="units[{{$index}}][status]" class="form-control form-control-sm" required>
+                                            @foreach($statusperangkat as $statusValue => $statusLabel)
+                                                <option value="{{ $statusValue }}" {{ (string) $unit->status === (string) $statusValue ? 'selected' : '' }}>{{ $statusLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
                                     <td><input type="date" name="units[{{$index}}][start_warranty]" class="form-control form-control-sm row-date-start" value="{{ $unit->start_warranty }}"></td>
                                     <td><input type="date" name="units[{{$index}}][end_warranty]" class="form-control form-control-sm row-date-end" value="{{ $unit->end_warranty }}"></td>
                                     <td><input type="date" name="units[{{$index}}][tgl_online]" class="form-control form-control-sm row-date-online" value="{{ $unit->tgl_online }}"></td>
+                                    <td><input type="text" name="units[{{$index}}][type_lisensi]" class="form-control form-control-sm" value="{{ $unit->type_lisensi }}"></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -303,10 +318,17 @@ $(document).ready(function () {
                                 </td>
                                 <td><input type="text" name="units[${index}][koordinat]" class="form-control form-control-sm" value="${row.koordinat}"></td>
                                 <td><input type="text" name="units[${index}][lantai]" class="form-control form-control-sm" value="${row.lantai}"></td>
-                                <td><input type="text" name="units[${index}][type_lisensi]" class="form-control form-control-sm" value="${row.type_lisensi}"></td>
+                                <td>
+                                    <select name="units[${index}][status]" class="form-control form-control-sm" required>
+                                        <option value="0" ${String(row.status) === '0' ? 'selected' : ''}>Tidak Aktif</option>
+                                        <option value="1" ${String(row.status ?? 1) === '1' ? 'selected' : ''}>Aktif</option>
+                                        <option value="3" ${String(row.status) === '3' ? 'selected' : ''}>Golden Unit/Stock</option>
+                                    </select>
+                                </td>
                                 <td><input type="date" name="units[${index}][start_warranty]" class="form-control form-control-sm row-date-start" value="${row.start_warranty}"></td>
                                 <td><input type="date" name="units[${index}][end_warranty]" class="form-control form-control-sm row-date-end" value="${row.end_warranty}"></td>
                                 <td><input type="date" name="units[${index}][tgl_online]" class="form-control form-control-sm row-date-online" value="${row.tgl_online}"></td>
+                                <td><input type="text" name="units[${index}][type_lisensi]" class="form-control form-control-sm" value="${row.type_lisensi}"></td>
                             </tr>
                         `;
                         tbody.prepend(html); // Put at top as requested

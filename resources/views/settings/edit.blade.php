@@ -162,7 +162,7 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 {{Form::label('ticketing_url', 'Ticketing System URL', ['class' => 'form-control-label'])}}
-                                {{ Form::text('ticketing_url', setting('ticketing_url', config('app.url')), ['class'=>"form-control", 'placeholder' => 'http://103.87.67.192/'])}}
+                                {{ Form::text('ticketing_url', setting('ticketing_url', config('settings.defaults.ticketing_url', config('app.url'))), ['class'=>"form-control", 'placeholder' => config('settings.defaults.ticketing_url', 'https://pmomaintenance.web.id')])}}
                                 <small class="text-muted">This URL will be included in the access credentials email.</small>
                             </div>
                         </div>

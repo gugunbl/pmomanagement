@@ -3,7 +3,11 @@ Dear {{ explode(' ', $user->name)[0] }},
 
 Untuk Akses System Ticketing
 
-url : [{{ setting('ticketing_url', config('app.url')) }}]({{ setting('ticketing_url', config('app.url')) }})
+@php
+    $ticketingUrl = rtrim(setting('ticketing_url') ?: config('settings.defaults.ticketing_url', config('app.url')), '/');
+@endphp
+
+url : [{{ $ticketingUrl }}]({{ $ticketingUrl }})
 
 username : {{ $user->email }}
 password : {{ $defaultPassword }}
