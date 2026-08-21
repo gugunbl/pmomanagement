@@ -410,7 +410,7 @@ $(document).ready(function () {
         $(this).val(''); // Reset input
 
         $.ajax({
-            url: '{{ route("perangkat.import") }}',
+            url: '{{ route("perangkat.import", [], false) }}',
             type: 'POST',
             data: form_data,
             contentType: false,

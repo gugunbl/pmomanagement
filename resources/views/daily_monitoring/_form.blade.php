@@ -180,7 +180,7 @@
 
             body.html('<tr><td colspan="8" class="text-center text-muted">Memuat tiket...</td></tr>');
 
-            var url = "{{ route('daily-monitoring.project-cases', ':project') }}".replace(':project', projectId);
+            var url = "{{ route('daily-monitoring.project-cases', ':project', false) }}".replace(':project', projectId);
             $.get(url, function(response) {
                 warningInput.val(response.total_warning || 0);
                 warningDisplay.text(response.total_warning || 0);

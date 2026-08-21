@@ -193,7 +193,7 @@ $(document).ready(function() {
             return;
         }
 
-        let url = "{{ route('cases.get-sn', ':id') }}";
+        let url = "{{ route('cases.get-sn', ':id', false) }}";
         url = url.replace(':id', projectId);
 
         $.ajax({

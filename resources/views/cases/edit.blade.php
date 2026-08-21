@@ -580,7 +580,7 @@ $(document).ready(function() {
             return;
         }
 
-        let url = "{{ route('cases.get-sn', ':id') }}";
+        let url = "{{ route('cases.get-sn', ':id', false) }}";
         url = url.replace(':id', projectId);
         let selectedSn = $('#sn_select').data('selected');
 
@@ -843,7 +843,7 @@ $(document).ready(function() {
             return;
         }
 
-        let url = "{{ route('cases.comments.store', $case->id_case) }}";
+        let url = "{{ route('cases.comments.store', $case->id_case, false) }}";
         $.ajax({
             url: url,
             type: 'POST',
