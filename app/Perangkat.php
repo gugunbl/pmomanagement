@@ -65,4 +65,13 @@ class Perangkat extends Model
         // Asumsi foreign key: id_project, local key: id_project di tabel m_project
         return $this->belongsTo(Project::class, 'id_project', 'id_project');
     }
+
+    /**
+     * Relasi ke ApFloor
+     */
+    public function apFloors()
+    {
+        return $this->belongsToMany(ApFloor::class, 'ap_floor_perangkat', 'id_perangkat', 'ap_floor_id')
+                    ->withTimestamps();
+    }
 }

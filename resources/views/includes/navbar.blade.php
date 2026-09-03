@@ -319,6 +319,43 @@
                         </li>
                     @endcanany
 
+                    @canany(['menu_monitoring_ap', 'sub_mapping_lantai_ap', 'sub_traffic_ap', 'sub_monitor_ap'])
+                        <li class="nav-item">
+                            <a class="nav-link {{ (request()->is('traffic-ap*')) ? 'active' : '' }}" href="#navbar-traffic-ap" data-toggle="collapse" role="button" aria-expanded="{{ (request()->is('traffic-ap*')) ? 'true' : 'false' }}" aria-controls="navbar-traffic-ap">
+                                <i class="fas text-primary fa-wifi"></i>
+                                <span class="nav-link-text">Monitoring AP</span>
+                            </a>
+                            <div class="collapse {{ (request()->is('traffic-ap*')) ? 'show' : '' }}" id="navbar-traffic-ap">
+                                <ul class="nav nav-sm flex-column">
+                                    @can('sub_mapping_lantai_ap')
+                                    <li class="nav-item">
+                                        <a href="{{ route('traffic-ap.mapping.index') }}" class="nav-link {{ request()->is('traffic-ap/mapping*') ? 'active' : '' }}">
+                                            <span class="sidenav-mini-icon">M </span>
+                                            <span class="sidenav-normal">Mapping Lantai &amp; AP</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    @can('sub_traffic_ap')
+                                    <li class="nav-item">
+                                        <a href="{{ route('traffic-ap.input') }}" class="nav-link {{ request()->is('traffic-ap/input*') ? 'active' : '' }}">
+                                            <span class="sidenav-mini-icon">T </span>
+                                            <span class="sidenav-normal">Traffic AP</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    @can('sub_monitor_ap')
+                                    <li class="nav-item">
+                                        <a href="{{ route('traffic-ap.monitor') }}" class="nav-link {{ request()->is('traffic-ap/monitor*') ? 'active' : '' }}">
+                                            <span class="sidenav-mini-icon">L </span>
+                                            <span class="sidenav-normal">Monitor</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+                                </ul>
+                            </div>
+                        </li>
+                    @endcanany
+
                 </ul>
             </div>
         </div>

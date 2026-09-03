@@ -160,6 +160,32 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::resource('cases', 'CaseController');
     Route::resource('interference-ratio', 'InterferenceRatioController');
 
+    /*
+    |--------------------------------------------------------------------------
+    | MONITORING TRAFFIC AP
+    |--------------------------------------------------------------------------
+    */
+    Route::group(['prefix' => 'traffic-ap'], function () {
+        // Sub Menu 1: Mapping Lantai & AP
+        Route::get('/mapping', 'ApTrafficController@mappingIndex')->name('traffic-ap.mapping.index');
+        Route::post('/mapping', 'ApTrafficController@mappingStore')->name('traffic-ap.mapping.store');
+        Route::put('/mapping/{id}', 'ApTrafficController@mappingUpdate')->name('traffic-ap.mapping.update');
+        Route::delete('/mapping/{id}', 'ApTrafficController@mappingDestroy')->name('traffic-ap.mapping.destroy');
+        Route::post('/mapping/auto-generate', 'ApTrafficController@mappingAutoGenerate')->name('traffic-ap.mapping.auto-generate');
+        Route::get('/ajax/devices', 'ApTrafficController@getApPerangkats')->name('traffic-ap.ajax.devices');
+        Route::get('/ajax/project-locations', 'ApTrafficController@getProjectLocations')->name('traffic-ap.ajax.project-locations');
+        Route::get('/ajax/auto-detect-devices', 'ApTrafficController@autoDetectDevices')->name('traffic-ap.ajax.auto-detect-devices');
+
+        // Sub Menu 2: Traffic AP (Input Data)
+        Route::get('/input', 'ApTrafficController@inputForm')->name('traffic-ap.input');
+        Route::get('/input/get-floors', 'ApTrafficController@getFloorsForInput')->name('traffic-ap.input.get-floors');
+        Route::post('/input', 'ApTrafficController@inputStore')->name('traffic-ap.input.store');
+
+        // Sub Menu 3: Monitor
+        Route::get('/monitor', 'ApTrafficController@monitor')->name('traffic-ap.monitor');
+        Route::get('/monitor/export', 'ApTrafficController@exportExcel')->name('traffic-ap.monitor.export');
+    });
+
     Route::resource('perangkat', 'PerangkatController');
     
     Route::get('/perangkat/{perangkat}', 'PerangkatController@show')
