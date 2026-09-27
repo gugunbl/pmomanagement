@@ -17,6 +17,7 @@ class ApTrafficLog extends Model
         'traffic_value',
         'traffic_unit',
         'traffic_in_mb',
+        'jumlah_user',
         'user_id',
         'keterangan',
     ];

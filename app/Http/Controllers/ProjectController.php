@@ -408,6 +408,10 @@ public function store(Request $request)
 
 public function edit(Project $project)
 {
+    if (!Auth::user()->canEditProject($project)) {
+        abort(403, 'Akses ditolak: Anda bukan PM Implementasi atau PM Maintenance untuk project ini. Hanya Admin, PM Implementasi, atau PM Maintenance yang dapat mengedit project ini.');
+    }
+
     $title = 'Edit Project';
 
     $project->load([
@@ -443,6 +447,10 @@ public function edit(Project $project)
 
 public function update(Request $request, Project $project)
 {
+    if (!Auth::user()->canEditProject($project)) {
+        abort(403, 'Akses ditolak: Anda bukan PM Implementasi atau PM Maintenance untuk project ini. Hanya Admin, PM Implementasi, atau PM Maintenance yang dapat mengedit project ini.');
+    }
+
     $request->validate([
         'pm_implementasi'          => 'required|exists:m_project_manager,id_pm',
         'pm_maintenance'           => 'required|exists:m_project_manager,id_pm',

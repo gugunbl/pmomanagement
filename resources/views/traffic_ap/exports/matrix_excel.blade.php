@@ -18,5 +18,13 @@
                 @endforeach
             </tr>
         @endforeach
+        <tr>
+            <td style="background-color: #8EA9DB; font-weight: bold; text-align: center; border: 1px solid #000000;">TOTAL</td>
+            @foreach($dateColumns as $dateKey => $label)
+                <td style="background-color: #E2E8F0; font-weight: bold; text-align: center; border: 1px solid #000000;">
+                    {{ $dailyTotals[$dateKey] ?? '-' }}
+                </td>
+            @endforeach
+        </tr>
     </tbody>
 </table>

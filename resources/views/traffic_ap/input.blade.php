@@ -127,11 +127,12 @@
                         <table class="table align-items-center table-bordered table-hover" id="traffic_table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th style="width: 60px; text-align: center;">No</th>
-                                    <th style="width: 280px;">Lantai</th>
-                                    <th style="min-width: 200px;">Input Text (Traffic)</th>
-                                    <th style="width: 160px;">Pilihan Size</th>
-                                    <th>Info AP Terpasang</th>
+                                    <th style="width: 50px; min-width: 50px; text-align: center;">No</th>
+                                    <th style="min-width: 100px; width: 160px;">Lantai</th>
+                                    <th style="min-width: 100px; width: 200px;">Traffic</th>
+                                    <th style="min-width: 100px; width: 160px;">Satuan</th>
+                                    <th style="min-width: 100px; width: 200px;">Jumlah User</th>
+                                    <th style="min-width: 200px;">Info AP Terpasang</th>
                                 </tr>
                             </thead>
                             <tbody id="traffic_tbody">
@@ -167,14 +168,21 @@
     border-radius: .375rem;
     padding: .375rem .75rem;
 }
-.traffic-input-field {
-    font-size: 1.05rem;
+.traffic-input-field, .user-input-field {
+    font-size: 1rem;
     font-weight: bold;
     color: #2b3553;
+    min-width: 140px !important;
 }
-.traffic-input-field:focus {
+.traffic-input-field:focus, .user-input-field:focus {
     border-color: #5e72e4;
     background-color: #f8f9fe;
+}
+.unit-select {
+    min-width: 95px !important;
+    padding-left: 0.6rem !important;
+    padding-right: 1.75rem !important;
+    font-weight: bold;
 }
 </style>
 @endpush
@@ -276,27 +284,36 @@ $(document).ready(function() {
                             return `<option value="${u}" ${sel}>${u}</option>`;
                         }).join('');
 
+                        var formattedUser = (item.jumlah_user !== null && item.jumlah_user !== '' && item.jumlah_user !== undefined) 
+                            ? Number(item.jumlah_user).toLocaleString('en-US') 
+                            : '';
+
                         var rowHtml = `
                             <tr class="traffic-row">
                                 <td class="text-center font-weight-bold align-middle">${index + 1}</td>
                                 <td class="align-middle">
                                     <input type="hidden" name="entries[${index}][nama_lantai]" value="${item.nama_lantai}">
                                     <input type="hidden" name="entries[${index}][ap_floor_id]" value="${item.ap_floor_id || ''}">
-                                    <strong class="text-primary font-weight-600" style="font-size: 1rem;">${item.nama_lantai}</strong>
+                                    <strong class="text-primary font-weight-600" style="font-size: 0.95rem;">${item.nama_lantai}</strong>
                                 </td>
                                 <td>
-                                    <div class="input-group">
-                                        <input type="number" step="any" min="0" 
-                                               name="entries[${index}][traffic_value]" 
-                                               class="form-control traffic-input-field" 
-                                               value="${item.traffic_value}" 
-                                               placeholder="0.00">
-                                    </div>
+                                    <input type="number" step="any" min="0" 
+                                           name="entries[${index}][traffic_value]" 
+                                           class="form-control traffic-input-field text-right font-weight-bold" 
+                                           value="${item.traffic_value}" 
+                                           placeholder="0.00">
                                 </td>
                                 <td>
                                     <select name="entries[${index}][traffic_unit]" class="form-control unit-select font-weight-bold">
                                         ${unitOptions}
                                     </select>
+                                </td>
+                                <td>
+                                    <input type="text" 
+                                           name="entries[${index}][jumlah_user]" 
+                                           class="form-control user-input-field text-right font-weight-bold" 
+                                           value="${formattedUser}" 
+                                           placeholder="0">
                                 </td>
                                 <td class="align-middle">
                                     <div class="d-flex flex-wrap align-items-center">
@@ -348,6 +365,20 @@ $(document).ready(function() {
 
     $('.btn-load-data').on('click', function() {
         loadFloorsData();
+    });
+
+    // Auto-format thousand separators for Jumlah User input (e.g. 1000 -> 1,000, max 8 digits)
+    $(document).on('input', '.user-input-field', function() {
+        var val = $(this).val();
+        var raw = val.replace(/\D/g, '');
+        if (raw.length > 8) {
+            raw = raw.substring(0, 8);
+        }
+        if (raw === '') {
+            $(this).val('');
+        } else {
+            $(this).val(Number(raw).toLocaleString('en-US'));
+        }
     });
 
     // Quick Unit Switcher

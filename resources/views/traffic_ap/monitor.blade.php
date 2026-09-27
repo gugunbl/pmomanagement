@@ -43,15 +43,14 @@
                     <form method="GET" action="{{ route('traffic-ap.monitor') }}" id="filterForm">
                         <div class="row align-items-end">
                             {{-- Dropdown Project --}}
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="form-group mb-md-0">
                                     <label class="form-control-label font-weight-bold">
-                                        <i class="fas fa-project-diagram mr-1 text-primary"></i> Filter Project
+                                        <i class="fas fa-project-diagram mr-1 text-primary"></i> Project
                                     </label>
                                     @if($fixedProject)
                                         <input type="text" class="form-control bg-white font-weight-bold" value="{{ $selectedProject->nama_project ?? '-' }}" readonly>
                                         <input type="hidden" name="id_project" id="filter_id_project" value="{{ $selectedProjectId }}">
-                                        <small class="text-info d-block mt-1"><i class="fas fa-lock mr-1"></i> Project akun Anda.</small>
                                     @else
                                         <select name="id_project" id="filter_id_project" class="form-control select2">
                                             @foreach($projects as $proj)
@@ -65,10 +64,10 @@
                             </div>
 
                             {{-- Dropdown Lokasi --}}
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="form-group mb-md-0">
                                     <label class="form-control-label font-weight-bold">
-                                        <i class="fas fa-building mr-1 text-primary"></i> Filter Lokasi
+                                        <i class="fas fa-building mr-1 text-primary"></i> Lokasi
                                     </label>
                                     <select name="id_lokasi" id="filter_id_lokasi" class="form-control select2">
                                         @foreach($lokasis as $lok)
@@ -82,36 +81,67 @@
 
                             <div class="col-md-2">
                                 <div class="form-group mb-md-0">
-                                    <label class="form-control-label font-weight-bold">Bulan</label>
-                                    @php
-                                        $months = [
-                                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                                            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                                            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-                                        ];
-                                    @endphp
-                                    <select name="bulan" class="form-control select2">
-                                        @foreach($months as $mNum => $mName)
-                                            <option value="{{ $mNum }}" {{ $selectedMonth == $mNum ? 'selected' : '' }}>
-                                                {{ $mName }}
-                                            </option>
-                                        @endforeach
+                                    <label class="form-control-label font-weight-bold">Mode Filter</label>
+                                    <select name="filter_mode" id="filter_mode" class="form-control select2">
+                                        <option value="month" {{ $filterMode == 'month' ? 'selected' : '' }}>Bulanan</option>
+                                        <option value="range" {{ $filterMode == 'range' ? 'selected' : '' }}>Rentang Tanggal</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
-                                <div class="form-group mb-md-0">
-                                    <label class="form-control-label font-weight-bold">Tahun</label>
-                                    <select name="tahun" class="form-control select2">
-                                        @for($y = date('Y') + 1; $y >= 2024; $y--)
-                                            <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>
-                                                {{ $y }}
-                                            </option>
-                                        @endfor
-                                    </select>
+                            <div class="col-md-3" id="filter_month_group" style="display: {{ $filterMode == 'month' ? 'block' : 'none' }};">
+                                <div class="row">
+                                    <div class="col-7 pr-1">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-control-label font-weight-bold">Bulan</label>
+                                            @php
+                                                $months = [
+                                                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                                                ];
+                                            @endphp
+                                            <select name="bulan" id="filter_bulan" class="form-control select2">
+                                                @foreach($months as $mNum => $mName)
+                                                    <option value="{{ $mNum }}" {{ $selectedMonth == $mNum ? 'selected' : '' }}>
+                                                        {{ $mName }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-5 pl-1">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-control-label font-weight-bold">Tahun</label>
+                                            <select name="tahun" id="filter_tahun" class="form-control select2">
+                                                @for($y = date('Y') + 1; $y >= 2024; $y--)
+                                                    <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>
+                                                        {{ $y }}
+                                                    </option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <div class="col-md-3" id="filter_range_group" style="display: {{ $filterMode == 'range' ? 'block' : 'none' }};">
+                                <div class="row">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-control-label font-weight-bold">Start Date</label>
+                                            <input type="date" name="start_date" id="start_date" class="form-control p-2" value="{{ $startDate ?? date('Y-m-d') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group mb-md-0">
+                                            <label class="form-control-label font-weight-bold">End Date</label>
+                                            <input type="date" name="end_date" id="end_date" class="form-control p-2" value="{{ $endDate ?? date('Y-m-d') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-1">
                                 <div class="form-group mb-md-0">
                                     <label class="form-control-label font-weight-bold">Satuan</label>
@@ -123,7 +153,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-1 text-md-right mt-3 mt-md-0">
+                            <div class="col-md-2 text-md-right mt-3 mt-md-0">
                                 <button type="submit" class="btn btn-primary btn-block">
                                     <i class="fas fa-filter mr-1"></i> Tampilkan
                                 </button>
@@ -152,45 +182,125 @@
                         </a>
                     </div>
                 @else
-                    {{-- MATRIKS MONITORING TRAFFIC AP SESUAI GAMBAR 1 --}}
-                    <div class="table-responsive table-matrix-container shadow-sm border rounded">
-                        <table class="table table-matrix table-bordered mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="matrix-th-lantai">LANTAI</th>
-                                    @foreach($dateColumns as $dateKey => $col)
-                                        <th class="matrix-th-date text-center" title="{{ $col['label'] }}">
-                                            {{ $col['label'] }}
-                                        </th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($floors as $floorName)
-                                    <tr>
-                                        <td class="matrix-td-lantai font-weight-bold">
-                                            {{ $floorName }}
-                                        </td>
-                                        @foreach($dateColumns as $dateKey => $col)
-                                            @php
-                                                $cell = $matrix[$floorName][$dateKey] ?? null;
-                                                $display = $cell['display'] ?? '-';
-                                                $hasValue = ($display !== '-');
-                                            @endphp
-                                            <td class="matrix-td-val text-center {{ $hasValue ? 'font-weight-600' : 'text-muted' }}">
-                                                {{ $display }}
-                                            </td>
+                    {{-- TAB NAVIGATION --}}
+                    <ul class="nav nav-tabs nav-fill mb-0" id="monitorTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active font-weight-bold" id="tab-traffic-tab" data-toggle="tab" href="#tab-traffic" role="tab">
+                                <i class="fas fa-chart-bar mr-1"></i> Traffic
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link font-weight-bold" id="tab-user-tab" data-toggle="tab" href="#tab-user" role="tab">
+                                <i class="fas fa-users mr-1"></i> Jumlah User
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="monitorTabsContent">
+                        {{-- TAB 1: TRAFFIC --}}
+                        <div class="tab-pane fade show active" id="tab-traffic" role="tabpanel">
+                            <div class="table-responsive table-matrix-container shadow-sm border rounded" style="border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;">
+                                <table class="table table-matrix table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="matrix-th-lantai">LANTAI</th>
+                                            @foreach($dateColumns as $dateKey => $col)
+                                                <th class="matrix-th-date text-center" title="{{ $col['label'] }}">
+                                                    {{ $col['label'] }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($floors as $floorName)
+                                            <tr>
+                                                <td class="matrix-td-lantai font-weight-bold">
+                                                    {{ $floorName }}
+                                                </td>
+                                                @foreach($dateColumns as $dateKey => $col)
+                                                    @php
+                                                        $cell = $matrixTraffic[$floorName][$dateKey] ?? null;
+                                                        $display = $cell['display'] ?? '-';
+                                                        $hasValue = ($display !== '-');
+                                                    @endphp
+                                                    <td class="matrix-td-val text-center {{ $hasValue ? 'font-weight-600' : 'text-muted' }}">
+                                                        {{ $display }}
+                                                    </td>
+                                                @endforeach
+                                            </tr>
                                         @endforeach
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th class="matrix-td-lantai font-weight-bold" style="background-color: #8ea9db !important; color: #000000 !important; border-top: 2px solid #000 !important;">TOTAL</th>
+                                            @foreach($dateColumns as $dateKey => $col)
+                                                <th class="matrix-td-val text-center font-weight-bold" style="background-color: #e2e8f0; border-top: 2px solid #000 !important; font-size: 0.85rem; color: #000;">
+                                                    {{ $dailyTotalsTraffic[$dateKey]['display'] ?? '-' }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- TAB 2: JUMLAH USER --}}
+                        <div class="tab-pane fade" id="tab-user" role="tabpanel">
+                            <div class="table-responsive table-matrix-container shadow-sm border rounded" style="border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;">
+                                <table class="table table-matrix table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="matrix-th-lantai">LANTAI</th>
+                                            @foreach($dateColumns as $dateKey => $col)
+                                                <th class="matrix-th-date text-center" title="{{ $col['label'] }}">
+                                                    {{ $col['label'] }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($floors as $floorName)
+                                            <tr>
+                                                <td class="matrix-td-lantai font-weight-bold">
+                                                    {{ $floorName }}
+                                                </td>
+                                                @foreach($dateColumns as $dateKey => $col)
+                                                    @php
+                                                        $cell = $matrixUser[$floorName][$dateKey] ?? null;
+                                                        $display = $cell['display'] ?? '-';
+                                                        $hasValue = ($display !== '-');
+                                                    @endphp
+                                                    <td class="matrix-td-val text-center {{ $hasValue ? 'font-weight-600' : 'text-muted' }}">
+                                                        {{ $display }}
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th class="matrix-td-lantai font-weight-bold" style="background-color: #8ea9db !important; color: #000000 !important; border-top: 2px solid #000 !important;">TOTAL</th>
+                                            @foreach($dateColumns as $dateKey => $col)
+                                                <th class="matrix-td-val text-center font-weight-bold" style="background-color: #e2e8f0; border-top: 2px solid #000 !important; font-size: 0.85rem; color: #000;">
+                                                    {{ $dailyTotalsUser[$dateKey]['display'] ?? '-' }}
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row align-items-center mt-3">
                         <div class="col-md-6">
                             <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i> Menampilkan total <strong>{{ count($floors) }} Lantai</strong> untuk periode <strong>{{ $months[$selectedMonth] ?? '' }} {{ $selectedYear }}</strong>.
+                                <i class="fas fa-info-circle mr-1"></i> Menampilkan total <strong>{{ count($floors) }} Lantai</strong> untuk periode
+                                @if($filterMode == 'range')
+                                    <strong>{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</strong>.
+                                @else
+                                    <strong>{{ $months[$selectedMonth] ?? '' }} {{ $selectedYear }}</strong>.
+                                @endif
                             </small>
                         </div>
                         <div class="col-md-6 text-md-right">
@@ -208,6 +318,25 @@
 
 @push('styles')
 <style>
+#monitorTabs .nav-link {
+    color: #525f7f;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    background-color: #f1f3f5;
+    margin-right: 2px;
+    border-radius: .375rem .375rem 0 0;
+    padding: .6rem 1.2rem;
+    transition: all .15s ease;
+}
+#monitorTabs .nav-link.active {
+    color: #1a237e;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+    font-weight: 800;
+}
+#monitorTabs .nav-link:hover:not(.active) {
+    background-color: #e9ecef;
+}
 .select2-container--bootstrap4 .select2-selection {
     min-height: 44px;
     border: 1px solid #cad1d7;
@@ -438,6 +567,16 @@ $(document).ready(function() {
                 }
             }
         });
+    });
+    // Toggle Filter Mode
+    $('#filter_mode').on('change', function() {
+        if ($(this).val() === 'range') {
+            $('#filter_month_group').hide();
+            $('#filter_range_group').show();
+        } else {
+            $('#filter_range_group').hide();
+            $('#filter_month_group').show();
+        }
     });
 });
 </script>

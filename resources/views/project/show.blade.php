@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @push('pg_btn')
-    @can('update-project')
+    @if(Auth::check() && Auth::user()->canEditProject($project))
         <a class="btn btn-info btn-sm m-1" data-toggle="tooltip" data-placement="top" title="Edit Project details" href="{{route('project.edit',$project)}}">
             <i class="fa fa-edit" aria-hidden="true"></i> Edit project
         </a>
-    @endcan
+    @endif
 @endpush
 @section('content')
     <div class="row">
@@ -55,9 +55,18 @@
                         <div class="col-sm-2 text-muted">PM Maintenance</div>
                         <div class="col-sm-4"><strong>{{ $project->mPMMaintenance->nama_pm }}</strong></div>
                     </div>
-                    <div class="row mb-0">
+                    <div class="row mb-3">
                         <div class="col-sm-2 text-muted">Tipe Maintenance</div>
                         <div class="col-sm-4"><strong>{{ $project->tipe_maintenance ?? '-' }}</strong></div>
+                        @if(Auth::check())
+                            @php $userCanEditProject = Auth::user()->canEditProject($project); @endphp
+                            <div class="col-sm-2 text-muted">Hak Edit</div>
+                            <div class="col-sm-4">
+                                <strong class="{{ $userCanEditProject ? 'text-success' : 'text-muted' }}">
+                                    {{ $userCanEditProject ? 'Ya, Anda dapat edit project ini' : 'Tidak, hanya view saja' }}
+                                </strong>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

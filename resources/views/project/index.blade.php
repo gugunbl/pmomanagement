@@ -138,11 +138,14 @@
                                                 <i class="fa fa-eye" aria-hidden="true"></i>
                                             </a>
                                             @endcan
-                                            @can('update-project')
-                                            <a class="btn btn-info btn-sm m-1" data-toggle="tooltip" data-placement="top" title="Edit post details" href="{{route('project.edit',$project->id_project)}}">
-                                                <i class="fa fa-edit" aria-hidden="true"></i>
-                                            </a>
-                                            @endcan
+                                            @if(Auth::check() && Auth::user()->canEditProject($project))
+                                                <a class="btn btn-info btn-sm m-1" data-toggle="tooltip" data-placement="top" title="Edit post details" href="{{route('project.edit',$project->id_project)}}">
+                                                    <i class="fa fa-edit" aria-hidden="true"></i>
+                                                </a>
+                                                <span class="badge badge-success d-block mt-1">Edit allowed</span>
+                                            @else
+                                                <span class="badge badge-secondary d-block mt-1">View only</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

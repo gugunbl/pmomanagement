@@ -67,6 +67,43 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'id_project');
     }
 
+    public function isSuperAdmin()
+    {
+        if ($this->relationLoaded('roles')) {
+            $roleNames = $this->roles->pluck('name')->all();
+            if (collect($roleNames)->contains(fn ($name) => strtolower((string) $name) === 'super-admin')) {
+                return true;
+            }
+        }
+
+        if (!method_exists($this, 'hasRole')) {
+            return false;
+        }
+
+        try {
+            return $this->hasRole('super-admin');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    public function canEditProject(Project $project)
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $pmImplementasiUserId = $project->mPMImplementasi ? $project->mPMImplementasi->user_id : null;
+        $pmMaintenanceUserId = $project->mPMMaintenance ? $project->mPMMaintenance->user_id : null;
+
+        $currentUserId = (int) ($this->id ?? 0);
+
+        return $currentUserId > 0 && (
+            (int) $currentUserId === (int) ($pmImplementasiUserId ?? 0) ||
+            (int) $currentUserId === (int) ($pmMaintenanceUserId ?? 0)
+        );
+    }
+
     public function teamSupports()
     {
         return $this->belongsToMany(TeamSupport::class, 'user_team_support', 'user_id', 'team_support_id');

@@ -436,7 +436,7 @@ class ApTrafficController extends Controller
         if ($selectedLokasiId && !$lokasis->contains('id_lokasi', $selectedLokasiId)) {
             $selectedLokasiId = $lokasis->first()->id_lokasi ?? null;
         }
-        $selectedTanggal = $request->input('tanggal', date('Y-m-d'));
+        $selectedTanggal = $request->input('tanggal', Carbon::yesterday()->format('Y-m-d'));
 
         return view('traffic_ap.input', compact(
             'title',
@@ -550,6 +550,7 @@ class ApTrafficController extends Controller
                 'ap_names' => $fl['ap_names'],
                 'traffic_value' => $existing ? $existing->traffic_value : '',
                 'traffic_unit' => $existing ? $existing->traffic_unit : 'GB',
+                'jumlah_user' => $existing ? $existing->jumlah_user : '',
                 'has_data' => $existing ? true : false,
             ];
         }
@@ -565,6 +566,16 @@ class ApTrafficController extends Controller
 
     public function inputStore(Request $request)
     {
+        if ($request->has('entries') && is_array($request->entries)) {
+            $entries = $request->entries;
+            foreach ($entries as $k => $e) {
+                if (isset($e['jumlah_user'])) {
+                    $entries[$k]['jumlah_user'] = str_replace(',', '', $e['jumlah_user']);
+                }
+            }
+            $request->merge(['entries' => $entries]);
+        }
+
         $validated = $request->validate([
             'id_project' => 'nullable|exists:m_project,id_project',
             'id_lokasi' => 'required|exists:m_lokasi,id_lokasi',
@@ -574,6 +585,7 @@ class ApTrafficController extends Controller
             'entries.*.ap_floor_id' => 'nullable|integer',
             'entries.*.traffic_value' => 'nullable|numeric|min:0',
             'entries.*.traffic_unit' => 'nullable|string|in:KB,MB,GB,TB',
+            'entries.*.jumlah_user' => 'nullable|integer|min:0',
         ]);
 
         $projectId = $request->id_project;
@@ -587,9 +599,10 @@ class ApTrafficController extends Controller
                 $namaLantai = strtoupper(trim($entry['nama_lantai']));
                 $val = $entry['traffic_value'];
                 $unit = $entry['traffic_unit'] ?? 'GB';
+                $userCount = isset($entry['jumlah_user']) && $entry['jumlah_user'] !== '' ? $entry['jumlah_user'] : 0;
                 $floorId = !empty($entry['ap_floor_id']) ? $entry['ap_floor_id'] : null;
 
-                if ($val !== null && $val !== '') {
+                if (($val !== null && $val !== '') || $userCount > 0) {
                     ApTrafficLog::updateOrCreate(
                         [
                             'id_project' => $projectId,
@@ -599,8 +612,9 @@ class ApTrafficController extends Controller
                         ],
                         [
                             'ap_floor_id' => $floorId,
-                            'traffic_value' => $val,
+                            'traffic_value' => $val !== '' ? $val : 0,
                             'traffic_unit' => $unit,
+                            'jumlah_user' => $userCount,
                             'user_id' => Auth::id(),
                         ]
                     );
@@ -699,8 +713,12 @@ class ApTrafficController extends Controller
         $selectedLokasi = null;
         $dateColumns = [];
         $floors = [];
-        $matrix = [];
+        $matrixTraffic = [];
+        $matrixUser = [];
         $totalTraffic = null;
+        $totalUser = null;
+        $dailyTotalsTraffic = [];
+        $dailyTotalsUser = [];
 
         if ($selectedLokasiId) {
             $selectedLokasi = Lokasi::find($selectedLokasiId);
@@ -789,35 +807,59 @@ class ApTrafficController extends Controller
                 }
             };
 
-            // Susun matriks: $matrix[lantai][tanggal] = formatted string
+            // Susun matriks
+            $matrixTraffic = [];
+            $matrixUser = [];
             foreach ($floors as $floorName) {
-                $matrix[$floorName] = [];
+                $matrixTraffic[$floorName] = [];
+                $matrixUser[$floorName] = [];
                 foreach ($dateColumns as $dateKey => $colInfo) {
-                    $matrix[$floorName][$dateKey] = [
+                    $matrixTraffic[$floorName][$dateKey] = [
                         'value' => null,
                         'unit' => null,
                         'display' => '-',
                         'in_mb' => 0,
                     ];
+                    $matrixUser[$floorName][$dateKey] = [
+                        'value' => null,
+                        'display' => '-',
+                    ];
                 }
             }
 
             $totalInSelectedUnit = 0;
+            $totalUserCount = 0;
+            $dailyTotalsTraffic = [];
+            $dailyTotalsUser = [];
+            foreach ($dateColumns as $dateKey => $colInfo) {
+                $dailyTotalsTraffic[$dateKey] = ['value' => 0, 'display' => '-'];
+                $dailyTotalsUser[$dateKey] = ['value' => 0, 'display' => '-'];
+            }
 
             foreach ($logs as $log) {
                 $floorKey = strtoupper(trim($log->nama_lantai));
                 $dateKey = Carbon::parse($log->tanggal)->format('Y-m-d');
 
-                if (isset($matrix[$floorKey][$dateKey])) {
+                if (isset($matrixTraffic[$floorKey][$dateKey])) {
+                    // Traffic
                     $convertedVal = $convertToSelected($log->traffic_value, $log->traffic_unit);
                     $displayVal = rtrim(rtrim(number_format($convertedVal, 4, '.', ''), '0'), '.');
-                    $matrix[$floorKey][$dateKey] = [
+                    $matrixTraffic[$floorKey][$dateKey] = [
                         'value' => $convertedVal,
                         'unit' => $selectedSatuan,
-                        'display' => $displayVal . ' ' . $selectedSatuan,
+                        'display' => $convertedVal > 0 ? $displayVal . ' ' . $selectedSatuan : '-',
                         'in_mb' => $log->traffic_in_mb,
                     ];
                     $totalInSelectedUnit += $convertedVal;
+                    $dailyTotalsTraffic[$dateKey]['value'] += $convertedVal;
+
+                    // Jumlah User
+                    $matrixUser[$floorKey][$dateKey] = [
+                        'value' => $log->jumlah_user,
+                        'display' => $log->jumlah_user > 0 ? number_format($log->jumlah_user, 0, ',', '.') : '-',
+                    ];
+                    $totalUserCount += $log->jumlah_user;
+                    $dailyTotalsUser[$dateKey]['value'] += $log->jumlah_user;
                 }
             }
 
@@ -828,6 +870,22 @@ class ApTrafficController extends Controller
                 'display' => $totalFormatted ?: '0',
                 'satuan' => $selectedSatuan,
             ];
+            $totalUser = [
+                'value' => $totalUserCount,
+                'display' => number_format($totalUserCount, 0, ',', '.'),
+            ];
+
+            // Format daily totals
+            foreach ($dailyTotalsTraffic as $dKey => $dInfo) {
+                if ($dInfo['value'] > 0) {
+                    $dFmt = rtrim(rtrim(number_format($dInfo['value'], 4, '.', ''), '0'), '.');
+                    $dailyTotalsTraffic[$dKey]['display'] = $dFmt . ' ' . $selectedSatuan;
+                }
+                
+                if ($dailyTotalsUser[$dKey]['value'] > 0) {
+                    $dailyTotalsUser[$dKey]['display'] = number_format($dailyTotalsUser[$dKey]['value'], 0, ',', '.');
+                }
+            }
         }
 
         return view('traffic_ap.monitor', compact(
@@ -847,8 +905,12 @@ class ApTrafficController extends Controller
             'selectedSatuan',
             'dateColumns',
             'floors',
-            'matrix',
-            'totalTraffic'
+            'matrixTraffic',
+            'matrixUser',
+            'totalTraffic',
+            'totalUser',
+            'dailyTotalsTraffic',
+            'dailyTotalsUser'
         ));
     }
 
@@ -861,6 +923,10 @@ class ApTrafficController extends Controller
         $filterMode = $request->input('filter_mode', 'month');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+        $selectedSatuan = strtoupper($request->input('satuan', 'GB'));
+        if (!in_array($selectedSatuan, ['TB', 'GB', 'MB'])) {
+            $selectedSatuan = 'GB';
+        }
 
         $lokasi = Lokasi::findOrFail($lokasiId);
 
@@ -916,25 +982,76 @@ class ApTrafficController extends Controller
 
         $logs = $logQuery->get();
 
-        $matrix = [];
+        $convertToSelected = function($value, $fromUnit) use ($selectedSatuan) {
+            switch (strtoupper($fromUnit)) {
+                case 'TB': $mb = $value * 1024 * 1024; break;
+                case 'GB': $mb = $value * 1024; break;
+                case 'MB': $mb = $value; break;
+                case 'KB': $mb = $value / 1024; break;
+                default:   $mb = $value * 1024;
+            }
+            switch ($selectedSatuan) {
+                case 'TB': return $mb / (1024 * 1024);
+                case 'GB': return $mb / 1024;
+                case 'MB': return $mb;
+                default:   return $mb / 1024;
+            }
+        };
+
+        $matrixTraffic = [];
+        $matrixUser = [];
+        $dailyTotalsTraffic = [];
+        $dailyTotalsUser = [];
+        foreach ($dateColumns as $dateKey => $label) {
+            $dailyTotalsTraffic[$dateKey] = 0;
+            $dailyTotalsUser[$dateKey] = 0;
+        }
+
         foreach ($floors as $floorName) {
-            $matrix[$floorName] = [];
+            $matrixTraffic[$floorName] = [];
+            $matrixUser[$floorName] = [];
             foreach ($dateColumns as $dateKey => $label) {
-                $matrix[$floorName][$dateKey] = '-';
+                $matrixTraffic[$floorName][$dateKey] = '-';
+                $matrixUser[$floorName][$dateKey] = '-';
             }
         }
 
         foreach ($logs as $log) {
             $floorKey = strtoupper(trim($log->nama_lantai));
             $dateKey = Carbon::parse($log->tanggal)->format('Y-m-d');
-            if (isset($matrix[$floorKey][$dateKey])) {
-                $val = rtrim(rtrim(number_format((float)$log->traffic_value, 2, '.', ''), '0'), '.');
-                $matrix[$floorKey][$dateKey] = $val . ' ' . $log->traffic_unit;
+            if (isset($matrixTraffic[$floorKey][$dateKey])) {
+                // Traffic
+                $convertedVal = $convertToSelected($log->traffic_value, $log->traffic_unit);
+                if ($convertedVal > 0) {
+                    $displayVal = rtrim(rtrim(number_format($convertedVal, 4, '.', ''), '0'), '.');
+                    $matrixTraffic[$floorKey][$dateKey] = $displayVal . ' ' . $selectedSatuan;
+                }
+                $dailyTotalsTraffic[$dateKey] += $convertedVal;
+
+                // Jumlah User
+                if ($log->jumlah_user > 0) {
+                    $matrixUser[$floorKey][$dateKey] = number_format($log->jumlah_user, 0, ',', '.');
+                }
+                $dailyTotalsUser[$dateKey] += $log->jumlah_user;
             }
+        }
+
+        $fmtDailyTraffic = [];
+        $fmtDailyUser = [];
+        foreach ($dateColumns as $dKey => $label) {
+            $fmtDailyTraffic[$dKey] = $dailyTotalsTraffic[$dKey] > 0
+                ? rtrim(rtrim(number_format($dailyTotalsTraffic[$dKey], 4, '.', ''), '0'), '.') . ' ' . $selectedSatuan
+                : '-';
+            $fmtDailyUser[$dKey] = $dailyTotalsUser[$dKey] > 0
+                ? number_format($dailyTotalsUser[$dKey], 0, ',', '.')
+                : '-';
         }
 
         $filename = 'Traffic_AP_' . str_replace(' ', '_', $lokasi->nama_lokasi) . '_' . date('Ymd_His') . '.xlsx';
 
-        return Excel::download(new ApTrafficMatrixExport($lokasi, $dateColumns, $floors, $matrix), $filename);
+        return Excel::download(
+            new ApTrafficMatrixExport($lokasi, $dateColumns, $floors, $matrixTraffic, $fmtDailyTraffic, $matrixUser, $fmtDailyUser),
+            $filename
+        );
     }
 }

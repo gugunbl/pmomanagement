@@ -25,9 +25,20 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
-        Gate::before(function ($user, $ability) {
-            return $user->hasRole('super-admin') ? true : null;
+        Gate::before(function ($user, $ability, $arguments = []) {
+            if ($user && $user->isSuperAdmin()) {
+                return true;
+            }
+
+            if ($ability === 'update-project' && !empty($arguments)) {
+                $project = $arguments[0] ?? null;
+
+                if ($project instanceof \App\Project && method_exists($user, 'canEditProject')) {
+                    return $user->canEditProject($project) ? true : false;
+                }
+            }
+
+            return null;
         });
     }
 }
