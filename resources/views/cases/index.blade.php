@@ -45,6 +45,7 @@
                                     <option value="">-- Semua Type --</option>
                                     <option value="Problem/Incident" {{ request('type') == 'Problem/Incident' ? 'selected' : '' }}>Problem/Incident</option>
                                     <option value="Request/Kegiatan" {{ request('type') == 'Request/Kegiatan' ? 'selected' : '' }}>Request/Kegiatan</option>
+                                    <option value="Relokasi/Reposisi" {{ request('type') == 'Relokasi/Reposisi' ? 'selected' : '' }}>Relokasi/Reposisi</option>
                                 </select>
                             </div>
                         </div>
@@ -94,6 +95,8 @@
                                             <span class="badge badge-warning">Problem</span>
                                         @elseif($row->type == 'Request/Kegiatan')
                                             <span class="badge badge-info">Request</span>
+                                        @elseif($row->type == 'Relokasi/Reposisi')
+                                            <span class="badge badge-primary">Relokasi/Reposisi</span>
                                         @else
                                             <span class="text-muted small">-</span>
                                         @endif

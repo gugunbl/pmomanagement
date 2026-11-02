@@ -157,6 +157,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::resource('daily-monitoring', 'DailyMonitoringController')->except('destroy');
     Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
     Route::post('/cases/{case}/comments', 'CaseController@storeComment')->name('cases.comments.store');
+    Route::get('/cases/{case}/relocation-ba', 'CaseController@downloadRelocationBa')->name('cases.relocation-ba.download');
     Route::resource('cases', 'CaseController');
     Route::resource('interference-ratio', 'InterferenceRatioController');
 

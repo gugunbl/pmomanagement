@@ -62,7 +62,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-control-label">Type</label>
-                                {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
+                                {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan', 'Relokasi/Reposisi' => 'Relokasi/Reposisi'], null, ['class' => 'form-control', 'required']) }}
                                 @error('type') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
@@ -332,6 +332,69 @@
                         </div>
                     </div>
                 </div>
+
+                @if($case->type === 'Relokasi/Reposisi')
+                    <hr class="my-4" />
+                    <h6 class="heading-small text-muted mb-4">DATA BERITA ACARA RELOKASI / REPOSISI</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Nomor BA</label>
+                                {{ Form::text('ba_number', null, ['class' => 'form-control', 'placeholder' => 'Nomor berita acara']) }}
+                                @error('ba_number') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Tanggal Pelaksanaan BA</label>
+                                <input type="date" name="ba_date" class="form-control" value="{{ old('ba_date', $case->ba_date ? date('Y-m-d', strtotime($case->ba_date)) : '') }}">
+                                @error('ba_date') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Lokasi Asal</label>
+                                {{ Form::text('ba_origin_location', null, ['class' => 'form-control', 'placeholder' => 'Lokasi perangkat saat ini']) }}
+                                @error('ba_origin_location') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Lokasi Tujuan</label>
+                                {{ Form::text('ba_destination_location', null, ['class' => 'form-control', 'placeholder' => 'Lokasi perangkat setelah relokasi/reposisi']) }}
+                                @error('ba_destination_location') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="heading-small text-muted mb-3">PENANDATANGAN</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Nama PIC Customer</label>
+                                {{ Form::text('ba_customer_pic_name', null, ['class' => 'form-control', 'placeholder' => 'Nama penandatangan customer']) }}
+                                @error('ba_customer_pic_name') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="form-group">
+                                <label class="form-control-label">Jabatan PIC Customer</label>
+                                {{ Form::text('ba_customer_pic_title', null, ['class' => 'form-control', 'placeholder' => 'Jabatan']) }}
+                                @error('ba_customer_pic_title') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Nama PIC Pelaksana</label>
+                                {{ Form::text('ba_executor_pic_name', null, ['class' => 'form-control', 'placeholder' => 'Nama penandatangan pelaksana']) }}
+                                @error('ba_executor_pic_name') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="form-group">
+                                <label class="form-control-label">Jabatan PIC Pelaksana</label>
+                                {{ Form::text('ba_executor_pic_title', null, ['class' => 'form-control', 'placeholder' => 'Jabatan']) }}
+                                @error('ba_executor_pic_title') <small class="text-danger">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <small class="text-muted">Kolom tanda tangan tetap disediakan pada PDF untuk ditandatangani secara fisik.</small>
+                @endif
 
                 <div class="row align-items-center mt-4">
                     <div class="col-6 text-right offset-6 d-flex justify-content-end">

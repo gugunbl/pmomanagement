@@ -198,11 +198,14 @@
             {{-- Link Dokumen --}}
             <div class="col-md-6">
                 <div class="form-group">
-                    {{ Form::label('link_dokumen', 'Link Dokumen') }}
+                    {{ Form::label('link_dokumen', 'Folder Project di Nextcloud') }}
                     {{ Form::text('link_dokumen', null, [
                         'class'=>'form-control',
-                        'placeholder'=>'https://...'
+                        'placeholder'=>'Contoh: 2025_VDI_Phase2'
                     ]) }}
+                    <small class="form-text text-muted">
+                        Gunakan nama folder persis di Nextcloud, tanpa spasi (huruf, angka, garis bawah, atau tanda hubung).
+                    </small>
                 </div>
             </div>
 

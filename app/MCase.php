@@ -29,6 +29,14 @@ class MCase extends Model
         'evidence_photo',
         'rca_file',
         'mop_file',
+        'ba_number',
+        'ba_date',
+        'ba_origin_location',
+        'ba_destination_location',
+        'ba_customer_pic_name',
+        'ba_customer_pic_title',
+        'ba_executor_pic_name',
+        'ba_executor_pic_title',
     ];
 
     public function project()

@@ -30,6 +30,14 @@ return [
 
     'project_report_disk' => env('PROJECT_REPORT_STORAGE_DISK', 'public'),
     'project_report_path' => env('PROJECT_REPORT_STORAGE_PATH', 'project_reports/files'),
+    'project_report_max_upload_kb' => env('PROJECT_REPORT_MAX_UPLOAD_KB', 51200),
+    'project_report_nextcloud_webdav_url' => env('PROJECT_REPORT_NEXTCLOUD_WEBDAV_URL', ''),
+    'project_report_nextcloud_browser_url' => env('PROJECT_REPORT_NEXTCLOUD_BROWSER_URL', ''),
+    'project_report_nextcloud_username' => env('PROJECT_REPORT_NEXTCLOUD_USERNAME', ''),
+    'project_report_nextcloud_password' => env('PROJECT_REPORT_NEXTCLOUD_APP_PASSWORD', ''),
+    'project_report_nextcloud_root' => env('PROJECT_REPORT_NEXTCLOUD_ROOT', 'IT PMO/Project'),
+    'project_report_nextcloud_subdirectory' => env('PROJECT_REPORT_NEXTCLOUD_SUBDIRECTORY', ''),
+    'project_report_nextcloud_timeout' => env('PROJECT_REPORT_NEXTCLOUD_TIMEOUT', 60),
 
     /*
     |--------------------------------------------------------------------------

@@ -255,7 +255,9 @@ public function store(Request $request)
         'tanggal_spk' => 'required|date_format:Y-m-d',
         'nama_project' => 'required|string|max:255',
         'nomor_spk' => 'required|string|max:255',
-        'link_dokumen' => 'nullable|string|max:255',
+        'link_dokumen' => config('filesystems.project_report_disk') === 'nextcloud'
+            ? ['required', 'string', 'max:255', 'regex:/\A[A-Za-z0-9_-]+\z/']
+            : 'nullable|string|max:255',
         'keterangan' => 'nullable|string',
 
         'category' => 'required|exists:categories,id',
@@ -457,6 +459,9 @@ public function update(Request $request, Project $project)
         'nama_project'             => 'required|string|max:255',
         'nomor_spk'                => 'required|string|max:255',
         'tanggal_spk'              => 'required|date_format:Y-m-d',
+        'link_dokumen'             => config('filesystems.project_report_disk') === 'nextcloud'
+            ? ['required', 'string', 'max:255', 'regex:/\A[A-Za-z0-9_-]+\z/']
+            : 'nullable|string|max:255',
         'tipe_maintenance'         => 'nullable|string|in:Manage Service,PM-CM',
         'top_maintenance_total'    => 'required|integer|min:1|max:60',
         'top_maintenance_signer_total' => 'nullable|integer|min:0|max:10',
@@ -789,25 +794,40 @@ public function update(Request $request, Project $project)
         abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
         abort_unless($report->status === 'signoff', 403);
 
-        $maxUploadKb = intval(env('PROJECT_REPORT_MAX_UPLOAD_KB', 51200));
+        $maxUploadKb = intval(config('filesystems.project_report_max_upload_kb', 51200));
 
         $request->validate([
             'upload_file' => 'required|file|mimes:pdf|max:' . $maxUploadKb
         ]);
 
         if ($request->hasFile('upload_file')) {
-            if ($report->uploaded_file) {
-                Storage::disk($report->uploaded_disk ?: 'public')->delete($report->uploaded_file);
-            }
-
             $disk = config('filesystems.project_report_disk', 'public');
-            $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
-            $path = $request->file('upload_file')->store($directory, $disk);
+            $upload = $request->file('upload_file');
+            $oldPath = $report->uploaded_file;
+            $oldDisk = $report->uploaded_disk ?: 'public';
+
+            if ($disk === 'nextcloud') {
+                try {
+                    $nextcloud = app(\App\Services\NextcloudWebDav::class);
+                    $path = $nextcloud->reportPath($report);
+                    $nextcloud->upload($upload->getRealPath(), $path);
+                } catch (\App\Services\NextcloudWebDavException $e) {
+                    flash('Upload ke Nextcloud gagal: ' . $e->getMessage())->error();
+                    return back()->withInput();
+                }
+            } else {
+                $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
+                $path = $upload->store($directory, $disk);
+            }
 
             $report->uploaded_file = $path;
             $report->uploaded_disk = $disk;
-            $report->uploaded_original_name = $request->file('upload_file')->getClientOriginalName();
+            $report->uploaded_original_name = $upload->getClientOriginalName();
             $report->save();
+
+            if ($oldPath && $oldDisk !== 'nextcloud' && ($oldPath !== $path || $oldDisk !== $disk)) {
+                Storage::disk($oldDisk)->delete($oldPath);
+            }
         }
 
         flash('File laporan berhasil diupload!')->success();
@@ -820,6 +840,23 @@ public function update(Request $request, Project $project)
         abort_unless($report->uploaded_file, 404);
 
         $disk = $report->uploaded_disk ?: 'public';
+        if ($disk === 'nextcloud') {
+            try {
+                $response = app(\App\Services\NextcloudWebDav::class)->download($report->uploaded_file);
+            } catch (\App\Services\NextcloudWebDavException $e) {
+                abort($e->getStatusCode() === 404 ? 404 : 502, $e->getMessage());
+            }
+
+            $stream = $response->getBody();
+            return response()->streamDownload(function () use ($stream) {
+                while (!$stream->eof()) {
+                    echo $stream->read(8192);
+                }
+            }, $report->uploaded_original_name ?: basename($report->uploaded_file), [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
         abort_unless(Storage::disk($disk)->exists($report->uploaded_file), 404);
 
         return Storage::disk($disk)->download(

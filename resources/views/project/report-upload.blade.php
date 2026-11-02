@@ -37,7 +37,7 @@
                 <form action="{{ route('project.report.upload', $report->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group">
-                        <label for="upload_file">Upload File Laporan (PDF, max {{ number_format(intval(env('PROJECT_REPORT_MAX_UPLOAD_KB', 51200)) / 1024) }}MB)</label>
+                        <label for="upload_file">Upload File Laporan (PDF, max {{ number_format(intval(config('filesystems.project_report_max_upload_kb', 51200)) / 1024) }}MB)</label>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="upload_file" name="upload_file" accept="application/pdf" required>
                             <label class="custom-file-label" for="upload_file">Pilih file PDF...</label>

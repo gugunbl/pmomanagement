@@ -30,6 +30,20 @@
                         <div class="col-sm-2 text-muted">Customer</div>
                         <div class="col-sm-4"><strong>{{ $project->customer }}</strong></div>
                     </div>
+                    @if($project->link_dokumen)
+                        <div class="row mb-3">
+                            <div class="col-sm-2 text-muted">Link Dokumen</div>
+                            <div class="col-sm-10">
+                                @if($project->link_dokumen_url)
+                                    <a href="{{ $project->link_dokumen_url }}" target="_blank" rel="noopener noreferrer">
+                                        {{ $project->link_dokumen }}
+                                    </a>
+                                @else
+                                    <strong>{{ $project->link_dokumen }}</strong>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                     <div class="row mb-3">
                         <div class="col-sm-2 text-muted">Category</div>
                         <div class="col-sm-4"><strong>{{ $project->mcategory->category_name }}</strong></div>

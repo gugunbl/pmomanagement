@@ -15,6 +15,11 @@
                         </button>
                         <a href="{{ route('cases.index') }}" class="btn btn-sm btn-secondary">Kembali</a>
                         <a href="{{ route('cases.edit', $case->id_case) }}" class="btn btn-sm btn-warning">Edit</a>
+                        @if($case->type === 'Relokasi/Reposisi')
+                            <a href="{{ route('cases.relocation-ba.download', $case->id_case) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-file-download mr-1"></i> Download Draft BA
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -127,6 +132,8 @@
                                         <span class="badge badge-warning">Problem/Incident</span>
                                     @elseif($case->type == 'Request/Kegiatan')
                                         <span class="badge badge-info">Request/Kegiatan</span>
+                                    @elseif($case->type == 'Relokasi/Reposisi')
+                                        <span class="badge badge-primary">Relokasi/Reposisi</span>
                                     @else
                                         <span class="badge badge-secondary">-</span>
                                     @endif
@@ -349,6 +356,53 @@
                     </div>
                 </div>
 
+                @if($case->type === 'Relokasi/Reposisi')
+                    <hr class="my-4" />
+                    <h6 class="heading-small text-muted mb-4">DATA BERITA ACARA RELOKASI / REPOSISI</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Nomor BA</label>
+                                <p class="form-control-static">{{ $case->ba_number ?: '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Tanggal Pelaksanaan BA</label>
+                                <p class="form-control-static">{{ $case->ba_date ? date('d-m-Y', strtotime($case->ba_date)) : '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Lokasi Asal</label>
+                                <p class="form-control-static">{{ $case->ba_origin_location ?: '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label">Lokasi Tujuan</label>
+                                <p class="form-control-static">{{ $case->ba_destination_location ?: '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">PIC Customer</h6>
+                            <p class="form-control-static mb-1">{{ $case->ba_customer_pic_name ?: '-' }}</p>
+                            <p class="form-control-static text-muted">{{ $case->ba_customer_pic_title ?: '-' }}</p>
+                            <div class="border-bottom mt-4" style="width: 80%;"></div>
+                            <small class="text-muted">Tanda tangan</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">PIC Pelaksana</h6>
+                            <p class="form-control-static mb-1">{{ $case->ba_executor_pic_name ?: '-' }}</p>
+                            <p class="form-control-static text-muted">{{ $case->ba_executor_pic_title ?: '-' }}</p>
+                            <div class="border-bottom mt-4" style="width: 80%;"></div>
+                            <small class="text-muted">Tanda tangan</small>
+                        </div>
+                    </div>
+                @endif
+
             </div>
         </div>
     </div>
@@ -429,6 +483,22 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    @if(session('ask_relocation_ba'))
+        Swal.fire({
+            icon: 'question',
+            title: 'Generate BA Relokasi/Reposisi?',
+            text: 'Case berhasil disimpan. Apakah Anda ingin mengunduh draft Berita Acara sekarang?',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, download BA',
+            cancelButtonText: 'Nanti saja',
+            confirmButtonColor: '#5e72e4',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                window.location.href = @json(route('cases.relocation-ba.download', $case->id_case));
+            }
+        });
+    @endif
+
     $('#btnReplaceDevice').on('click', function() {
         let count = {{ count($affectedPerangkats) }};
         

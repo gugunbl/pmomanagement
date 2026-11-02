@@ -14,9 +14,9 @@ class GeminiVisionService
     
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY');
+        $this->apiKey = config('services.gemini.api_key');
         $this->baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-        $this->model = 'gemini-2.5-flash';
+        $this->model = 'gemini-3.8-flash';
     }
     
      /**
@@ -24,8 +24,17 @@ class GeminiVisionService
      */
     public function extractFromImage(string $imagePath): array
     {
+        if (empty($this->apiKey)) {
+            Log::error('Gemini Vision Error: GEMINI_API_KEY is not configured.');
+
+            return [
+                'success' => false,
+                'error' => 'GEMINI_API_KEY belum dikonfigurasi pada server.',
+            ];
+        }
+
         $startTime = now();
-        $modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+        $modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest'];
         $lastException = null;
 
         foreach ($modelsToTry as $modelToUse) {

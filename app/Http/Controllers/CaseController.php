@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CaseController extends Controller
 {
@@ -110,7 +111,7 @@ class CaseController extends Controller
     {
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
-            'type' => 'required|in:Problem/Incident,Request/Kegiatan',
+            'type' => 'required|in:Problem/Incident,Request/Kegiatan,Relokasi/Reposisi',
             'open_date' => 'required|date',
             'closed_date' => 'nullable|date',
             'subject' => 'required|string|max:255',
@@ -149,11 +150,28 @@ class CaseController extends Controller
             $validated['mop_file'] = $path;
         }
 
-        MCase::create($validated);
+        $case = MCase::create($validated);
 
         flash('Case berhasil ditambahkan!')->success();
-        
+
+        if ($case->type === 'Relokasi/Reposisi') {
+            return redirect()->route('cases.show', $case->id_case)
+                ->with('ask_relocation_ba', true);
+        }
+
         return redirect()->route('cases.index');
+    }
+
+    public function downloadRelocationBa($case)
+    {
+        $case = MCase::with(['project', 'perangkat.jenisPerangkat', 'perangkat.lokasi'])->findOrFail($case);
+
+        abort_unless($case->type === 'Relokasi/Reposisi', 404);
+
+        $pdf = Pdf::loadView('cases.relocation-ba-pdf', compact('case'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Draft-BA-Relokasi-Reposisi-Case-'.$case->id_case.'.pdf');
     }
 
     public function getSerialNumbers($id_project)
@@ -229,7 +247,7 @@ class CaseController extends Controller
 
         $validated = $request->validate([
             'id_project' => 'required|exists:m_project,id_project',
-            'type' => 'required|in:Problem/Incident,Request/Kegiatan',
+            'type' => 'required|in:Problem/Incident,Request/Kegiatan,Relokasi/Reposisi',
             'open_date' => 'required|date',
             'closed_date' => 'nullable|date',
             'subject' => 'required|string|max:255',
@@ -242,6 +260,14 @@ class CaseController extends Controller
             'ncm_customer' => 'nullable|string|max:255',
             'principal_ticket_no' => 'nullable|string|max:255',
             'resolution_detail' => 'nullable|string',
+            'ba_number' => 'nullable|string|max:100',
+            'ba_date' => 'nullable|date',
+            'ba_origin_location' => 'nullable|string|max:255',
+            'ba_destination_location' => 'nullable|string|max:255',
+            'ba_customer_pic_name' => 'nullable|string|max:255',
+            'ba_customer_pic_title' => 'nullable|string|max:255',
+            'ba_executor_pic_name' => 'nullable|string|max:255',
+            'ba_executor_pic_title' => 'nullable|string|max:255',
             'status' => 'required|in:Open,In Progress,Closed',
             'evidence_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'rca_file' => 'nullable|mimes:pdf|max:10240',

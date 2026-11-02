@@ -39,6 +39,21 @@ class Project extends Model
         'project_report_total',
         'tipe_maintenance',
     ];
+
+    public function getLinkDokumenUrlAttribute()
+    {
+        $browserUrl = trim(config('filesystems.project_report_nextcloud_browser_url', ''));
+        $folder = (string) $this->link_dokumen;
+
+        if ($browserUrl === '' || !preg_match('/\A[A-Za-z0-9_-]+\z/', $folder)) {
+            return null;
+        }
+
+        $root = trim(config('filesystems.project_report_nextcloud_root', ''), '/');
+        $path = '/' . ($root !== '' ? $root . '/' : '') . $folder;
+
+        return rtrim($browserUrl, '/') . '/?dir=' . rawurlencode($path);
+    }
     
     /**
      * Relasi ke Perangkat
@@ -139,4 +154,3 @@ public function topMaintenance()
     }
 
 }
-

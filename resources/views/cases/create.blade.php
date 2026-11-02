@@ -55,7 +55,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-control-label">Type <span class="text-danger">*</span></label>
-                                {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan'], null, ['class' => 'form-control', 'required']) }}
+                                {{ Form::select('type', ['' => 'Pilih Type...', 'Problem/Incident' => 'Problem/Incident', 'Request/Kegiatan' => 'Request/Kegiatan', 'Relokasi/Reposisi' => 'Relokasi/Reposisi'], null, ['class' => 'form-control', 'required']) }}
                                 @error('type') <small class="text-danger">{{ $message }}</small> @enderror
                             </div>
                         </div>
