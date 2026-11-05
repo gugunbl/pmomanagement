@@ -57,6 +57,8 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/profile/{user}', 'UserController@profileUpdate')->name('profile.update');
     Route::get('/dashboard-utilisasi', 'UtilizationDashboardController@index')->name('dashboard.utilisasi');
     Route::post('/dashboard-utilisasi/import', 'UtilizationDashboardController@import')->name('dashboard.utilisasi.import');
+    Route::get('/dashboard-utilisasi/import-status', 'UtilizationDashboardController@importStatuses')->name('dashboard.utilisasi.import-status');
+    Route::post('/dashboard-utilisasi/import-status/{id}/read', 'UtilizationDashboardController@markImportStatusRead')->name('dashboard.utilisasi.import-status.read');
     Route::post('/dashboard-utilisasi/import-excel', 'UtilizationDashboardController@importExcel')->name('dashboard.utilisasi.import.excel');
 
     Route::resource('roles', 'RoleController')->except('show');

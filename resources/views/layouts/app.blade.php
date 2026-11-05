@@ -42,6 +42,57 @@
     white-space: normal;       /* boleh turun baris */
     word-break: break-word;    /* potong kata panjang */
 }
+
+.import-status-stack {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1080;
+    width: min(390px, calc(100vw - 32px));
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.import-status-notice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 8px;
+    padding: 14px 16px;
+    border-left: 4px solid #168a70;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, .18);
+}
+
+.import-status-notice.is-failed {
+    border-left-color: #c62828;
+}
+
+.import-status-notice.is-active {
+    border-left-color: #1976a5;
+}
+
+.import-status-notice .import-status-message {
+    flex: 1;
+    margin: 0;
+}
+
+.import-status-notice .import-status-close {
+    border: 0;
+    padding: 0 0 0 8px;
+    background: transparent;
+    color: #64707b;
+    cursor: pointer;
+}
+
+@media (max-width: 576px) {
+    .import-status-stack {
+        right: 10px;
+        bottom: 10px;
+        width: calc(100vw - 20px);
+    }
+}
 </style>
 
     
@@ -77,6 +128,10 @@
         @yield('content')
     </div>
 
+    @auth
+        <div id="importStatusStack" class="import-status-stack" aria-live="polite" aria-atomic="false"></div>
+    @endauth
+
 <script src="{{ asset('assets/vendor/jquery/dist/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
@@ -89,6 +144,70 @@
 <script src="{{asset('assets/js/bootstrap-select.min.js')}}"></script>
 <script src="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.js')}}"></script>
 <script src="{{asset('assets/js/dashboard.js')}}"></script>
+
+@auth
+<script>
+$(function () {
+    var statusUrl = @json(route('dashboard.utilisasi.import-status'));
+    var readUrl = @json(route('dashboard.utilisasi.import-status.read', ['id' => 'IMPORT_ID']));
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    var $stack = $('#importStatusStack');
+
+    function renderImportStatus(item) {
+        var id = String(item.id);
+        var $notice = $stack.find('[data-import-id="' + id + '"]');
+        var active = item.status === 'queued' || item.status === 'processing';
+        var failed = item.status === 'failed';
+
+        if (!$notice.length) {
+            $notice = $('<div>').attr('data-import-id', id).addClass('import-status-notice');
+            $notice.append($('<span>').addClass('import-status-icon'));
+            $notice.append($('<p>').addClass('import-status-message'));
+            $stack.prepend($notice);
+        }
+
+        $notice.toggleClass('is-active', active).toggleClass('is-failed', failed);
+        $notice.find('.import-status-icon')
+            .html(active ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' : (failed ? '<i class="fas fa-exclamation-circle" aria-hidden="true"></i>' : '<i class="fas fa-check-circle" aria-hidden="true"></i>'));
+        $notice.find('.import-status-message').text(item.message || 'Status import diperbarui.');
+
+        if (!active && !$notice.find('.import-status-close').length) {
+            var $close = $('<button type="button" class="import-status-close" aria-label="Tutup notifikasi"><i class="fas fa-times" aria-hidden="true"></i></button>');
+            $close.on('click', function () {
+                $.ajax({
+                    url: readUrl.replace('IMPORT_ID', encodeURIComponent(id)),
+                    method: 'POST',
+                    data: { _token: csrfToken }
+                }).always(function () {
+                    $notice.remove();
+                });
+            });
+            $notice.append($close);
+        }
+    }
+
+    function refreshImportStatuses() {
+        $.getJSON(statusUrl).done(function (response) {
+            var visibleIds = [];
+
+            $.each(response.imports || [], function (_, item) {
+                visibleIds.push(String(item.id));
+                renderImportStatus(item);
+            });
+
+            $stack.children('[data-import-id]').each(function () {
+                if (visibleIds.indexOf(String($(this).attr('data-import-id'))) === -1) {
+                    $(this).remove();
+                }
+            });
+        });
+    }
+
+    refreshImportStatuses();
+    window.setInterval(refreshImportStatuses, 10000);
+});
+</script>
+@endauth
 
 @stack('scripts')
 

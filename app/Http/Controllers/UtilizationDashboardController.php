@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessDailyTaskReportImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class UtilizationDashboardController extends Controller
 {
@@ -213,164 +215,62 @@ class UtilizationDashboardController extends Controller
         }
 
         $file     = $request->file('file');
-        $filename = time() . '_' . $file->getClientOriginalName();
-        $path     = $file->storeAs('task_reports', $filename, 'public');
-        $fullPath = storage_path('app/public/' . $path);
+        $path = $file->store('task_reports', 'public');
+        $importId = DB::table('daily_task_report_imports')->insertGetId([
+            'user_id' => auth()->id(),
+            'file_path' => $path,
+            'status' => 'queued',
+            'message' => 'Upload diterima dan menunggu worker.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        // Call Gemini Vision Service
-        $aiService = new \App\Services\AI\GeminiVisionService();
-        $result    = $aiService->extractFromImage($fullPath);
+        try {
+            ProcessDailyTaskReportImport::dispatch($path, $importId)->onConnection('database');
+        } catch (\Throwable $e) {
+            Storage::disk('public')->delete($path);
+            DB::table('daily_task_report_imports')->where('id', $importId)->update([
+                'status' => 'failed',
+                'message' => 'Upload gagal dimasukkan ke antrean. Silakan coba lagi.',
+                'read_at' => now(),
+                'updated_at' => now(),
+            ]);
+            Log::error('Failed to queue daily task report import: ' . $e->getMessage());
 
-        if (!$result['success'] || !$result['data']) {
-            $errorMsg = $result['error'] ?? 'Unknown error';
-            if ($errorMsg === "template tidak sesuai, dan tidak bisa di proses") {
-                return redirect()->back()->with('error', $errorMsg);
-            }
-            return redirect()->back()->with('error', 'Gagal memproses gambar dengan AI: ' . $errorMsg);
+            return redirect()->back()->with('error', 'Gagal memasukkan upload ke antrean pemrosesan. Silakan coba lagi.');
         }
 
-        $data         = $result['data'];
-        $employeeName = $data['employee_name'] ?? 'Unknown';
+        return redirect()->back();
+    }
 
-        // -------------------------------------------------------
-        // Normalise to multi-entry format
-        // New format: { format, employee_name, entries: [...] }
-        // Old format: { employee_name, report_date, day_name, activities: [...] }
-        // -------------------------------------------------------
-        if (!empty($data['entries']) && is_array($data['entries'])) {
-            // NEW FORMAT — table/template image with multiple dates
-            $entries = $data['entries'];
-        } else {
-            // OLD FORMAT — single-date chat screenshot, wrap in entries array
-            $entries = [[
-                'report_date' => $data['report_date'] ?? date('Y-m-d'),
-                'day_name'    => $data['day_name'] ?? null,
-                'activities'  => $data['activities'] ?? [],
-            ]];
-        }
+    public function importStatuses()
+    {
+        $imports = DB::table('daily_task_report_imports')
+            ->where('user_id', auth()->id())
+            ->where(function ($query) {
+                $query->whereIn('status', ['queued', 'processing'])
+                    ->orWhereNull('read_at');
+            })
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get(['id', 'status', 'message', 'inserted_days', 'inserted_activities', 'created_at', 'updated_at']);
 
-        // Enforce duplicate validation check before importing
-        $duplicateDates = [];
-        foreach ($entries as $entry) {
-            $reportDate = $entry['report_date'] ?? null;
-            if (!$reportDate) continue;
+        return response()->json(['imports' => $imports]);
+    }
 
-            $exists = DB::table('daily_task_reports')
-                ->where('employee_name', $employeeName)
-                ->where('report_date', $reportDate)
-                ->exists();
-
-            if ($exists) {
-                $duplicateDates[] = date('d-m-Y', strtotime($reportDate));
-            }
-        }
-
-        if (!empty($duplicateDates)) {
-            $formattedDates = implode(', ', $duplicateDates);
-            return redirect()->back()->with('error', "Data laporan untuk karyawan {$employeeName} pada tanggal {$formattedDates} sudah terdaftar.");
-        }
-
-        $insertedDays       = 0;
-        $insertedActivities = 0;
-
-        foreach ($entries as $entry) {
-            $reportDate = $entry['report_date'] ?? date('Y-m-d');
-            $dayName    = $entry['day_name'] ?? null;
-            $activities = $entry['activities'] ?? [];
-
-            if (empty($activities)) continue;
-
-            // Skip duplicate (same employee + date)
-            $exists = DB::table('daily_task_reports')
-                ->where('employee_name', $employeeName)
-                ->where('report_date', $reportDate)
-                ->exists();
-
-            if ($exists) continue;
-
-            // Build activities array & calculate total minutes
-            $activitiesToInsert = [];
-            $totalMinutes       = 0;
-
-            foreach ($activities as $activity) {
-                $duration = $activity['duration_minutes'] ?? null;
-
-                // Derive duration from start/end times if missing
-                if ($duration === null && !empty($activity['start_time']) && !empty($activity['end_time'])) {
-                    try {
-                        $start    = \Carbon\Carbon::parse($activity['start_time']);
-                        $end      = \Carbon\Carbon::parse($activity['end_time']);
-                        $duration = abs($start->diffInMinutes($end));
-                    } catch (\Exception $e) {
-                        $duration = null;
-                    }
-                }
-
-                $totalMinutes += (int) ($duration ?? 0);
-
-                $activitiesToInsert[] = [
-                    'start_time'           => $activity['start_time'] ?? '00:00',
-                    'end_time'             => $activity['end_time']   ?? '00:00',
-                    'activity_description' => $activity['description'] ?? '',
-                    'duration_minutes'     => $duration,
-                    'is_parallel'          => $activity['is_parallel'] ?? false,
-                    'created_at'           => now(),
-                ];
-            }
-
-            // Calculate utilization
-            $effectiveHours  = 8;
-            $utilizationPct  = $totalMinutes > 0
-                ? round(($totalMinutes / 60) / $effectiveHours * 100, 2)
-                : ($data['work_utilization_percentage'] ?? null);
-
-            $h = floor($totalMinutes / 60);
-            $m = $totalMinutes % 60;
-            $totalProductiveTime = $totalMinutes > 0
-                ? sprintf('%02d:%02d:00', $h, $m)
-                : ($data['total_productive_time'] ?? null);
-
-            $reportId = DB::table('daily_task_reports')->insertGetId([
-                'employee_name'               => $employeeName,
-                'report_date'                 => $reportDate,
-                'day_name'                    => $dayName,
-                'total_productive_time'       => $totalProductiveTime,
-                'work_utilization_percentage' => $utilizationPct,
-                'effective_work_hours'        => $effectiveHours,
-                'image_path'                  => $path,
-                'ocr_method'                  => 'gemini',
-                'ai_confidence_score'         => $result['confidence'] ?? null,
-                'raw_ai_response'             => json_encode($result['raw_response'] ?? []),
-                'extracted_entities'          => json_encode($data),
-                'status'                      => 'ai_parsed',
-                'processed_at'               => now(),
-                'created_at'                  => now(),
-                'updated_at'                  => now(),
+    public function markImportStatusRead($id)
+    {
+        $updated = DB::table('daily_task_report_imports')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->whereIn('status', ['completed', 'failed'])
+            ->whereNull('read_at')
+            ->update([
+                'read_at' => now(),
+                'updated_at' => now(),
             ]);
 
-            // Stamp report_id on activities and bulk insert
-            foreach ($activitiesToInsert as &$act) {
-                $act['report_id'] = $reportId;
-            }
-            unset($act);
-
-            if (!empty($activitiesToInsert)) {
-                DB::table('task_activities')->insert($activitiesToInsert);
-                $insertedActivities += count($activitiesToInsert);
-            }
-
-            $insertedDays++;
-        }
-
-        if ($insertedDays === 0) {
-            return redirect()->back()->with('warning', 'Semua data sudah ada di database (duplikat dilewati).');
-        }
-
-        $msg = count($entries) > 1
-            ? "Berhasil diproses! {$insertedDays} hari & {$insertedActivities} aktivitas atas nama: {$employeeName}."
-            : "Screenshot berhasil diproses oleh Gemini AI. Data telah ditambahkan.";
-
-        return redirect()->back()->with('success', $msg);
+        return response()->json(['success' => $updated > 0]);
     }
 
     public function importExcel(Request $request)

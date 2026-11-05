@@ -34,7 +34,7 @@ class GeminiVisionService
         }
 
         $startTime = now();
-        $modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest'];
+        $modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash'];
         $lastException = null;
 
         foreach ($modelsToTry as $modelToUse) {
@@ -49,31 +49,39 @@ class GeminiVisionService
                 $prompt = $this->buildExtractionPrompt();
                 
                 // Call Gemini API with inline image data
-                $response = Http::timeout(60)->post(
-                    $this->baseUrl . '/models/' . $this->model . ':generateContent?key=' . $this->apiKey,
-                    [
-                        'contents' => [
-                            [
-                                'parts' => [
-                                    [
-                                        'text' => $prompt
-                                    ],
-                                    [
-                                        'inline_data' => [
-                                            'mime_type' => $mimeType,
-                                            'data' => $imageBase64
+                for ($attempt = 1; $attempt <= 2; $attempt++) {
+                    $response = Http::timeout(40)->post(
+                        $this->baseUrl . '/models/' . $this->model . ':generateContent?key=' . $this->apiKey,
+                        [
+                            'contents' => [
+                                [
+                                    'parts' => [
+                                        [
+                                            'text' => $prompt
+                                        ],
+                                        [
+                                            'inline_data' => [
+                                                'mime_type' => $mimeType,
+                                                'data' => $imageBase64
+                                            ]
                                         ]
                                     ]
                                 ]
+                            ],
+                            'generationConfig' => [
+                                'temperature' => 0.1,
+                                'maxOutputTokens' => 8000,
+                                'responseMimeType' => 'application/json',
                             ]
-                        ],
-                        'generationConfig' => [
-                            'temperature' => 0.1,
-                            'maxOutputTokens' => 8000,
-                            'responseMimeType' => 'application/json',
                         ]
-                    ]
-                );
+                    );
+
+                    if (!in_array($response->status(), [429, 503], true) || $attempt === 2) {
+                        break;
+                    }
+
+                    sleep(3);
+                }
                 
                 $processingTime = now()->diffInMilliseconds($startTime);
                 
