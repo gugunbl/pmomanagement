@@ -1,5 +1,12 @@
-<nav class="navbar navbar-top navbar-expand navbar-dark bg-primary border-bottom">
+<nav class="navbar navbar-top navbar-expand navbar-dark bg-primary border-bottom app-topbar">
     <div class="container-fluid">
+        <div class="app-mobile-brand d-xl-none">
+            <span class="app-mobile-brand-mark"><i class="fas fa-cubes"></i></span>
+            <span>
+                <small>Asset Management</small>
+                <strong>{{ config('app.name', 'Dashboard') }}</strong>
+            </span>
+        </div>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             {{-- Search form hidden temporarily
             <form class="navbar-search navbar-search-light form-inline mr-sm-3" id="navbar-search-main">
@@ -18,7 +25,7 @@
             --}}
             <!-- Navbar links -->
             <ul class="navbar-nav align-items-center  ml-md-auto ">
-                <li class="nav-item d-xl-none">
+                <li class="nav-item d-xl-none app-legacy-menu-toggle">
                     <!-- Sidenav toggler -->
                     <div class="pr-3 sidenav-toggler sidenav-toggler-dark" data-action="sidenav-pin" data-target="#sidenav-main">
                         <div class="sidenav-toggler-inner">

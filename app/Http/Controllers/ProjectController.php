@@ -28,6 +28,7 @@ use App\Exports\MonitoringBAExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 
 class ProjectController extends Controller
@@ -256,7 +257,7 @@ public function store(Request $request)
         'nama_project' => 'required|string|max:255',
         'nomor_spk' => 'required|string|max:255',
         'link_dokumen' => config('filesystems.project_report_disk') === 'nextcloud'
-            ? ['required', 'string', 'max:255', 'regex:/\A[A-Za-z0-9_-]+\z/']
+            ? Project::nextcloudFolderValidationRules()
             : 'nullable|string|max:255',
         'keterangan' => 'nullable|string',
 
@@ -460,7 +461,7 @@ public function update(Request $request, Project $project)
         'nomor_spk'                => 'required|string|max:255',
         'tanggal_spk'              => 'required|date_format:Y-m-d',
         'link_dokumen'             => config('filesystems.project_report_disk') === 'nextcloud'
-            ? ['required', 'string', 'max:255', 'regex:/\A[A-Za-z0-9_-]+\z/']
+            ? Project::nextcloudFolderValidationRules()
             : 'nullable|string|max:255',
         'tipe_maintenance'         => 'nullable|string|in:Manage Service,PM-CM',
         'top_maintenance_total'    => 'required|integer|min:1|max:60',
@@ -693,8 +694,29 @@ public function update(Request $request, Project $project)
 
     public function reportMonitoring(Request $request)
     {
+        $request->validate([
+            'customer' => 'nullable|string|max:255',
+            'project' => 'nullable|integer|min:1',
+        ]);
+
+        $selectedCustomer = trim((string) $request->query('customer', ''));
+        $selectedCustomer = $selectedCustomer !== '' ? $selectedCustomer : null;
+        $selectedProjectId = $selectedCustomer !== null && $request->filled('project')
+            ? (int) $request->query('project')
+            : null;
+
         $query = ProjectReport::with(['project.comments.user', 'comments.user'])
             ->whereHas('project');
+
+        if ($selectedCustomer !== null) {
+            $query->whereHas('project', function ($projectQuery) use ($selectedCustomer) {
+                $projectQuery->where('customer', $selectedCustomer);
+            });
+        }
+
+        if ($selectedProjectId !== null) {
+            $query->where('project_id', $selectedProjectId);
+        }
 
         $mainQuery = clone $query;
         $mainQuery->join('m_project', 'project_reports.project_id', '=', 'm_project.id_project')
@@ -718,8 +740,33 @@ public function update(Request $request, Project $project)
             }
         }
 
+        $customerOptions = Project::query()
+            ->whereHas('reports')
+            ->whereNotNull('customer')
+            ->where('customer', '<>', '')
+            ->distinct()
+            ->orderBy('customer')
+            ->pluck('customer');
+
+        $projectOptions = collect();
+        if ($selectedCustomer !== null) {
+            $projectOptions = Project::query()
+                ->whereHas('reports')
+                ->where('customer', $selectedCustomer)
+                ->orderBy('nama_project')
+                ->get(['id_project', 'nama_project']);
+        }
+
         $title = 'Monitoring Laporan';
-        return view('project.monitoring-laporan', compact('reports', 'title', 'startProjectCounter'));
+        return view('project.monitoring-laporan', compact(
+            'reports',
+            'title',
+            'startProjectCounter',
+            'customerOptions',
+            'projectOptions',
+            'selectedCustomer',
+            'selectedProjectId'
+        ));
     }
 
     public function reportMonitoringUpdate(Request $request)
@@ -786,7 +833,9 @@ public function update(Request $request, Project $project)
         abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
         abort_unless($report->status === 'signoff', 403);
 
-        return view('project.report-upload', compact('report'));
+        $uploadFileName = $report->uploadFilename();
+
+        return view('project.report-upload', compact('report', 'uploadFileName'));
     }
 
     public function reportUpload(Request $request, ProjectReport $report)
@@ -795,10 +844,49 @@ public function update(Request $request, Project $project)
         abort_unless($report->status === 'signoff', 403);
 
         $maxUploadKb = intval(config('filesystems.project_report_max_upload_kb', 51200));
+        $uploadFile = $request->file('upload_file');
+
+        if ($uploadFile && !$uploadFile->isValid()) {
+            $errorCode = $uploadFile->getError();
+            $uploadErrors = [
+                UPLOAD_ERR_INI_SIZE => 'Ukuran file melebihi upload_max_filesize pada konfigurasi PHP.',
+                UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas MAX_FILE_SIZE pada form.',
+                UPLOAD_ERR_PARTIAL => 'File hanya terunggah sebagian. Periksa koneksi lalu coba kembali.',
+                UPLOAD_ERR_NO_FILE => 'Tidak ada file yang diterima oleh server.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary upload PHP tidak tersedia.',
+                UPLOAD_ERR_CANT_WRITE => 'PHP tidak dapat menulis file ke folder temporary.',
+                UPLOAD_ERR_EXTENSION => 'Upload dihentikan oleh ekstensi PHP.',
+            ];
+            $errorMessage = $uploadErrors[$errorCode] ?? 'PHP menolak file karena kesalahan upload yang tidak dikenal.';
+
+            Log::warning('Project report upload rejected by PHP.', [
+                'report_id' => $report->id,
+                'error_code' => $errorCode,
+                'upload_tmp_dir' => ini_get('upload_tmp_dir'),
+                'system_tmp_dir' => sys_get_temp_dir(),
+                'temporary_directory_exists' => is_dir(sys_get_temp_dir()),
+                'temporary_directory_writable' => is_writable(sys_get_temp_dir()),
+            ]);
+
+            return back()->withErrors([
+                'upload_file' => $errorMessage . ' (kode upload PHP: ' . $errorCode . ')',
+            ]);
+        }
 
         $request->validate([
             'upload_file' => 'required|file|mimes:pdf|max:' . $maxUploadKb
+        ], [
+            'upload_file.uploaded' => 'File gagal diterima oleh PHP. Pastikan ukuran file tidak melebihi batas upload server dan coba kembali.',
+            'upload_file.max' => 'Ukuran PDF tidak boleh melebihi ' . number_format($maxUploadKb / 1024) . ' MB.',
+            'upload_file.mimes' => 'File laporan harus berformat PDF.',
         ]);
+
+        $uploadFileName = $report->uploadFilename();
+        if (!$uploadFileName) {
+            return back()->withErrors([
+                'upload_file' => 'Periode mulai dan periode selesai harus diisi sebelum laporan dapat diupload.',
+            ]);
+        }
 
         if ($request->hasFile('upload_file')) {
             $disk = config('filesystems.project_report_disk', 'public');
@@ -809,7 +897,7 @@ public function update(Request $request, Project $project)
             if ($disk === 'nextcloud') {
                 try {
                     $nextcloud = app(\App\Services\NextcloudWebDav::class);
-                    $path = $nextcloud->reportPath($report);
+                    $path = $nextcloud->reportPath($report, $uploadFileName);
                     $nextcloud->upload($upload->getRealPath(), $path);
                 } catch (\App\Services\NextcloudWebDavException $e) {
                     flash('Upload ke Nextcloud gagal: ' . $e->getMessage())->error();
@@ -817,12 +905,16 @@ public function update(Request $request, Project $project)
                 }
             } else {
                 $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
-                $path = $upload->store($directory, $disk);
+                $path = $upload->storeAs($directory, $uploadFileName, $disk);
+                if (!$path) {
+                    flash('File laporan gagal disimpan ke storage.')->error();
+                    return back()->withInput();
+                }
             }
 
             $report->uploaded_file = $path;
             $report->uploaded_disk = $disk;
-            $report->uploaded_original_name = $upload->getClientOriginalName();
+            $report->uploaded_original_name = $uploadFileName;
             $report->save();
 
             if ($oldPath && $oldDisk !== 'nextcloud' && ($oldPath !== $path || $oldDisk !== $disk)) {

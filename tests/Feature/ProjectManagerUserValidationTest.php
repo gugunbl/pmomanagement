@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mprojectmanager;
 use App\User;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -15,7 +16,20 @@ class ProjectManagerUserValidationTest extends TestCase
     {
         parent::setUp();
 
-        if (!Schema::hasTable('m_project_manager')) {
+        if (! Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->string('password');
+                $table->tinyInteger('status')->default(1);
+                $table->timestamp('email_verified_at')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('m_project_manager')) {
             Schema::create('m_project_manager', function (Blueprint $table) {
                 $table->increments('id_pm');
                 $table->string('nama_pm');
@@ -39,14 +53,18 @@ class ProjectManagerUserValidationTest extends TestCase
 
     public function test_pm_user_id_must_be_unique_across_pm_records(): void
     {
-        $uniqueEmail = 'pm-unique-' . uniqid() . '@example.com';
+        $uniqueEmail = 'pm-unique-'.uniqid().'@example.com';
 
-        $user = User::create([
+        $userId = DB::table('users')->insertGetId([
             'name' => 'PM Unique',
             'email' => $uniqueEmail,
             'password' => 'secret123',
             'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
+
+        $user = User::findOrFail($userId);
 
         Mprojectmanager::create([
             'nama_pm' => 'PM 1',

@@ -28,6 +28,33 @@ class NextcloudWebDavTest extends TestCase
         );
     }
 
+    public function test_upload_filename_uses_upload_date_project_report_number_and_period()
+    {
+        $this->configureNextcloud();
+        $report = $this->makeReport(
+            '2021_Pengadaan_Server_MDM',
+            'Pengadaan Penambahan Server MDM Database Tahun 2021'
+        );
+        $report->report_ke = 1;
+        $report->period_start = '2000-01-01';
+        $report->period_end = '2000-01-01';
+
+        $fileName = '20261112_Laporan_PM_Pengadaan Penambahan Server MDM Database Tahun 2021_1_20000101_20000101.pdf';
+
+        $this->assertSame($fileName, $report->uploadFilename('2026-11-12'));
+        $this->assertSame(
+            'IT PMO/Project/2021_Pengadaan_Server_MDM/30_Preventive_Maintenance/' . $fileName,
+            (new NextcloudWebDav($this->client([new Response(201)])))->reportPath($report, $fileName)
+        );
+    }
+
+    public function test_upload_filename_is_unavailable_without_both_period_dates()
+    {
+        $report = $this->makeReport('2021_Pengadaan_Server_MDM');
+
+        $this->assertNull($report->uploadFilename('2026-11-12'));
+    }
+
     public function test_upload_uses_basic_auth_and_encodes_path_segments()
     {
         $this->configureNextcloud();
@@ -48,6 +75,31 @@ class NextcloudWebDavTest extends TestCase
         );
         $this->assertSame('PUT', $history[0]['request']->getMethod());
         $this->assertSame('Basic ' . base64_encode('pmomaintenance:app-password'), $history[0]['request']->getHeaderLine('Authorization'));
+    }
+
+    public function test_upload_does_not_close_a_stream_that_the_http_handler_already_closed()
+    {
+        $this->configureNextcloud();
+        $handlerClosedStream = false;
+        $handler = function ($request, array $options) use (&$handlerClosedStream) {
+            $request->getBody()->close();
+            $handlerClosedStream = true;
+
+            return \GuzzleHttp\Promise\Create::promiseFor(new Response(201));
+        };
+        $service = new NextcloudWebDav(new Client([
+            'handler' => HandlerStack::create($handler),
+        ]));
+        $temporaryFile = tempnam(sys_get_temp_dir(), 'nextcloud-test');
+        file_put_contents($temporaryFile, 'pdf content');
+
+        try {
+            $service->upload($temporaryFile, 'IT PMO/Project/2025_VDI_Phase2/report-42.pdf');
+        } finally {
+            unlink($temporaryFile);
+        }
+
+        $this->assertTrue($handlerClosedStream);
     }
 
     public function test_report_path_rejects_folder_names_with_spaces()
@@ -71,10 +123,11 @@ class NextcloudWebDavTest extends TestCase
         ]);
     }
 
-    private function makeReport($folder)
+    private function makeReport($folder, $projectName = 'Project Name')
     {
         $project = new Project();
         $project->link_dokumen = $folder;
+        $project->nama_project = $projectName;
 
         $report = new ProjectReport();
         $report->setAttribute('id', 42);

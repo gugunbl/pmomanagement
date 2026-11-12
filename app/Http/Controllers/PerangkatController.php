@@ -48,6 +48,7 @@ class PerangkatController extends Controller
 
 public function index(Request $request)
 {
+    $title = 'Manage Perangkat';
     $user = Auth::user();
     $userProjects = $user->projects->pluck('id_project')->toArray();
 
@@ -81,7 +82,7 @@ public function index(Request $request)
 
     $perangkats = $query->paginate(15)->withQueryString();
 
-    return view('perangkat.index', compact('perangkats', 'projectes'));
+    return view('perangkat.index', compact('title', 'perangkats', 'projectes'));
 }
 
 

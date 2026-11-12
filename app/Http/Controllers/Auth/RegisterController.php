@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserRegistered;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-
-use App\Mail\UserRegistered;
 
 class RegisterController extends Controller
 {
@@ -47,7 +45,6 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -62,8 +59,7 @@ class RegisterController extends Controller
     /**
      * Create a new user instance after a valid registration.
      *
-     * @param  array  $data
-     * @return \App\User
+     * @return User
      */
     protected function create(array $data)
     {
@@ -73,11 +69,12 @@ class RegisterController extends Controller
             'password' => $data['password'],
         ]);
         if (setting('register_notification_email')) {
-            Mail::to($data['email'])->send( new UserRegistered($user));
+            Mail::to($data['email'])->send(new UserRegistered($user));
         }
-        if ( setting('default_role')) {
-            $user->assignRole(setting('default_role'));
+        if (setting('default_role')) {
+            $user->assignRole((int) setting('default_role'));
         }
+
         return $user;
     }
 }

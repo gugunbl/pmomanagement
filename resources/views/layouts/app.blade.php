@@ -89,23 +89,26 @@
 @media (max-width: 576px) {
     .import-status-stack {
         right: 10px;
-        bottom: 10px;
+        bottom: 92px;
         width: calc(100vw - 20px);
     }
 }
 </style>
 
     
+    @livewireStyles
     @stack('styles')
 </head>
 
-<body>
+<body class="app-body @yield('body_class')">
 
 @include('includes.navbar')
 <div class="main-content" id="panel">
     @include('includes.header')
-    @include('includes.page-header')
-    <div class="container-fluid mt--6">
+    @if (! View::hasSection('hide_page_header'))
+        @include('includes.page-header')
+    @endif
+    <div class="container-fluid app-content {{ View::hasSection('hide_page_header') ? 'dashboard-content' : 'mt--5' }}">
         
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -129,8 +132,10 @@
     </div>
 
     @auth
-        <div id="importStatusStack" class="import-status-stack" aria-live="polite" aria-atomic="false"></div>
+        <livewire:import-status-notifications />
+        <livewire:mobile-navigation />
     @endauth
+</div>
 
 <script src="{{ asset('assets/vendor/jquery/dist/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
@@ -145,70 +150,7 @@
 <script src="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.js')}}"></script>
 <script src="{{asset('assets/js/dashboard.js')}}"></script>
 
-@auth
-<script>
-$(function () {
-    var statusUrl = @json(route('dashboard.utilisasi.import-status'));
-    var readUrl = @json(route('dashboard.utilisasi.import-status.read', ['id' => 'IMPORT_ID']));
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
-    var $stack = $('#importStatusStack');
-
-    function renderImportStatus(item) {
-        var id = String(item.id);
-        var $notice = $stack.find('[data-import-id="' + id + '"]');
-        var active = item.status === 'queued' || item.status === 'processing';
-        var failed = item.status === 'failed';
-
-        if (!$notice.length) {
-            $notice = $('<div>').attr('data-import-id', id).addClass('import-status-notice');
-            $notice.append($('<span>').addClass('import-status-icon'));
-            $notice.append($('<p>').addClass('import-status-message'));
-            $stack.prepend($notice);
-        }
-
-        $notice.toggleClass('is-active', active).toggleClass('is-failed', failed);
-        $notice.find('.import-status-icon')
-            .html(active ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' : (failed ? '<i class="fas fa-exclamation-circle" aria-hidden="true"></i>' : '<i class="fas fa-check-circle" aria-hidden="true"></i>'));
-        $notice.find('.import-status-message').text(item.message || 'Status import diperbarui.');
-
-        if (!active && !$notice.find('.import-status-close').length) {
-            var $close = $('<button type="button" class="import-status-close" aria-label="Tutup notifikasi"><i class="fas fa-times" aria-hidden="true"></i></button>');
-            $close.on('click', function () {
-                $.ajax({
-                    url: readUrl.replace('IMPORT_ID', encodeURIComponent(id)),
-                    method: 'POST',
-                    data: { _token: csrfToken }
-                }).always(function () {
-                    $notice.remove();
-                });
-            });
-            $notice.append($close);
-        }
-    }
-
-    function refreshImportStatuses() {
-        $.getJSON(statusUrl).done(function (response) {
-            var visibleIds = [];
-
-            $.each(response.imports || [], function (_, item) {
-                visibleIds.push(String(item.id));
-                renderImportStatus(item);
-            });
-
-            $stack.children('[data-import-id]').each(function () {
-                if (visibleIds.indexOf(String($(this).attr('data-import-id'))) === -1) {
-                    $(this).remove();
-                }
-            });
-        });
-    }
-
-    refreshImportStatuses();
-    window.setInterval(refreshImportStatuses, 10000);
-});
-</script>
-@endauth
-
+@livewireScripts
 @stack('scripts')
 
 </body>

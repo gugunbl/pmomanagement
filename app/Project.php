@@ -40,12 +40,36 @@ class Project extends Model
         'tipe_maintenance',
     ];
 
+    public static function isValidNextcloudFolderName($folder)
+    {
+        $folder = (string) $folder;
+
+        return trim($folder) !== ''
+            && $folder !== '.'
+            && $folder !== '..'
+            && preg_match('/[\/\\\\\x00-\x1F]/u', $folder) === 0;
+    }
+
+    public static function nextcloudFolderValidationRules()
+    {
+        return [
+            'required',
+            'string',
+            'max:255',
+            function ($attribute, $value, $fail) {
+                if (!static::isValidNextcloudFolderName($value)) {
+                    $fail('Folder project harus sama persis dengan nama folder Nextcloud dan tidak boleh mengandung garis miring atau karakter kontrol.');
+                }
+            },
+        ];
+    }
+
     public function getLinkDokumenUrlAttribute()
     {
         $browserUrl = trim(config('filesystems.project_report_nextcloud_browser_url', ''));
         $folder = (string) $this->link_dokumen;
 
-        if ($browserUrl === '' || !preg_match('/\A[A-Za-z0-9_-]+\z/', $folder)) {
+        if ($browserUrl === '' || !static::isValidNextcloudFolderName($folder)) {
             return null;
         }
 

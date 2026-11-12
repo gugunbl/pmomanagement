@@ -6,14 +6,14 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Crypt;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable, HasRoles, LogsActivity, ThrottlesLogins;
-    protected static $ignoreChangedAttributes = ['password'];
+    use HasRoles, LogsActivity, Notifiable, ThrottlesLogins;
 
     /**
      * The attributes that are mass assignable.
@@ -31,9 +31,16 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password', 'remember_token',
     ];
-    protected static $logFillable = true;
-    protected static $logName = 'user';
-    protected static $logOnlyDirty = true;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logExcept(['password'])
+            ->logOnlyDirty()
+            ->useLogName('user');
+    }
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -45,18 +52,21 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function setStatusAttribute($status)
     {
-        $this->attributes['status'] = ($status)? 1 : 0;
+        $this->attributes['status'] = ($status) ? 1 : 0;
     }
+
     public function setPasswordAttribute($password)
     {
         if ($password) {
-            $this->attributes['password'] = \Illuminate\Support\Facades\Crypt::encryptString($password);
+            $this->attributes['password'] = Crypt::encryptString($password);
         }
     }
+
     public function categories()
     {
         return $this->hasMany('App\Category');
     }
+
     public function posts()
     {
         return $this->hasMany('App\Post');
@@ -76,7 +86,7 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         }
 
-        if (!method_exists($this, 'hasRole')) {
+        if (! method_exists($this, 'hasRole')) {
             return false;
         }
 

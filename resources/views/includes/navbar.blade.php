@@ -205,7 +205,7 @@
                                 <i class="fas text-primary fa-list-alt"></i>
                                 <span class="nav-link-text">Manage project</span>
                             </a>
-                            <div class="collapse" id="navbar-project">
+                            <div class="collapse {{ request()->is('project*') ? 'show' : '' }}" id="navbar-project">
                                 <ul class="nav nav-sm flex-column">
                                  @can('view-project')
                                     <li class="nav-item">
@@ -246,7 +246,7 @@
                                 <i class="fas text-primary fa-list-alt"></i>
                                 <span class="nav-link-text">Manage Perangkat</span>
                             </a>
-                            <div class="collapse" id="navbar-perangkat">
+                            <div class="collapse {{ request()->is('perangkat*') ? 'show' : '' }}" id="navbar-perangkat">
                                 <ul class="nav nav-sm flex-column">
                                  @can('view-perangkat')
                                     <li class="nav-item">

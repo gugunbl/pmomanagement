@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Project;
 use App\ProjectReport;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -31,18 +32,18 @@ class NextcloudWebDav
         }
     }
 
-    public function reportPath(ProjectReport $report)
+    public function reportPath(ProjectReport $report, $fileName = null)
     {
         $project = $report->project;
         $projectFolder = $project ? (string) $project->link_dokumen : '';
         $subdirectory = trim((string) config('filesystems.project_report_nextcloud_subdirectory', ''));
 
-        if (!$this->isSafeFolderName($projectFolder)) {
-            throw new NextcloudWebDavException('Nama folder project belum diisi atau tidak sesuai standar tanpa spasi.');
+        if (!Project::isValidNextcloudFolderName($projectFolder)) {
+            throw new NextcloudWebDavException('Nama folder project belum diisi atau mengandung karakter path yang tidak diperbolehkan.');
         }
 
-        if (!$this->isSafeFolderName($subdirectory)) {
-            throw new NextcloudWebDavException('Subfolder laporan Nextcloud belum dikonfigurasi atau tidak sesuai standar tanpa spasi.');
+        if (!Project::isValidNextcloudFolderName($subdirectory)) {
+            throw new NextcloudWebDavException('Subfolder laporan Nextcloud belum dikonfigurasi atau mengandung karakter path yang tidak diperbolehkan.');
         }
 
         $root = trim((string) config('filesystems.project_report_nextcloud_root', ''), '/');
@@ -54,9 +55,14 @@ class NextcloudWebDav
             }
         }
 
+        $fileName = $fileName ?: 'report-' . $report->getKey() . '.pdf';
+        if (strpos($fileName, '/') !== false || strpos($fileName, '\\') !== false || $fileName === '.' || $fileName === '..') {
+            throw new NextcloudWebDavException('Nama file laporan tidak valid.');
+        }
+
         $segments[] = $projectFolder;
         $segments[] = $subdirectory;
-        $segments[] = 'report-' . $report->getKey() . '.pdf';
+        $segments[] = $fileName;
 
         return implode('/', $segments);
     }
@@ -75,7 +81,9 @@ class NextcloudWebDav
         try {
             $this->request('PUT', $remotePath, ['body' => $stream]);
         } finally {
-            fclose($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }
     }
 
@@ -133,10 +141,5 @@ class NextcloudWebDav
         $encodedPath = implode('/', array_map('rawurlencode', $segments));
 
         return $this->webdavUrl . '/' . rawurlencode($this->username) . '/' . $encodedPath;
-    }
-
-    private function isSafeFolderName($name)
-    {
-        return $name !== '' && preg_match('/\A[A-Za-z0-9_-]+\z/', $name) === 1;
     }
 }

@@ -204,7 +204,7 @@
                         'placeholder'=>'Contoh: 2025_VDI_Phase2'
                     ]) }}
                     <small class="form-text text-muted">
-                        Gunakan nama folder persis di Nextcloud, tanpa spasi (huruf, angka, garis bawah, atau tanda hubung).
+                        Gunakan nama folder persis seperti di Nextcloud. Spasi diperbolehkan; jangan gunakan karakter / atau \\.
                     </small>
                 </div>
             </div>

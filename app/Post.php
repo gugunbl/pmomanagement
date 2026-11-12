@@ -3,11 +3,13 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Post extends Model
 {
     use LogsActivity;
+
     protected $fillable = [
         'post_title',
         'post_body',
@@ -16,17 +18,25 @@ class Post extends Model
         'category_id',
         'user_id',
     ];
-    protected static $logFillable = true;
-    protected static $logName = 'post';
-    protected static $logOnlyDirty = true;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('post');
+    }
+
     public function setStatusAttribute($status)
     {
-        $this->attributes['status'] = ($status)? 1 : 0;
+        $this->attributes['status'] = ($status) ? 1 : 0;
     }
+
     public function category()
     {
         return $this->belongsTo('App\Category');
     }
+
     public function user()
     {
         return $this->belongsTo('App\User');
