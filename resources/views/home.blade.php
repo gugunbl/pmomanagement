@@ -33,6 +33,9 @@
     $startYear = $yearLabels->first() ?? now()->year;
     $endYear = $yearLabels->last() ?? now()->year;
     $peak = collect($totalPerTahun)->sortByDesc('total')->first();
+    $projectTotalsByYear = collect($totalPerTahun)->mapWithKeys(function ($row) {
+        return [(string) $row->tahun => (int) $row->total];
+    });
 @endphp
 
 <main class="portfolio-dashboard">
@@ -52,7 +55,7 @@
 
     <div class="portfolio-body">
         <section class="portfolio-kpi-grid" aria-label="Ringkasan project">
-            <article class="portfolio-kpi">
+            <article class="portfolio-kpi" title="Dihitung otomatis dari project dengan status implementasi aktif">
                 <div class="portfolio-kpi-head">
                     <span>Total project aktif</span>
                     <i class="fas fa-layer-group"></i>
@@ -74,7 +77,7 @@
                     <i class="fas fa-rocket"></i>
                 </div>
                 <strong>{{ $totalImplementasiAktif }}</strong>
-                <p>{{ $implementationPercent }}% dari total project aktif</p>
+                <p>{{ $implementationPercent }}% dari total project aktif · berdasarkan status project</p>
                 <a href="{{ route('project.index', ['search' => '', 'status_maintenance' => 'implementasi']) }}">Lihat daftar project <i class="fas fa-arrow-right"></i></a>
             </article>
 
@@ -115,6 +118,27 @@
                     <span class="portfolio-insight-pill"><i class="fas fa-chart-line"></i> Puncak di <b>{{ $peak->tahun }}</b> dengan {{ $peak->total }} project</span>
                 @endif
                 <div class="portfolio-trend-chart"><canvas id="portfolioTrendChart"></canvas></div>
+                <div class="portfolio-year-summary" aria-label="Total project per tahun">
+                    <div class="portfolio-year-summary-title">Total project per tahun</div>
+                    <div class="portfolio-year-table-wrap">
+                        <table class="portfolio-year-table">
+                            <thead>
+                                <tr>
+                                    @foreach($yearLabels as $year)
+                                        <th scope="col">{{ $year }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    @foreach($yearLabels as $year)
+                                        <td>{{ $projectTotalsByYear->get((string) $year, 0) }}</td>
+                                    @endforeach
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </article>
 
             <article class="portfolio-panel portfolio-maintenance-panel">
@@ -123,6 +147,11 @@
                         <h2>Maintenance per customer</h2>
                         <p>Project maintenance yang masih aktif</p>
                     </div>
+                    @if($maintenanceByCustomer->isNotEmpty())
+                        <button type="button" class="portfolio-detail-button" data-toggle="modal" data-target="#maintenanceCustomerModal">
+                            <i class="far fa-eye"></i> Lihat semua
+                        </button>
+                    @endif
                 </div>
                 <div class="portfolio-donut-wrap">
                     <div class="portfolio-donut-chart">
@@ -160,10 +189,18 @@
                     <h2>Segera berakhir</h2>
                     <p>Maintenance yang berakhir dalam 5 bulan ke depan, diurutkan dari yang terdekat</p>
                 </div>
-                <span class="portfolio-contract-pill"><i class="far fa-bell"></i> {{ $maintenanceEndingSoon->count() }} kontrak</span>
+                <div class="portfolio-expiring-actions">
+                    <span class="portfolio-contract-pill"><i class="far fa-bell"></i> {{ $maintenanceEndingSoon->count() }} kontrak</span>
+                    @if($maintenanceEndingSoon->count() > 1)
+                        <div class="portfolio-slider-buttons" aria-label="Navigasi project yang segera berakhir">
+                            <button type="button" data-expiring-direction="-1" aria-label="Project sebelumnya"><i class="fas fa-chevron-left"></i></button>
+                            <button type="button" data-expiring-direction="1" aria-label="Project berikutnya"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    @endif
+                </div>
             </div>
-            <div class="portfolio-expiring-grid">
-                @forelse($maintenanceEndingSoon->take(3) as $project)
+            <div class="portfolio-expiring-slider" id="portfolioExpiringSlider" tabindex="0">
+                @forelse($maintenanceEndingSoon as $project)
                     @php
                         $endDate = \Carbon\Carbon::parse($project->tanggal_akhir_maintenance);
                         $daysLeft = max(0, (int) now()->startOfDay()->diffInDays($endDate, false));
@@ -180,8 +217,48 @@
                     <div class="portfolio-empty-state"><i class="far fa-check-circle"></i> Tidak ada maintenance yang segera berakhir.</div>
                 @endforelse
             </div>
+            @if($maintenanceEndingSoon->isNotEmpty())
+                <div class="portfolio-slider-status" id="portfolioExpiringStatus" aria-live="polite"></div>
+            @endif
         </section>
     </div>
+
+    @if($maintenanceByCustomer->isNotEmpty())
+        <div class="modal fade monitor-modal portfolio-customer-modal" id="maintenanceCustomerModal" tabindex="-1" role="dialog" aria-labelledby="maintenanceCustomerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <span class="monitor-eyebrow">Rincian portofolio</span>
+                            <h5 class="modal-title" id="maintenanceCustomerModalLabel">Maintenance aktif per customer</h5>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="monitor-modal-project-meta portfolio-customer-modal-summary">
+                            <div><span>Total customer</span><strong>{{ $maintenanceByCustomer->count() }}</strong></div>
+                            <div><span>Total project aktif</span><strong>{{ $maintenanceTotal }}</strong></div>
+                        </div>
+                        <div class="table-responsive monitor-modal-table">
+                            <table class="table table-sm mb-0 portfolio-customer-table">
+                                <thead><tr><th>#</th><th>Customer</th><th class="text-right">Project aktif</th><th class="text-right">Kontribusi</th></tr></thead>
+                                <tbody>
+                                    @foreach($maintenanceByCustomer as $index => $row)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td><strong>{{ $row->customer ?: 'Tanpa customer' }}</strong></td>
+                                            <td class="text-right">{{ $row->total }}</td>
+                                            <td class="text-right">{{ $maintenanceTotal > 0 ? round(($row->total / $maintenanceTotal) * 100) : 0 }}%</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </main>
 @endsection
 
@@ -227,6 +304,43 @@ if (donutCanvas) {
             plugins: { legend: { display: false } }
         }
     });
+}
+
+const expiringSlider = document.getElementById('portfolioExpiringSlider');
+const expiringStatus = document.getElementById('portfolioExpiringStatus');
+const expiringButtons = document.querySelectorAll('[data-expiring-direction]');
+
+if (expiringSlider) {
+    const cards = Array.from(expiringSlider.querySelectorAll('.portfolio-expiring-card'));
+
+    const updateExpiringStatus = () => {
+        if (!cards.length || !expiringStatus) return;
+
+        const gap = parseFloat(window.getComputedStyle(expiringSlider).columnGap || window.getComputedStyle(expiringSlider).gap) || 0;
+        const cardWidth = cards[0].getBoundingClientRect().width + gap;
+        const firstVisible = Math.max(0, Math.min(cards.length - 1, Math.round(expiringSlider.scrollLeft / cardWidth)));
+        const visibleCount = Math.max(1, Math.round(expiringSlider.clientWidth / cardWidth));
+        const lastVisible = Math.min(cards.length, firstVisible + visibleCount);
+        expiringStatus.textContent = `${firstVisible + 1}–${lastVisible} dari ${cards.length} project`;
+
+        expiringButtons.forEach((button) => {
+            const direction = Number(button.dataset.expiringDirection);
+            button.disabled = direction < 0
+                ? expiringSlider.scrollLeft <= 2
+                : expiringSlider.scrollLeft + expiringSlider.clientWidth >= expiringSlider.scrollWidth - 2;
+        });
+    };
+
+    expiringButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const direction = Number(button.dataset.expiringDirection);
+            expiringSlider.scrollBy({ left: direction * expiringSlider.clientWidth, behavior: 'smooth' });
+        });
+    });
+
+    expiringSlider.addEventListener('scroll', updateExpiringStatus, { passive: true });
+    window.addEventListener('resize', updateExpiringStatus);
+    updateExpiringStatus();
 }
 </script>
 @endpush

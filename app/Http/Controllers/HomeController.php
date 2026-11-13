@@ -37,7 +37,7 @@ $endLimit = Carbon::today()
     ->endOfMonth();
 
 $maintenanceEndingSoon = DB::table('m_project')
-    ->select('customer', 'nama_project', 'tanggal_akhir_maintenance')
+    ->select('id_project', 'customer', 'nama_project', 'tanggal_akhir_maintenance')
     ->where('status_maintenance', 1)
     ->whereBetween('tanggal_akhir_maintenance', [$today, $endLimit])
     ->orderBy('tanggal_akhir_maintenance', 'asc')
@@ -45,7 +45,8 @@ $maintenanceEndingSoon = DB::table('m_project')
     
     
     $totalPerTahun = DB::table('m_project')
-    ->select('tahun', DB::raw('count(nomor_spk) as total'))
+    ->select('tahun', DB::raw('count(*) as total'))
+    ->whereNotNull('tahun')
     ->groupBy('tahun')
     ->orderBy('tahun')
     ->get();
@@ -65,7 +66,8 @@ $maintenanceEndingSoon = DB::table('m_project')
 
     // DATA CHART (Stacked Column)
     $chartRaw = DB::table('m_project')
-        ->select('tahun', 'customer', DB::raw('count(nomor_spk) as total'))
+        ->select('tahun', 'customer', DB::raw('count(*) as total'))
+        ->whereNotNull('tahun')
         ->groupBy('tahun', 'customer')
         ->orderBy('tahun')
         ->get();

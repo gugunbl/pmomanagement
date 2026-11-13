@@ -1314,7 +1314,7 @@ a.app-kpi-card:hover {
 .portfolio-title-group h1 {
     margin: 0;
     color: #0b1f3a;
-    font-size: 1rem;
+    font-size: 1.12rem;
     font-weight: 750;
     letter-spacing: -.01em;
 }
@@ -1323,7 +1323,7 @@ a.app-kpi-card:hover {
 .portfolio-panel-head p {
     margin: 3px 0 0;
     color: #718096;
-    font-size: .68rem;
+    font-size: .76rem;
 }
 
 .portfolio-toolbar-filters {
@@ -1337,7 +1337,7 @@ a.app-kpi-card:hover {
     border: 1px solid #dbe2eb;
     border-radius: 9px;
     background: #fff;
-    font-size: .72rem;
+    font-size: .8rem;
     font-weight: 650;
 }
 
@@ -1374,7 +1374,7 @@ a.app-kpi-card:hover {
 .portfolio-kpi-head {
     justify-content: space-between;
     color: #263b58;
-    font-size: .72rem;
+    font-size: .8rem;
     font-weight: 650;
 }
 
@@ -1415,7 +1415,7 @@ a.app-kpi-card:hover {
     min-height: 17px;
     margin: 8px 0 0;
     color: #738096;
-    font-size: .67rem;
+    font-size: .74rem;
 }
 
 .portfolio-kpi > a {
@@ -1424,7 +1424,7 @@ a.app-kpi-card:hover {
     align-items: center;
     margin-top: 11px;
     color: #123a63;
-    font-size: .7rem;
+    font-size: .76rem;
     font-weight: 700;
 }
 
@@ -1460,7 +1460,7 @@ a.app-kpi-card:hover {
     gap: 10px;
     margin-top: 8px;
     color: #68778d;
-    font-size: .62rem;
+    font-size: .7rem;
 }
 
 .portfolio-legend-inline i,
@@ -1511,7 +1511,7 @@ a.app-kpi-card:hover {
 .portfolio-panel-head h2 {
     margin: 0;
     color: #0c213e;
-    font-size: .86rem;
+    font-size: 1rem;
     font-weight: 750;
 }
 
@@ -1519,7 +1519,7 @@ a.app-kpi-card:hover {
     flex-wrap: wrap;
     gap: 13px;
     color: #64748b;
-    font-size: .62rem;
+    font-size: .7rem;
 }
 
 .portfolio-insight-pill {
@@ -1527,12 +1527,62 @@ a.app-kpi-card:hover {
     padding: 5px 10px;
     color: #25415f;
     background: #f0f4f8;
-    font-size: .61rem;
+    font-size: .68rem;
 }
 
 .portfolio-trend-chart {
     height: 285px;
     margin-top: 5px;
+}
+
+.portfolio-year-summary {
+    margin-top: 14px;
+}
+
+.portfolio-year-summary-title {
+    margin-bottom: 8px;
+    color: #536987;
+    font-size: .76rem;
+    font-weight: 700;
+}
+
+.portfolio-year-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #dfe5ed;
+    border-radius: 9px;
+}
+
+.portfolio-year-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    text-align: center;
+}
+
+.portfolio-year-table th,
+.portfolio-year-table td {
+    padding: 10px 8px;
+    border-right: 1px solid #e5eaf0;
+}
+
+.portfolio-year-table th:last-child,
+.portfolio-year-table td:last-child {
+    border-right: 0;
+}
+
+.portfolio-year-table th {
+    color: #61728a;
+    background: #f6f8fb;
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+.portfolio-year-table td {
+    color: #123a63;
+    border-top: 1px solid #e5eaf0;
+    font-size: .82rem;
+    font-weight: 800;
 }
 
 .portfolio-donut-wrap {
@@ -1565,7 +1615,7 @@ a.app-kpi-card:hover {
 .portfolio-donut-total span {
     margin-top: 4px;
     color: #778397;
-    font-size: .58rem;
+    font-size: .68rem;
 }
 
 .portfolio-customer-list {
@@ -1582,7 +1632,7 @@ a.app-kpi-card:hover {
     gap: 8px;
     align-items: center;
     color: #213652;
-    font-size: .64rem;
+    font-size: .72rem;
 }
 
 .portfolio-customer-list li > span {
@@ -1607,7 +1657,37 @@ a.app-kpi-card:hover {
     color: #40546d;
     border-radius: 8px;
     background: #f1f4f7;
-    font-size: .62rem;
+    font-size: .7rem;
+}
+
+.portfolio-detail-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 7px 10px;
+    color: #123a63;
+    border: 1px solid #ccd7e4;
+    border-radius: 8px;
+    background: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.portfolio-detail-button:hover {
+    color: #fff;
+    border-color: #123a63;
+    background: #123a63;
+}
+
+.portfolio-customer-modal-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.portfolio-customer-table th,
+.portfolio-customer-table td {
+    vertical-align: middle;
 }
 
 .portfolio-contract-pill {
@@ -1615,23 +1695,71 @@ a.app-kpi-card:hover {
     padding: 6px 10px;
     color: #b42318;
     background: #fee9e7;
-    font-size: .62rem;
+    font-size: .7rem;
 }
 
-.portfolio-expiring-grid {
+.portfolio-expiring-actions,
+.portfolio-slider-buttons {
+    display: flex;
+    align-items: center;
+}
+
+.portfolio-expiring-actions {
+    gap: 9px;
+}
+
+.portfolio-slider-buttons {
+    gap: 5px;
+}
+
+.portfolio-slider-buttons button {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    place-items: center;
+    color: #123a63;
+    border: 1px solid #ccd7e4;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.portfolio-slider-buttons button:hover:not(:disabled) {
+    color: #fff;
+    border-color: #123a63;
+    background: #123a63;
+}
+
+.portfolio-slider-buttons button:disabled {
+    cursor: default;
+    opacity: .4;
+}
+
+.portfolio-expiring-slider {
+    display: flex;
     gap: 12px;
     margin-top: 15px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.portfolio-expiring-slider::-webkit-scrollbar {
+    display: none;
 }
 
 .portfolio-expiring-card {
     display: flex;
+    flex: 0 0 calc((100% - 24px) / 3);
     min-height: 122px;
     flex-direction: column;
     padding: 13px 14px;
     border: 1px solid #dfe5ed;
     border-radius: 10px;
+    scroll-snap-align: start;
 }
 
 .portfolio-expiring-card.is-urgent {
@@ -1649,7 +1777,7 @@ a.app-kpi-card:hover {
     color: #8a5b00;
     border-radius: 999px;
     background: #fff0c6;
-    font-size: .58rem;
+    font-size: .68rem;
     font-weight: 700;
 }
 
@@ -1660,13 +1788,14 @@ a.app-kpi-card:hover {
 
 .portfolio-expiring-meta time {
     color: #738096;
-    font-size: .57rem;
+    font-size: .72rem;
+    font-weight: 650;
 }
 
 .portfolio-expiring-card h3 {
     margin: 11px 0 14px;
     color: #0b1f3a;
-    font-size: .72rem;
+    font-size: .84rem;
     font-weight: 700;
     line-height: 1.35;
 }
@@ -1677,7 +1806,7 @@ a.app-kpi-card:hover {
     align-items: center;
     margin: auto 0 0;
     color: #69778b;
-    font-size: .61rem;
+    font-size: .7rem;
 }
 
 .portfolio-expiring-card p i {
@@ -1688,10 +1817,18 @@ a.app-kpi-card:hover {
 }
 
 .portfolio-empty-state {
-    grid-column: 1 / -1;
+    flex: 1 0 100%;
     padding: 28px;
     color: #718096;
     text-align: center;
+}
+
+.portfolio-slider-status {
+    margin-top: 9px;
+    color: #718096;
+    font-size: .68rem;
+    font-weight: 650;
+    text-align: right;
 }
 
 @media (max-width: 1199.98px) {
@@ -1771,17 +1908,18 @@ a.app-kpi-card:hover {
         overflow-x: auto;
     }
 
-    .portfolio-expiring-grid {
-        display: flex;
+    .portfolio-expiring-slider {
         margin-right: -16px;
         padding-right: 16px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
     }
 
     .portfolio-expiring-card {
         flex: 0 0 82%;
-        scroll-snap-align: start;
+    }
+
+    .portfolio-expiring-actions {
+        width: 100%;
+        justify-content: space-between;
     }
 }
 
