@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="{{asset('assets/css/bootstrap-select.min.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/jquery-confirm.min.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/dashboard.css')}}">
-    <link rel="stylesheet" href="{{asset('assets/css/custom.css')}}">
+    <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}?v={{ @filemtime(public_path('assets/css/custom.css')) ?: '1' }}">
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet"/>

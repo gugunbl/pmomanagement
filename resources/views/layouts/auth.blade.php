@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.css')}}">
     <!-- Argon CSS -->
     <link rel="stylesheet" href="{{asset('assets/css/dashboard.css')}}" type="text/css">
-    <link rel="stylesheet" href="{{asset('assets/css/custom.css')}}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}?v={{ @filemtime(public_path('assets/css/custom.css')) ?: '1' }}" type="text/css">
 </head>
 
 <body class="bg-white">
