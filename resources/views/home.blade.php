@@ -232,7 +232,7 @@
                             <span class="monitor-eyebrow">Rincian portofolio</span>
                             <h5 class="modal-title" id="maintenanceCustomerModalLabel">Maintenance aktif per customer</h5>
                         </div>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                        <button type="button" class="close" data-maintenance-modal-close aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
                         <div class="monitor-modal-project-meta portfolio-customer-modal-summary">
@@ -254,6 +254,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-maintenance-modal-close>Tutup</button>
                     </div>
                 </div>
             </div>
@@ -341,6 +344,34 @@ if (expiringSlider) {
     expiringSlider.addEventListener('scroll', updateExpiringStatus, { passive: true });
     window.addEventListener('resize', updateExpiringStatus);
     updateExpiringStatus();
+}
+
+const maintenanceCustomerModal = $('#maintenanceCustomerModal');
+if (maintenanceCustomerModal.length) {
+    const modalTrigger = $('[data-target="#maintenanceCustomerModal"]');
+
+    // Keep Bootstrap's modal and backdrop in the same stacking context.
+    maintenanceCustomerModal.appendTo(document.body);
+
+    const resetMaintenanceModalState = () => {
+        maintenanceCustomerModal.removeClass('show').hide().attr('aria-hidden', 'true');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        modalTrigger.trigger('focus');
+    };
+
+    maintenanceCustomerModal.on('hidden.bs.modal', resetMaintenanceModalState);
+
+    maintenanceCustomerModal.on('click', '[data-maintenance-modal-close]', function () {
+        maintenanceCustomerModal.modal('hide');
+
+        // Fallback if another script interrupts Bootstrap's transition event.
+        window.setTimeout(() => {
+            if (maintenanceCustomerModal.hasClass('show') || $('.modal-backdrop').length) {
+                resetMaintenanceModalState();
+            }
+        }, 400);
+    });
 }
 </script>
 @endpush
