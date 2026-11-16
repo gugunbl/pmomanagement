@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('body_class', 'traffic-ap-page')
+
 @push('pg_btn')
     <a href="{{ route('traffic-ap.input', ['id_project' => $selectedProjectId, 'id_lokasi' => $selectedLokasiId]) }}" class="btn btn-sm btn-neutral">
         <i class="fas fa-edit mr-1 text-primary"></i> Input Traffic AP
@@ -12,12 +14,17 @@
 @section('content')
 <div class="row">
     <div class="col-md-12">
-        <div class="card shadow">
+        <div class="card shadow traffic-shell">
+            @include('traffic_ap._workspace_nav', ['activeTrafficPage' => 'monitor'])
             <div class="card-header border-0 pb-0">
                 <div class="row align-items-center mb-3">
                     <div class="col-md-6">
-                        <div class="d-flex align-items-center flex-wrap" style="gap: 12px;">
-                            <h3 class="mb-0" style="font-weight:800; color:#1a237e; letter-spacing:-0.5px;">{{ $title }}</h3>
+                        <div class="d-flex align-items-center flex-wrap traffic-page-heading" style="gap: 12px;">
+                            <span class="traffic-page-heading__icon"><i class="fas fa-chart-line"></i></span>
+                            <div>
+                                <h3 class="mb-0">{{ $title }}</h3>
+                                <p class="text-sm text-muted mb-0">Bandingkan traffic dan jumlah pengguna berdasarkan lantai dan periode.</p>
+                            </div>
                             @if($totalTraffic !== null)
                                 <div class="total-traffic-chip">
                                     <span class="chip-icon"><i class="fas fa-tachometer-alt"></i></span>
@@ -27,7 +34,6 @@
                                 </div>
                             @endif
                         </div>
-                        <p class="text-sm text-muted mb-0 mt-1">Laporan matriks traffic AP harian per lantai sesuai project &amp; lokasi terpilih.</p>
                     </div>
                     <div class="col-md-6 text-md-right mt-3 mt-md-0">
                         @if($selectedLokasi && !empty($floors))
@@ -39,7 +45,7 @@
                 </div>
 
                 {{-- FILTER CARD --}}
-                <div class="card bg-secondary shadow-none border p-3 mb-3">
+                <div class="card bg-secondary shadow-none border p-3 mb-3 traffic-filter-card">
                     <form method="GET" action="{{ route('traffic-ap.monitor') }}" id="filterForm">
                         <div class="row align-items-end">
                             {{-- Dropdown Project --}}
@@ -173,7 +179,7 @@
                         <i class="fas fa-exclamation-triangle mr-2"></i> Silakan pilih lokasi terlebih dahulu.
                     </div>
                 @elseif(empty($floors))
-                    <div class="text-center py-5">
+                    <div class="text-center py-5 traffic-empty-state">
                         <i class="fas fa-table fa-3x text-light mb-3"></i>
                         <h4 class="text-muted">Belum ada data lantai atau traffic pada lokasi <strong>{{ $selectedLokasi->nama_lokasi }}</strong></h4>
                         <p class="text-sm text-muted">Silakan input data traffic terlebih dahulu melalui menu <strong>Traffic AP</strong>.</p>
@@ -317,6 +323,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/traffic-ap.css') }}?v={{ @filemtime(public_path('assets/css/traffic-ap.css')) ?: '1' }}">
 <style>
 #monitorTabs .nav-link {
     color: #525f7f;
@@ -530,6 +537,67 @@
     vertical-align: baseline;
     margin-left: 2px;
     opacity: 0.9;
+}
+
+/* Visual refresh: keep dense reporting readable without spreadsheet-like glare. */
+#monitorTabs {
+    gap: 8px;
+    padding: 5px;
+    border: 0;
+    border-radius: 12px;
+    background: #eef2f8;
+}
+#monitorTabs .nav-item { flex: 1; }
+#monitorTabs .nav-link,
+#monitorTabs .nav-link.active {
+    margin: 0;
+    border: 0;
+    border-radius: 9px;
+}
+#monitorTabs .nav-link.active { box-shadow: 0 4px 12px rgba(34,55,95,.09); }
+.table-matrix-container {
+    margin-top: 12px;
+    border-color: #dfe5ef !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+.table-matrix th,
+.table-matrix td { border-color: #e2e7ef !important; }
+.matrix-th-date {
+    background: #243f76 !important;
+    color: #fff !important;
+    border-color: #375388 !important;
+}
+.matrix-th-lantai {
+    background: #173363 !important;
+    color: #fff !important;
+    border-color: #375388 !important;
+}
+.matrix-td-lantai {
+    background: #eef3fb !important;
+    color: #243856 !important;
+    border-right-color: #c8d4e7 !important;
+}
+.table-matrix tbody tr:nth-child(even) .matrix-td-val { background: #fafbfe; }
+.total-traffic-chip,
+.total-traffic-chip:hover {
+    padding: 7px 14px 7px 8px;
+    border: 1px solid #cbe8e4;
+    background: #eaf8f6;
+    box-shadow: none;
+    animation: none;
+    transform: none;
+}
+.total-traffic-chip .chip-icon { width: 28px; height: 28px; margin-right: 8px; color: #0e8b86; box-shadow: none; }
+.total-traffic-chip .chip-label,
+.total-traffic-chip .chip-value,
+.total-traffic-chip .chip-unit { color: #176864; text-shadow: none; }
+.total-traffic-chip .chip-divider { height: 18px; margin: 0 9px; background: #b4dcd8; }
+
+@media (max-width: 767.98px) {
+    #monitorTabs .nav-link { padding: .7rem .5rem; }
+    .total-traffic-chip { margin-left: 58px; }
+    .table-matrix th, .table-matrix td { padding: .5rem .65rem; }
 }
 </style>
 @endpush

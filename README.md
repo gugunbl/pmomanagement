@@ -7,6 +7,25 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
 </p>
 
+## System versioning
+
+The application release uses semantic versioning and reads its version from the tracked `VERSION` file. The login page displays this value automatically.
+
+Use the PHP 8.3 project runner when preparing a release:
+
+```powershell
+# Bug fix or small backward-compatible change: 2.0.0 -> 2.0.1
+.\artisan83.ps1 system:version:bump patch
+
+# Backward-compatible feature: 2.0.1 -> 2.1.0
+.\artisan83.ps1 system:version:bump minor
+
+# Breaking change: 2.1.0 -> 3.0.0
+.\artisan83.ps1 system:version:bump major
+```
+
+Run the appropriate bump once in the release pipeline, then commit `VERSION` with the release. `APP_VERSION` may be set by a deployment platform when an environment-specific override is required. After deploying, rebuild the Laravel config cache as usual.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('body_class', 'traffic-ap-page')
+
 @push('pg_btn')
     <a href="{{ route('traffic-ap.mapping.index', ['id_project' => $selectedProjectId, 'id_lokasi' => $selectedLokasiId]) }}" class="btn btn-sm btn-neutral">
         <i class="fas fa-layer-group mr-1 text-primary"></i> Mapping Lantai & AP
@@ -12,17 +14,23 @@
 @section('content')
 <div class="row">
     <div class="col-md-12">
-        <div class="card shadow">
+        <div class="card shadow traffic-shell">
+            @include('traffic_ap._workspace_nav', ['activeTrafficPage' => 'input'])
             <div class="card-header border-0 pb-0">
                 <div class="row align-items-center mb-3">
                     <div class="col">
-                        <h3 class="mb-0">{{ $title }}</h3>
-                        <p class="text-sm text-muted mb-0">Input data traffic AP harian per lantai untuk project, lokasi, dan tanggal yang dipilih.</p>
+                        <div class="traffic-page-heading">
+                            <span class="traffic-page-heading__icon"><i class="fas fa-keyboard"></i></span>
+                            <div>
+                                <h3 class="mb-0">{{ $title }}</h3>
+                                <p class="text-sm text-muted mb-0">Catat traffic dan jumlah pengguna tiap lantai untuk satu tanggal operasional.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {{-- FORM FILTER / HEADER PILIHAN PROJECT, LOKASI & TANGGAL --}}
-                <div class="card bg-secondary shadow-none border p-3 mb-3">
+                <div class="card bg-secondary shadow-none border p-3 mb-3 traffic-filter-card">
                     <div class="row align-items-center">
                         {{-- Dropdown Project --}}
                         <div class="col-md-4">
@@ -91,7 +99,7 @@
                     <input type="hidden" name="tanggal" id="submit_tanggal" value="{{ $selectedTanggal }}">
 
                     {{-- Toolbar Helpers --}}
-                    <div id="table-toolbar" class="d-none justify-content-between align-items-center mb-3 bg-white p-2 rounded border">
+                    <div id="table-toolbar" class="d-none justify-content-between align-items-center mb-3 bg-white p-2 rounded border traffic-toolbar">
                         <div>
                             <span class="text-sm text-muted mr-2">Quick Set Satuan:</span>
                             <div class="btn-group btn-group-sm">
@@ -116,7 +124,7 @@
                     </div>
 
                     {{-- Empty State --}}
-                    <div id="empty-state" class="text-center py-5">
+                    <div id="empty-state" class="text-center py-5 traffic-empty-state">
                         <i class="fas fa-building fa-3x text-light mb-3"></i>
                         <h4 class="text-muted">Pilih Project, Lokasi, dan Tanggal terlebih dahulu</h4>
                         <p class="text-sm text-muted">Daftar lantai pada project & lokasi terpilih akan ditampilkan secara otomatis di bawah ini.</p>
@@ -161,6 +169,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/traffic-ap.css') }}?v={{ @filemtime(public_path('assets/css/traffic-ap.css')) ?: '1' }}">
 <style>
 .select2-container--bootstrap4 .select2-selection {
     min-height: 44px;

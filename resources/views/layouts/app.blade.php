@@ -149,6 +149,7 @@
 <script src="{{asset('assets/js/bootstrap-select.min.js')}}"></script>
 <script src="{{asset('assets/vendor/sweetalert2/dist/sweetalert2.min.js')}}"></script>
 <script src="{{asset('assets/js/dashboard.js')}}"></script>
+<script src="{{ asset('assets/js/sidebar.js') }}?v={{ @filemtime(public_path('assets/js/sidebar.js')) ?: '1' }}"></script>
 
 @livewireScripts
 @stack('scripts')

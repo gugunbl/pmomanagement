@@ -113,9 +113,32 @@
         }
 
         .login-subtitle {
-            margin-bottom: 2rem;
+            margin-bottom: .75rem;
             color: rgba(255, 255, 255, .82);
             font-size: 1rem;
+        }
+
+        .login-version {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: 1.75rem;
+            padding: .38rem .7rem;
+            color: rgba(255, 255, 255, .82);
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .035em;
+        }
+
+        .login-version-dot {
+            width: 7px;
+            height: 7px;
+            background: #56d6a3;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(86, 214, 163, .12);
         }
 
         .login-panel label {
@@ -296,6 +319,10 @@
             <div class="login-panel-inner">
                 <h1 class="login-title">Selamat Datang</h1>
                 <p class="login-subtitle">Silahkan Login dengan akun anda.</p>
+                <div class="login-version" title="Versi aplikasi yang sedang digunakan">
+                    <span class="login-version-dot" aria-hidden="true"></span>
+                    <span>System Version v{{ config('version.release', '2.0.0') }}</span>
+                </div>
 
                 @include('flash::message')
 

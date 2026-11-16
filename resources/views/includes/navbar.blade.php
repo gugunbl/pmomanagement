@@ -1,4 +1,4 @@
-<nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+<nav class="sidenav app-sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main" aria-label="Navigasi utama">
     <div class="scrollbar-inner">
         <!-- Brand -->
         <div class="sidenav-header d-flex align-items-center">
@@ -12,14 +12,18 @@
             </a>
             <div class="ml-auto">
                 <!-- Sidenav toggler -->
-                <div class="sidenav-toggler d-none d-xl-block" data-action="sidenav-unpin" data-target="#sidenav-main">
+                <button type="button" class="sidenav-toggler app-sidenav-toggle d-none d-xl-block" data-action="sidenav-unpin" data-target="#sidenav-main" aria-label="Ciutkan sidebar" aria-controls="sidenav-main" aria-expanded="true">
                     <div class="sidenav-toggler-inner">
                         <i class="sidenav-toggler-line"></i>
                         <i class="sidenav-toggler-line"></i>
                         <i class="sidenav-toggler-line"></i>
                     </div>
-                </div>
+                </button>
             </div>
+        </div>
+        <div class="app-sidenav-caption">
+            <span>Navigasi utama</span>
+            <small>Pilih area kerja Anda</small>
         </div>
         <div class="navbar-inner">
             <!-- Collapse -->
@@ -29,7 +33,7 @@
                     @can('menu-dashboard')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('home')) ? 'active' : '' }}" href="{{route('home')}}">
-                            <i class="ni ni-shop text-primary"></i>
+                            <i class="fas fa-home text-primary"></i>
                             <span class="nav-link-text">Dashboard</span>
                         </a>
                     </li>
@@ -37,7 +41,7 @@
                     @can('menu-dashboard-user')
                     <li class="nav-item">
                         <a class="nav-link {{ (request()->is('home_user')) ? 'active' : '' }}" href="{{route('home_user')}}">
-                            <i class="ni ni-shop text-info"></i>
+                            <i class="fas fa-chart-pie text-info"></i>
                             <span class="nav-link-text">Dashboard User</span>
                         </a>
                     </li>
@@ -45,8 +49,8 @@
                     @can('update-settings')
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('settings*')) ? 'active' : '' }}" href="{{route('settings.index')}}">
-                                <i class="ni ni-settings-gear-65 text-primary"></i>
-                                <span class="nav-link-text">Manage Settings</span>
+                                <i class="fas fa-sliders-h text-primary"></i>
+                                <span class="nav-link-text">Pengaturan</span>
                             </a>
                         </li>
                     @endcan
@@ -55,8 +59,8 @@
                     @canany(['view-entertainment', 'create-entertainment', 'view-category', 'create-category', 'menu-manage-customer', 'menu-manage-sales', 'menu-team-support', 'view-permission', 'create-permission', 'view-role', 'create-role', 'media', 'view-activity-log'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('entertainment*') || request()->is('category*') || request()->is('customer*') || request()->is('sales*') || request()->is('team-support*') || request()->is('permissions*') || request()->is('roles*') || request()->is('media*') || request()->is('activity-log*') || request()->is('components')) ? 'active' : '' }}" href="#navbar-master" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="navbar-master">
-                                <i class="fas text-primary fa-layer-group"></i>
-                                <span class="nav-link-text">Menu Master</span>
+                                <i class="fas text-primary fa-database"></i>
+                                <span class="nav-link-text">Data Master</span>
                             </a>
                             <div class="collapse" id="navbar-master">
                                 <ul class="nav nav-sm flex-column">
@@ -173,8 +177,8 @@
 
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'active' : '' }}" href="#navbar-users"  data-toggle="collapse" role="button" aria-expanded="{{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'true' : 'false' }}" aria-controls="navbar-users">
-                                <i class="fas text-primary fa-tasks"></i>
-                                <span class="nav-link-text">Manage Users</span>
+                                <i class="fas text-primary fa-users-cog"></i>
+                                <span class="nav-link-text">Pengguna</span>
                             </a>
                             <div class="collapse {{ (request()->is('users*') || request()->is('dashboard-utilisasi*')) ? 'show' : '' }}" id="navbar-users">
                                 <ul class="nav nav-sm flex-column">
@@ -202,8 +206,8 @@
                     @canany(['view-project', 'create-project','maintenance-project'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('project*')) ? 'active' : '' }}" href="#navbar-project"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-project">
-                                <i class="fas text-primary fa-list-alt"></i>
-                                <span class="nav-link-text">Manage project</span>
+                                <i class="fas text-primary fa-project-diagram"></i>
+                                <span class="nav-link-text">Project</span>
                             </a>
                             <div class="collapse {{ request()->is('project*') ? 'show' : '' }}" id="navbar-project">
                                 <ul class="nav nav-sm flex-column">
@@ -243,8 +247,8 @@
                     @canany(['view-perangkat', 'view-summary-perangkat','view-warehouse','perangkat-warehouse'])
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('perangkat*')) ? 'active' : '' }}" href="#navbar-perangkat"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-perangkat">
-                                <i class="fas text-primary fa-list-alt"></i>
-                                <span class="nav-link-text">Manage Perangkat</span>
+                                <i class="fas text-primary fa-server"></i>
+                                <span class="nav-link-text">Perangkat</span>
                             </a>
                             <div class="collapse {{ request()->is('perangkat*') ? 'show' : '' }}" id="navbar-perangkat">
                                 <ul class="nav nav-sm flex-column">
@@ -278,7 +282,7 @@
                         <li class="nav-item">
                             <a class="nav-link {{ (request()->is('cases*') || request()->is('daily-monitoring*')) ? 'active' : '' }}" href="#navbar-cases"  data-toggle="collapse" role="button" aria-expanded="true" aria-controls="navbar-cases">
                                 <i class="fas text-primary fa-briefcase"></i>
-                                <span class="nav-link-text">Case Management</span>
+                                <span class="nav-link-text">Manajemen Case</span>
                             </a>
                             <div class="collapse" id="navbar-cases">
                                 <ul class="nav nav-sm flex-column">

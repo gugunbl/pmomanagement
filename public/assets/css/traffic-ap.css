@@ -1,0 +1,205 @@
+:root {
+    --traffic-ink: #17233f;
+    --traffic-muted: #69758b;
+    --traffic-line: #e4e9f2;
+    --traffic-soft: #f6f8fc;
+    --traffic-primary: #2855d9;
+    --traffic-primary-dark: #1e3fa7;
+    --traffic-cyan: #10a7a2;
+    --traffic-card-shadow: 0 18px 44px rgba(28, 45, 79, .09);
+}
+
+.traffic-ap-page .app-content { max-width: 1680px; }
+.traffic-ap-page .traffic-shell {
+    border: 1px solid rgba(218, 225, 237, .9);
+    border-radius: 18px;
+    box-shadow: var(--traffic-card-shadow) !important;
+    overflow: hidden;
+    background: #fff;
+}
+.traffic-ap-page .traffic-shell > .card-header {
+    padding: 28px 30px 0;
+    background: #fff;
+}
+.traffic-ap-page .traffic-shell > .card-body { padding: 22px 30px 30px; }
+
+.traffic-workflow {
+    display: grid;
+    grid-template-columns: minmax(240px, .8fr) minmax(520px, 1.7fr);
+    gap: 28px;
+    align-items: center;
+    padding: 18px 22px;
+    background: linear-gradient(125deg, #172b58 0%, #2149a0 58%, #176e91 100%);
+    color: #fff;
+}
+.traffic-workflow__intro { display: flex; flex-direction: column; min-width: 0; }
+.traffic-workflow__eyebrow {
+    margin-bottom: 4px;
+    color: #9fdfe2;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.traffic-workflow__intro strong { font-size: 1rem; line-height: 1.35; }
+.traffic-workflow__intro small { margin-top: 2px; color: rgba(255,255,255,.68); }
+.traffic-workflow__steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.traffic-workflow__step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 12px;
+    color: rgba(255,255,255,.78);
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.traffic-workflow__step:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; }
+.traffic-workflow__step.is-active { border-color: #fff; background: #fff; color: var(--traffic-primary-dark); box-shadow: 0 7px 20px rgba(8,25,68,.2); }
+.traffic-workflow__number {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(255,255,255,.13);
+    font-size: .75rem;
+    font-weight: 800;
+}
+.traffic-workflow__step.is-active .traffic-workflow__number { background: #e9efff; color: var(--traffic-primary); }
+.traffic-workflow__step > span:last-child { display: flex; min-width: 0; flex-direction: column; }
+.traffic-workflow__step small { color: inherit; font-size: .64rem; letter-spacing: .04em; opacity: .72; text-transform: uppercase; }
+.traffic-workflow__step strong { overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.traffic-page-heading { display: flex; gap: 16px; align-items: center; }
+.traffic-page-heading__icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #e9efff, #ecfbfa);
+    color: var(--traffic-primary);
+    font-size: 1.15rem;
+}
+.traffic-page-heading h3 { color: var(--traffic-ink) !important; font-size: 1.35rem; font-weight: 800 !important; letter-spacing: -.025em !important; }
+.traffic-page-heading p { margin-top: 4px !important; color: var(--traffic-muted) !important; }
+
+.traffic-filter-card {
+    margin-top: 22px;
+    padding: 18px !important;
+    border: 1px solid var(--traffic-line) !important;
+    border-radius: 14px !important;
+    background: var(--traffic-soft) !important;
+}
+.traffic-filter-card .form-control-label {
+    margin-bottom: 7px;
+    color: #3d4960;
+    font-size: .72rem;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+}
+.traffic-ap-page .form-control,
+.traffic-ap-page .select2-selection,
+.traffic-ap-page .bootstrap-select > .dropdown-toggle { border-color: #d7deea; border-radius: 10px !important; }
+.traffic-ap-page .form-control:focus {
+    border-color: #7692e9;
+    box-shadow: 0 0 0 3px rgba(40,85,217,.11);
+}
+.traffic-ap-page .btn { border-radius: 9px; font-weight: 700; }
+.traffic-ap-page .btn-primary { border-color: var(--traffic-primary); background: var(--traffic-primary); }
+.traffic-ap-page .btn-primary:hover { border-color: var(--traffic-primary-dark); background: var(--traffic-primary-dark); }
+
+.traffic-toolbar {
+    padding: 12px 14px !important;
+    border: 1px solid var(--traffic-line) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 5px 18px rgba(28,45,79,.05);
+}
+.traffic-empty-state { padding: 56px 20px !important; border: 1px dashed #ced7e7; border-radius: 14px; background: #fafbfe; }
+.traffic-empty-state i { color: #b6c2d7 !important; }
+.traffic-empty-state h4 { color: #33405a !important; font-weight: 750; }
+
+.traffic-ap-page .table-responsive { border-radius: 12px; }
+.traffic-ap-page table:not(.table-matrix) thead th {
+    border-top: 0;
+    border-bottom: 1px solid #dce3ee;
+    background: #f3f6fb;
+    color: #59667d;
+    font-size: .69rem;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+}
+.traffic-ap-page table:not(.table-matrix) tbody td { border-color: #edf0f5; vertical-align: middle; }
+.traffic-ap-page table:not(.table-matrix) tbody tr:hover { background: #f8faff; }
+
+.traffic-ap-page .modal-content { border: 0; border-radius: 16px; box-shadow: 0 24px 64px rgba(22,34,60,.24); overflow: hidden; }
+.traffic-ap-page .modal-header { border-bottom-color: var(--traffic-line); background: #f7f9fd; }
+.traffic-ap-page .modal-footer { border-top-color: var(--traffic-line); background: #fafbfe; }
+
+.traffic-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    color: var(--traffic-muted);
+    font-size: .76rem;
+}
+.traffic-context span { padding: 4px 8px; border-radius: 7px; background: #f1f4fa; }
+
+.traffic-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.traffic-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--traffic-line);
+    border-radius: 12px;
+    background: #fff;
+}
+.traffic-stat__icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 11px;
+    background: #edf2ff;
+    color: var(--traffic-primary);
+}
+.traffic-stat:nth-child(2) .traffic-stat__icon { background: #e8f8f6; color: #0b8e88; }
+.traffic-stat:nth-child(3) .traffic-stat__icon { background: #fff4df; color: #bd7400; }
+.traffic-stat span:last-child { display: flex; min-width: 0; flex-direction: column; }
+.traffic-stat small { color: var(--traffic-muted); font-size: .7rem; text-transform: uppercase; }
+.traffic-stat strong { overflow: hidden; color: var(--traffic-ink); font-size: 1.05rem; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 991.98px) {
+    .traffic-workflow { grid-template-columns: 1fr; gap: 14px; }
+    .traffic-workflow__intro small { display: none; }
+    .traffic-ap-page .traffic-shell > .card-header { padding: 22px 20px 0; }
+    .traffic-ap-page .traffic-shell > .card-body { padding: 20px; }
+    .traffic-filter-card .form-group { margin-bottom: 16px !important; }
+}
+@media (max-width: 575.98px) {
+    .traffic-workflow { padding: 14px; }
+    .traffic-workflow__steps { grid-template-columns: 1fr; }
+    .traffic-workflow__step { padding: 8px 10px; }
+    .traffic-workflow__intro { display: none; }
+    .traffic-ap-page .traffic-shell { border-radius: 13px; }
+    .traffic-page-heading { align-items: flex-start; }
+    .traffic-page-heading__icon { width: 42px; height: 42px; flex-basis: 42px; }
+    .traffic-page-heading h3 { font-size: 1.15rem; }
+    .traffic-ap-page .traffic-shell > .card-header,
+    .traffic-ap-page .traffic-shell > .card-body { padding-left: 15px; padding-right: 15px; }
+    .traffic-filter-card { padding: 14px !important; }
+    .traffic-toolbar { align-items: flex-start !important; flex-direction: column; gap: 10px; }
+    .traffic-stat-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .traffic-ap-page *, .traffic-ap-page *::before, .traffic-ap-page *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}

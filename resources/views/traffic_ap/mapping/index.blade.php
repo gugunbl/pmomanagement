@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('body_class', 'traffic-ap-page')
+
 @push('pg_btn')
     <a href="{{ route('traffic-ap.input', ['id_project' => $selectedProjectId, 'id_lokasi' => $selectedLokasiId]) }}" class="btn btn-sm btn-neutral">
         <i class="fas fa-edit mr-1 text-primary"></i> Input Traffic AP
@@ -12,12 +14,18 @@
 @section('content')
 <div class="row">
     <div class="col-md-12">
-        <div class="card shadow">
+        <div class="card shadow traffic-shell">
+            @include('traffic_ap._workspace_nav', ['activeTrafficPage' => 'mapping'])
             <div class="card-header border-0 pb-0">
                 <div class="row align-items-center mb-3">
                     <div class="col-md-6">
-                        <h3 class="mb-0">{{ $title }}</h3>
-                        <p class="text-sm text-muted mb-0">Kelola mapping lantai per project & lokasi serta asosiasi perangkat Access Point (AP).</p>
+                        <div class="traffic-page-heading">
+                            <span class="traffic-page-heading__icon"><i class="fas fa-layer-group"></i></span>
+                            <div>
+                                <h3 class="mb-0">{{ $title }}</h3>
+                                <p class="text-sm text-muted mb-0">Susun lantai dan hubungkan access point sebelum melakukan input harian.</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-6 text-md-right mt-3 mt-md-0">
                         @if($selectedLokasi && $selectedProject)
@@ -29,7 +37,7 @@
                 </div>
 
                 {{-- Filter Project & Lokasi --}}
-                <div class="card bg-secondary shadow-none border p-3 mb-4">
+                <div class="card bg-secondary shadow-none border p-3 mb-4 traffic-filter-card">
                     <form method="GET" action="{{ route('traffic-ap.mapping.index') }}" id="filterLokasiForm">
                         <div class="row align-items-center">
                             {{-- Dropdown Project --}}
@@ -79,6 +87,22 @@
             </div>
 
             <div class="card-body pt-0">
+                @if($selectedProject && $selectedLokasi)
+                    <div class="traffic-stat-grid" aria-label="Ringkasan mapping access point">
+                        <div class="traffic-stat">
+                            <span class="traffic-stat__icon"><i class="fas fa-layer-group"></i></span>
+                            <span><small>Total lantai</small><strong>{{ $floors->count() }} lantai</strong></span>
+                        </div>
+                        <div class="traffic-stat">
+                            <span class="traffic-stat__icon"><i class="fas fa-wifi"></i></span>
+                            <span><small>AP terhubung</small><strong>{{ $floors->sum(function ($floor) { return $floor->perangkats->count(); }) }} perangkat</strong></span>
+                        </div>
+                        <div class="traffic-stat">
+                            <span class="traffic-stat__icon"><i class="fas fa-map-marker-alt"></i></span>
+                            <span><small>Lokasi aktif</small><strong>{{ $selectedLokasi->nama_lokasi }}</strong></span>
+                        </div>
+                    </div>
+                @endif
                 @if(!$selectedProject)
                     <div class="alert alert-warning py-3">
                         <i class="fas fa-exclamation-triangle mr-2"></i> Belum ada project yang dapat diakses oleh akun Anda.
@@ -88,7 +112,7 @@
                         <i class="fas fa-exclamation-triangle mr-2"></i> Belum ada data lokasi pada project <strong>{{ $selectedProject->nama_project }}</strong>.
                     </div>
                 @elseif($floors->isEmpty())
-                    <div class="text-center py-5">
+                    <div class="text-center py-5 traffic-empty-state">
                         <div class="text-muted mb-3">
                             <i class="fas fa-layer-group fa-4x text-light"></i>
                         </div>
@@ -103,8 +127,8 @@
                         </div>
                     </div>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-items-center table-flush table-hover">
+                    <div class="table-responsive border">
+                        <table class="table align-items-center table-flush table-hover mb-0">
                             <thead class="thead-light">
                                 <tr>
                                     <th style="width: 60px;">No</th>
@@ -421,6 +445,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/traffic-ap.css') }}?v={{ @filemtime(public_path('assets/css/traffic-ap.css')) ?: '1' }}">
 <style>
 .select2-container--bootstrap4 .select2-selection {
     min-height: 44px;
