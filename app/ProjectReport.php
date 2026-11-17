@@ -52,6 +52,26 @@ class ProjectReport extends Model
         ]) . '.pdf';
     }
 
+    /**
+     * Build a short, unique filename for the physical storage object.
+     *
+     * The descriptive report name remains available through uploadFilename()
+     * and is stored separately as uploaded_original_name.
+     */
+    public function storageFilename($uploadDate = null, $uniqueToken = null)
+    {
+        $timestamp = Carbon::parse($uploadDate ?: Carbon::now())->format('YmdHis');
+        $token = $uniqueToken ?: bin2hex(random_bytes(8));
+        $token = preg_replace('/[^A-Za-z0-9]/', '', (string) $token);
+        $token = substr($token, 0, 16);
+
+        if ($token === '') {
+            $token = bin2hex(random_bytes(8));
+        }
+
+        return 'report-' . $this->getKey() . '-' . $timestamp . '-' . strtolower($token) . '.pdf';
+    }
+
     public function comments()
     {
         return $this->hasMany(ProjectReportComment::class, 'project_report_id', 'id')->orderBy('created_at', 'desc');

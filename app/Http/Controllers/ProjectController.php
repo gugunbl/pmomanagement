@@ -163,6 +163,7 @@ class ProjectController extends Controller
 
 public function maintenance(Request $request)
 {
+    $title = 'Project Maintenance';
     $tahun = $request->tahun;
     $pm_maintenance = $request->pm_maintenance;
     $customer = $request->customer;
@@ -244,7 +245,7 @@ $listTahun = DB::table('m_project')
         ->orderBy('pm.nama_pm')
         ->get();
 
-    return view('project.maintenance', compact('projects', 'listTahun', 'tahun','listPM','pm_maintenance', 'listCustomer', 'customer', 'pmProjectCounts'));
+    return view('project.maintenance', compact('title', 'projects', 'listTahun', 'tahun','listPM','pm_maintenance', 'listCustomer', 'customer', 'pmProjectCounts'));
 }
 
 
@@ -881,8 +882,8 @@ public function update(Request $request, Project $project)
             'upload_file.mimes' => 'File laporan harus berformat PDF.',
         ]);
 
-        $uploadFileName = $report->uploadFilename();
-        if (!$uploadFileName) {
+        $downloadFileName = $report->uploadFilename();
+        if (!$downloadFileName) {
             return back()->withErrors([
                 'upload_file' => 'Periode mulai dan periode selesai harus diisi sebelum laporan dapat diupload.',
             ]);
@@ -891,13 +892,14 @@ public function update(Request $request, Project $project)
         if ($request->hasFile('upload_file')) {
             $disk = config('filesystems.project_report_disk', 'public');
             $upload = $request->file('upload_file');
+            $storageFileName = $report->storageFilename();
             $oldPath = $report->uploaded_file;
             $oldDisk = $report->uploaded_disk ?: 'public';
 
             if ($disk === 'nextcloud') {
                 try {
                     $nextcloud = app(\App\Services\NextcloudWebDav::class);
-                    $path = $nextcloud->reportPath($report, $uploadFileName);
+                    $path = $nextcloud->reportPath($report, $storageFileName);
                     $nextcloud->upload($upload->getRealPath(), $path);
                 } catch (\App\Services\NextcloudWebDavException $e) {
                     flash('Upload ke Nextcloud gagal: ' . $e->getMessage())->error();
@@ -905,7 +907,7 @@ public function update(Request $request, Project $project)
                 }
             } else {
                 $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
-                $path = $upload->storeAs($directory, $uploadFileName, $disk);
+                $path = $upload->storeAs($directory, $storageFileName, $disk);
                 if (!$path) {
                     flash('File laporan gagal disimpan ke storage.')->error();
                     return back()->withInput();
@@ -914,16 +916,50 @@ public function update(Request $request, Project $project)
 
             $report->uploaded_file = $path;
             $report->uploaded_disk = $disk;
-            $report->uploaded_original_name = $uploadFileName;
-            $report->save();
+            $report->uploaded_original_name = $downloadFileName;
 
-            if ($oldPath && $oldDisk !== 'nextcloud' && ($oldPath !== $path || $oldDisk !== $disk)) {
-                Storage::disk($oldDisk)->delete($oldPath);
+            try {
+                $report->save();
+            } catch (\Throwable $e) {
+                $this->deleteProjectReportFile($disk, $path, $report->id, 'rollback');
+
+                Log::error('Project report metadata could not be saved after upload.', [
+                    'report_id' => $report->id,
+                    'disk' => $disk,
+                    'path' => $path,
+                    'exception' => $e,
+                ]);
+
+                flash('File belum dapat disimpan karena terjadi kesalahan pada database. File baru sudah dibatalkan; silakan coba kembali.')->error();
+                return back()->withInput();
+            }
+
+            if ($oldPath && ($oldPath !== $path || $oldDisk !== $disk)) {
+                $this->deleteProjectReportFile($oldDisk, $oldPath, $report->id, 'replacement');
             }
         }
 
         flash('File laporan berhasil diupload!')->success();
         return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    private function deleteProjectReportFile($disk, $path, $reportId, $reason)
+    {
+        try {
+            if ($disk === 'nextcloud') {
+                app(\App\Services\NextcloudWebDav::class)->delete($path);
+            } else {
+                Storage::disk($disk)->delete($path);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Project report file cleanup failed.', [
+                'report_id' => $reportId,
+                'disk' => $disk,
+                'path' => $path,
+                'reason' => $reason,
+                'exception' => $e,
+            ]);
+        }
     }
 
     public function reportDownload(ProjectReport $report)

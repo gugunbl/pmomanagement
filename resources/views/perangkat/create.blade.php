@@ -1,4 +1,8 @@
 @extends('layouts.app')
+@section('body_class', 'perangkat-page')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/perangkat.css') }}?v={{ @filemtime(public_path('assets/css/perangkat.css')) ?: '1' }}">
+@endpush
 @push('pg_btn')
     <a href="{{route('perangkat.index')}}" class="btn btn-sm btn-neutral">Data Semua Perangkat</a>
 <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css">
@@ -6,9 +10,12 @@
 -->
 @endpush
 @section('content')
+<div class="device-workspace">
+    @include('perangkat._workspace_nav', ['activeDevicePage' => 'create'])
     <div class="row">
         <div class="col-md-12">
-            <div class="card mb-5">
+            <div class="card mb-5 device-panel device-form-card">
+                <div class="device-page-header"><div class="device-page-heading"><span class="device-page-heading__icon"><i class="fas fa-plus"></i></span><div><h2>Tambah Perangkat</h2><p>Isi informasi umum, lalu lengkapi detail setiap unit dan serial number.</p></div></div></div>
                 <div class="card-body">
                     {!! Form::open(['route' => 'perangkat.store','method' => 'POST', 'files' => true]) !!}
 
@@ -17,13 +24,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group font-weight-bold border-left border-primary pl-3">
-                                    {{ Form::label('id_project', '1. Select Project', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('id_project', '1. Pilih Project', ['class' => 'form-control-label']) }}
                                     {{ Form::select('id_project',['' => ''] + $projectes->toArray(),null,['class'=> 'form-control select2', 'data-placeholder' => 'Ketik nama project...']) }}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group font-weight-bold border-left border-primary pl-3">
-                                    {{ Form::label('jenis', '2. Select Jenis Perangkat', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('jenis', '2. Pilih Jenis Perangkat', ['class' => 'form-control-label']) }}
                                     {{ Form::select('jenis',['' => ''] + $jenisperangkates->toArray(),null,['class'=> 'form-control select2', 'data-placeholder' => 'Ketik jenis perangkat...']) }}
                                 </div>
                             </div>
@@ -50,7 +57,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    {{ Form::label('qty', 'Quantity (Jumlah Unit)', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('qty', 'Jumlah Unit', ['class' => 'form-control-label']) }}
                                     {{ Form::number('qty', 1, ['class' => 'form-control', 'id' => 'qty_input', 'min' => 1]) }}
                                 </div>
                             </div>
@@ -71,7 +78,7 @@
                                 </div>
                             </div>
 -->
-                            <div class="col-md-12">
+                        <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="form-control-label">Foto Perangkat (Max 3)</label>
@@ -189,7 +196,7 @@
                             </table>
                         </div>
 
-                        <div class="text-right">
+                        <div class="text-right device-form-footer">
                             {{ Form::submit('Simpan Unit-Unit Perangkat', ['class'=> 'btn btn-primary btn-lg px-5 shadow']) }}
                         </div>
                         {!! Form::close() !!}
@@ -197,6 +204,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 

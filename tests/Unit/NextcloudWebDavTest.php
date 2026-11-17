@@ -55,6 +55,19 @@ class NextcloudWebDavTest extends TestCase
         $this->assertNull($report->uploadFilename('2026-11-12'));
     }
 
+    public function test_storage_filename_is_short_unique_and_does_not_contain_project_name()
+    {
+        $report = $this->makeReport(
+            '2024_BBRI_SAP_BRIFIRST',
+            str_repeat('Nama project yang sangat panjang ', 10)
+        );
+
+        $fileName = $report->storageFilename('2026-11-17 17:27:16', 'A1-B2_C3');
+
+        $this->assertSame('report-42-20261117172716-a1b2c3.pdf', $fileName);
+        $this->assertLessThan(100, strlen($fileName));
+    }
+
     public function test_upload_uses_basic_auth_and_encodes_path_segments()
     {
         $this->configureNextcloud();
@@ -102,13 +115,28 @@ class NextcloudWebDavTest extends TestCase
         $this->assertTrue($handlerClosedStream);
     }
 
-    public function test_report_path_rejects_folder_names_with_spaces()
+    public function test_delete_uses_webdav_delete_request()
+    {
+        $this->configureNextcloud();
+        $history = [];
+        $service = new NextcloudWebDav($this->client([new Response(204)], $history));
+
+        $service->delete('IT PMO/Project/2025_VDI_Phase2/report-42.pdf');
+
+        $this->assertSame('DELETE', $history[0]['request']->getMethod());
+        $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2025_VDI_Phase2/report-42.pdf',
+            (string) $history[0]['request']->getUri()
+        );
+    }
+
+    public function test_report_path_rejects_folder_names_with_path_separators()
     {
         $this->configureNextcloud();
         $service = new NextcloudWebDav($this->client([new Response(201)]));
 
         $this->expectException(NextcloudWebDavException::class);
-        $service->reportPath($this->makeReport('2025 VDI Phase2'));
+        $service->reportPath($this->makeReport('2025/VDI_Phase2'));
     }
 
     private function configureNextcloud()

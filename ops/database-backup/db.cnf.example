@@ -1,0 +1,7 @@
+[client]
+protocol=TCP
+host=127.0.0.1
+port=3306
+user=assetmgt_wh
+password=PASSWORD_DATABASE
+

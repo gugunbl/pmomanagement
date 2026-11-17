@@ -12,7 +12,7 @@
             </a>
             <div class="ml-auto">
                 <!-- Sidenav toggler -->
-                <button type="button" class="sidenav-toggler app-sidenav-toggle d-none d-xl-block" data-action="sidenav-unpin" data-target="#sidenav-main" aria-label="Ciutkan sidebar" aria-controls="sidenav-main" aria-expanded="true">
+                <button type="button" class="sidenav-toggler app-sidenav-toggle d-none d-xl-block" data-sidebar-toggle aria-label="Ciutkan sidebar" aria-controls="sidenav-main" aria-expanded="true">
                     <div class="sidenav-toggler-inner">
                         <i class="sidenav-toggler-line"></i>
                         <i class="sidenav-toggler-line"></i>

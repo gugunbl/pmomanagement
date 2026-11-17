@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+@section('body_class', 'perangkat-page')
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/perangkat.css') }}?v={{ @filemtime(public_path('assets/css/perangkat.css')) ?: '1' }}">
+@endpush
+
 @push('pg_btn')
     @can('create-perangkat')
         <a href="{{ route('pergantian.index') }}" class="btn btn-sm btn-neutral"><i class="fas fa-exchange-alt mr-1"></i> Riwayat Pergantian</a>
@@ -9,16 +15,23 @@
 
 @section('content')
 @php($selectedProjects = (array) request('id_project', []))
-<section class="card app-panel mb-5">
-    <div class="app-panel-header">
-        <div>
-            <h2>Semua Perangkat</h2>
-            <p>Inventaris perangkat, lokasi, status, dan masa garansi.</p>
+<div class="device-workspace">
+@include('perangkat._workspace_nav', ['activeDevicePage' => 'inventory'])
+<section class="card device-panel mb-5">
+    <div class="device-page-header">
+        <div class="device-page-heading">
+            <span class="device-page-heading__icon"><i class="fas fa-server"></i></span>
+            <div><h2>Inventaris Perangkat</h2><p>Temukan perangkat, lokasi, status, dan masa garansi dalam satu tampilan.</p></div>
         </div>
-        <span class="badge badge-light">{{ $perangkats->total() }} data</span>
+        <div class="device-page-actions">
+            <span class="badge badge-light px-3 py-2">{{ $perangkats->total() }} perangkat</span>
+            @can('create-perangkat')
+                <a href="{{ route('perangkat.create') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus mr-1"></i> Tambah perangkat</a>
+            @endcan
+        </div>
     </div>
 
-    <form action="{{ route('perangkat.index') }}" method="GET" id="filterForm" class="app-filter-bar asset-filter">
+    <form action="{{ route('perangkat.index') }}" method="GET" id="filterForm" class="app-filter-bar asset-filter device-filter">
         <div class="app-filter-field">
             <label for="search_input">Cari Perangkat</label>
             <input id="search_input" name="search" type="search" class="form-control" value="{{ request('search') }}" placeholder="Serial number, merk, atau tipe">
@@ -40,8 +53,8 @@
         </div>
     </form>
 
-    <div class="table-responsive">
-        <table class="table responsive-data-table">
+    <div class="table-responsive device-table-wrap">
+        <table class="table responsive-data-table device-table">
             <thead>
                 <tr>
                     <th>Project / Perangkat</th>
@@ -109,6 +122,7 @@
         {{ $perangkats->withQueryString()->links() }}
     </div>
 </section>
+</div>
 @endsection
 
 @push('styles')

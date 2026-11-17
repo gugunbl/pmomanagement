@@ -92,6 +92,11 @@ class NextcloudWebDav
         return $this->request('GET', $remotePath, ['stream' => true]);
     }
 
+    public function delete($remotePath)
+    {
+        return $this->request('DELETE', $remotePath);
+    }
+
     private function request($method, $remotePath, array $options = [])
     {
         $url = $this->urlForPath($remotePath);

@@ -1,0 +1,5 @@
+DB_NAME='sk_pro'
+NEXTCLOUD_DESTINATION_URL='https://cloud.idsolusi.com/remote.php/dav/files/USERNAME_NEXTCLOUD/Documents'
+LOCAL_RETENTION_DAYS=14
+REMOTE_RETENTION_DAYS=30
+

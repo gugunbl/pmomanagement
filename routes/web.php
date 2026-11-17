@@ -70,6 +70,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/project/maintenance', 'ProjectController@maintenance')
         ->name('project.maintenance');
 
+    Route::get('/project/maintenance/{project}/edit', 'ProjectController@edit')
+        ->name('project.maintenance.edit');
+
     Route::get('/project/maintenance/preview-reminder', 'ProjectController@previewMaintenanceReminder')
         ->name('project.maintenance.preview-reminder');
 

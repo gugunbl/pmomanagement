@@ -24,29 +24,48 @@
     </section>
 
     <form id="report-monitoring-filters" method="GET" action="{{ route('project.report.monitoring') }}" class="monitor-filter-panel">
-        <div class="monitor-filter-field">
-            <label for="report-monitoring-customer">Customer</label>
-            <select id="report-monitoring-customer" name="customer" class="form-control monitor-filter-select">
-                <option value="">Semua customer</option>
-                @foreach($customerOptions as $customerOption)
-                    <option value="{{ $customerOption }}" {{ $selectedCustomer === $customerOption ? 'selected' : '' }}>{{ $customerOption }}</option>
-                @endforeach
-            </select>
-            <small>Pilih customer untuk menampilkan project terkait.</small>
+        <div class="monitor-filter-heading">
+            <div class="monitor-filter-heading-copy">
+                <span class="monitor-filter-icon"><i class="fas fa-sliders-h"></i></span>
+                <div>
+                    <h3>Filter laporan</h3>
+                    <p>Pilih customer terlebih dahulu, kemudian persempit hasil berdasarkan project.</p>
+                </div>
+            </div>
+            <div class="monitor-filter-heading-status">
+                @if($selectedCustomer !== null || $selectedProjectId !== null)
+                    <span class="monitor-filter-active"><i class="fas fa-check-circle"></i> Filter aktif</span>
+                @else
+                    <span class="monitor-filter-auto"><i class="fas fa-bolt"></i> Pilihan diterapkan otomatis</span>
+                @endif
+            </div>
         </div>
-        <div class="monitor-filter-field">
-            <label for="report-monitoring-project">Project</label>
-            <select id="report-monitoring-project" name="project" class="form-control monitor-filter-select" {{ $selectedCustomer === null ? 'disabled' : '' }}>
-                <option value="">{{ $selectedCustomer === null ? 'Pilih customer terlebih dahulu' : 'Semua project' }}</option>
-                @foreach($projectOptions as $projectOption)
-                    <option value="{{ $projectOption->id_project }}" {{ (string) $selectedProjectId === (string) $projectOption->id_project ? 'selected' : '' }}>{{ $projectOption->nama_project }}</option>
-                @endforeach
-            </select>
-            <small>Project dapat dicari berdasarkan nama.</small>
-        </div>
-        <div class="monitor-filter-actions">
-            <button id="report-monitoring-apply" type="submit" class="btn btn-primary"><i class="fas fa-filter mr-1"></i> Terapkan</button>
-            <a id="report-monitoring-reset" href="{{ route('project.report.monitoring') }}" class="btn btn-outline-secondary">Reset</a>
+
+        <div class="monitor-filter-grid">
+            <div class="monitor-filter-field">
+                <label for="report-monitoring-customer"><span>1</span> Customer</label>
+                <select id="report-monitoring-customer" name="customer" class="form-control monitor-filter-select">
+                    <option value="">Semua customer</option>
+                    @foreach($customerOptions as $customerOption)
+                        <option value="{{ $customerOption }}" {{ $selectedCustomer === $customerOption ? 'selected' : '' }}>{{ $customerOption }}</option>
+                    @endforeach
+                </select>
+                <small><i class="fas fa-info-circle"></i> Tampilkan semua atau fokus pada satu customer.</small>
+            </div>
+            <div class="monitor-filter-field {{ $selectedCustomer === null ? 'is-disabled' : '' }}">
+                <label for="report-monitoring-project"><span>2</span> Project</label>
+                <select id="report-monitoring-project" name="project" class="form-control monitor-filter-select" {{ $selectedCustomer === null ? 'disabled' : '' }}>
+                    <option value="">{{ $selectedCustomer === null ? 'Pilih customer terlebih dahulu' : 'Semua project' }}</option>
+                    @foreach($projectOptions as $projectOption)
+                        <option value="{{ $projectOption->id_project }}" {{ (string) $selectedProjectId === (string) $projectOption->id_project ? 'selected' : '' }}>{{ $projectOption->nama_project }}</option>
+                    @endforeach
+                </select>
+                <small><i class="fas {{ $selectedCustomer === null ? 'fa-lock' : 'fa-search' }}"></i> {{ $selectedCustomer === null ? 'Aktif setelah customer dipilih.' : 'Ketik untuk mencari nama project.' }}</small>
+            </div>
+            <div class="monitor-filter-actions">
+                <button id="report-monitoring-apply" type="submit" class="btn btn-primary"><i class="fas fa-filter"></i><span>Terapkan filter</span></button>
+                <a id="report-monitoring-reset" href="{{ route('project.report.monitoring') }}" class="btn btn-outline-secondary"><i class="fas fa-undo-alt"></i><span>Reset</span></a>
+            </div>
         </div>
     </form>
 

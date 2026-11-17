@@ -1,11 +1,18 @@
 @extends('layouts.app')
+@section('body_class', 'perangkat-page')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/perangkat.css') }}?v={{ @filemtime(public_path('assets/css/perangkat.css')) ?: '1' }}">
+@endpush
 @push('pg_btn')
     <a href="{{ route('perangkat.summary') }}" class="btn btn-sm btn-neutral">Kembali ke Summary</a>
 @endpush
 @section('content')
+<div class="device-workspace">
+    @include('perangkat._workspace_nav', ['activeDevicePage' => 'summary'])
     <div class="row">
         <div class="col-md-12">
-            <div class="card mb-5">
+            <div class="card mb-5 device-panel device-form-card">
+                <div class="device-page-header"><div class="device-page-heading"><span class="device-page-heading__icon"><i class="fas fa-layer-group"></i></span><div><h2>Detail Kelompok Perangkat</h2><p>Kelola informasi umum dan unit perangkat dalam satu workspace.</p></div></div></div>
                 <div class="card-body">
                     {!! Form::open(['route' => 'perangkat.view-detail-summary-update','method' => 'POST', 'files' => true]) !!}
                     @csrf
@@ -14,7 +21,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="heading-small text-muted mb-0">Informasi Perangkat</h6>
                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="collapse" data-target="#collapseDeviceInfo" aria-expanded="false" aria-controls="collapseDeviceInfo">
-                            <i class="fas fa-arrows-alt-v mr-1"></i> Collapse/Uncollapse Info
+                            <i class="fas fa-arrows-alt-v mr-1"></i> Tampilkan / Sembunyikan Info
                         </button>
                     </div>
 
@@ -29,7 +36,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group font-weight-bold border-left border-primary pl-3">
-                                    {{ Form::label('jenis', 'Select Jenis Perangkat', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('jenis', 'Pilih Jenis Perangkat', ['class' => 'form-control-label']) }}
                                     {{ Form::select('jenis',['' => ''] + $jenisperangkates->toArray(), $basePerangkat ? $basePerangkat->jenis : null, ['class'=> 'form-control select2', 'data-placeholder' => 'Ketik jenis perangkat...']) }}
                                 </div>
                             </div>
@@ -181,7 +188,7 @@
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between device-form-footer">
                         <a href="{{ route('perangkat.summary') }}" class="btn btn-secondary btn-lg px-5 shadow">Batal</a>
                         {{ Form::submit('Update Unit-Unit Perangkat', ['class'=> 'btn btn-primary btn-lg px-5 shadow']) }}
                     </div>
@@ -190,6 +197,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('styles')

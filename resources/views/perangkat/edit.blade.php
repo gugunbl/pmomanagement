@@ -1,11 +1,18 @@
 @extends('layouts.app')
+@section('body_class', 'perangkat-page')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/perangkat.css') }}?v={{ @filemtime(public_path('assets/css/perangkat.css')) ?: '1' }}">
+@endpush
 @push('pg_btn')
     <a href="{{route('perangkat.index')}}" class="btn btn-sm btn-neutral">Data Semua Perangkat</a>
 @endpush
 @section('content')
+<div class="device-workspace">
+    @include('perangkat._workspace_nav', ['activeDevicePage' => 'inventory'])
     <div class="row">
         <div class="col-md-12">
-            <div class="card mb-5">
+            <div class="card mb-5 device-panel device-form-card">
+                <div class="device-page-header"><div class="device-page-heading"><span class="device-page-heading__icon"><i class="fas fa-edit"></i></span><div><h2>Edit Perangkat</h2><p>Perbarui identitas, penempatan, warranty, dan dokumentasi perangkat.</p></div></div></div>
                 <div class="card-body">
                     {!! Form::model($perangkat, ['route' => ['perangkat.update', $perangkat->id_perangkat], 'method' => 'PUT', 'files' => true]) !!}
                     @csrf
@@ -22,13 +29,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group font-weight-bold border-left border-primary pl-3">
-                                    {{ Form::label('id_project', '1. Select Project', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('id_project', '1. Pilih Project', ['class' => 'form-control-label']) }}
                                     {{ Form::select('id_project', ['' => ''] + $projectes->toArray(), null, ['class'=> 'form-control select2', 'data-placeholder' => 'Ketik nama project...']) }}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group font-weight-bold border-left border-primary pl-3">
-                                    {{ Form::label('jenis', '2. Select Jenis Perangkat', ['class' => 'form-control-label']) }}
+                                    {{ Form::label('jenis', '2. Pilih Jenis Perangkat', ['class' => 'form-control-label']) }}
                                     {{ Form::select('jenis', ['' => ''] + $jenisperangkates->toArray(), null, ['class'=> 'form-control select2', 'data-placeholder' => 'Ketik jenis perangkat...']) }}
                                 </div>
                             </div>
@@ -196,7 +203,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-5 py-4 border-top text-right">
+                    <div class="mt-5 text-right device-form-footer">
                         <a href="{{ route('perangkat.show', $perangkat->id_perangkat) }}" class="btn btn-secondary px-5 mr-3">Batal</a>
                         {{ Form::submit('Simpan Perubahan Perangkat', ['class'=> 'btn btn-primary px-5 shadow-lg btn-lg']) }}
                     </div>
@@ -205,6 +212,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('styles')

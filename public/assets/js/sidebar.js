@@ -3,20 +3,17 @@
 
     var body = document.body;
     var sidebar = document.getElementById('sidenav-main');
+    var toggle = document.querySelector('[data-sidebar-toggle]');
 
     if (!body || !sidebar) {
         return;
     }
 
     var topLinks = sidebar.querySelectorAll('.navbar-nav > .nav-item > .nav-link');
-    var toggles = document.querySelectorAll('[data-action="sidenav-pin"], [data-action="sidenav-unpin"]');
+    var expanded = true;
 
-    /* One-time migration: introduce the redesigned sidebar in its most useful state. */
-    if (window.innerWidth >= 1200 && window.Cookies && Cookies.get('sidebar-ui-version') !== '2') {
-        body.classList.remove('g-sidenav-hidden', 'g-sidenav-hide');
-        body.classList.add('g-sidenav-show', 'g-sidenav-pinned');
-        Cookies.set('sidenav-state', 'pinned');
-        Cookies.set('sidebar-ui-version', '2');
+    if (window.jQuery) {
+        window.jQuery(sidebar).off('mouseenter mouseleave');
     }
 
     Array.prototype.forEach.call(topLinks, function (link) {
@@ -24,25 +21,37 @@
 
         if (label) {
             link.setAttribute('data-sidebar-label', label.textContent.trim());
+            link.setAttribute('aria-label', label.textContent.trim());
         }
     });
 
-    function sidebarIsExpanded() {
-        return body.classList.contains('g-sidenav-pinned') || body.classList.contains('g-sidenav-show');
+    function readSavedState() {
+        if (!window.Cookies) {
+            return true;
+        }
+
+        var saved = Cookies.get('app-sidebar-expanded');
+
+        if (saved === 'false') {
+            return false;
+        }
+
+        if (saved === 'true') {
+            return true;
+        }
+
+        return Cookies.get('sidenav-state') !== 'unpinned';
     }
 
     function syncAccessibility() {
-        var expanded = sidebarIsExpanded();
-
         sidebar.setAttribute('data-expanded', expanded ? 'true' : 'false');
+
         Array.prototype.forEach.call(topLinks, function (link) {
             var label = link.getAttribute('data-sidebar-label');
 
             if (!label) {
                 return;
             }
-
-            link.setAttribute('aria-label', label);
 
             if (expanded) {
                 link.removeAttribute('title');
@@ -51,35 +60,63 @@
             }
         });
 
-        Array.prototype.forEach.call(toggles, function (toggle) {
+        if (toggle) {
+            toggle.classList.toggle('active', expanded);
             toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             toggle.setAttribute('aria-label', expanded ? 'Ciutkan sidebar' : 'Buka sidebar');
             toggle.setAttribute('title', expanded ? 'Ciutkan sidebar' : 'Buka menu utama');
+        }
+    }
+
+    function applyState(nextExpanded, persist) {
+        expanded = Boolean(nextExpanded);
+
+        if (window.innerWidth >= 1200) {
+            body.classList.toggle('app-sidenav-expanded', expanded);
+
+            if (expanded) {
+                body.classList.remove('g-sidenav-hidden', 'g-sidenav-hide');
+                body.classList.add('g-sidenav-show', 'g-sidenav-pinned');
+            } else {
+                body.classList.remove('g-sidenav-show', 'g-sidenav-pinned', 'g-sidenav-hide');
+                body.classList.add('g-sidenav-hidden');
+                body.querySelectorAll('.backdrop').forEach(function (backdrop) {
+                    backdrop.remove();
+                });
+            }
+        }
+
+        if (persist && window.Cookies) {
+            Cookies.set('app-sidebar-expanded', expanded ? 'true' : 'false');
+            Cookies.set('sidenav-state', expanded ? 'pinned' : 'unpinned');
+        }
+
+        syncAccessibility();
+    }
+
+    if (toggle) {
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            applyState(!expanded, true);
         });
     }
 
-    sidebar.addEventListener('focusin', function () {
-        if (window.innerWidth >= 1200 && !body.classList.contains('g-sidenav-pinned')) {
-            body.classList.remove('g-sidenav-hide', 'g-sidenav-hidden');
-            body.classList.add('g-sidenav-show');
-            syncAccessibility();
-        }
-    });
+    Array.prototype.forEach.call(topLinks, function (link) {
+        link.addEventListener('click', function (event) {
+            if (window.innerWidth < 1200 || expanded || link.getAttribute('data-toggle') !== 'collapse') {
+                return;
+            }
 
-    sidebar.addEventListener('focusout', function (event) {
-        if (window.innerWidth >= 1200 && !body.classList.contains('g-sidenav-pinned') && !sidebar.contains(event.relatedTarget)) {
-            body.classList.remove('g-sidenav-show');
-            body.classList.add('g-sidenav-hidden');
-            syncAccessibility();
-        }
-    });
+            event.preventDefault();
+            applyState(true, true);
 
-    if (window.MutationObserver) {
-        new MutationObserver(syncAccessibility).observe(body, {
-            attributes: true,
-            attributeFilter: ['class']
+            if (window.jQuery && link.getAttribute('href')) {
+                window.jQuery(link.getAttribute('href')).collapse('show');
+            }
         });
-    }
+    });
 
-    syncAccessibility();
+    expanded = readSavedState();
+    applyState(expanded, false);
 })();

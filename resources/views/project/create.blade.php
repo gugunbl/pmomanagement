@@ -1,50 +1,56 @@
 @extends('layouts.app')
 
+@section('body_class', 'project-workspace-body')
+
 @section('content')
-
-<div class="card">
-
-    <div class="card-header p-0">
-        <ul class="nav nav-pills nav-fill" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" data-toggle="pill" href="#info">
-                    Informasi Project
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="pill" href="#top-implementasi">
-                    TOP Implementasi
-                </a>
-            </li>
-        </ul>
+<div class="project-workspace">
+    <div class="project-intro-card">
+        <div class="project-intro-icon" aria-hidden="true"><i class="fas fa-folder-plus"></i></div>
+        <div class="project-intro-copy">
+            <span class="project-kicker">Project workspace</span>
+            <h2>Buat project baru</h2>
+            <p>Lengkapi informasi utama dan termin implementasi. Data dapat diperbarui kembali setelah project dibuat.</p>
+        </div>
+        <div class="project-intro-status"><i class="fas fa-shield-alt"></i> Draft baru</div>
     </div>
 
-    {!! Form::model($project, ['route' => 'project.store']) !!}
-
-    <div class="card-body">
-        <div class="tab-content">
-
-            <div class="tab-pane fade show active" id="info">
-                @include('project.partials.form-project-info')
-            </div>
-
-            <div class="tab-pane fade" id="top-implementasi">
-                @include('project.partials.form-top-implementasi')
-            </div>
-
+    <div class="card project-form-shell">
+        <div class="card-header project-tabs-header">
+            <ul class="nav nav-pills project-step-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="pill" href="#info" role="tab" aria-controls="info" aria-selected="true">
+                        <span class="project-step-number">01</span>
+                        <span><strong>Informasi Project</strong><small>Identitas, periode, dan PIC</small></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="pill" href="#top-implementasi" role="tab" aria-controls="top-implementasi" aria-selected="false">
+                        <span class="project-step-number">02</span>
+                        <span><strong>TOP Implementasi</strong><small>Termin dan status pembayaran</small></span>
+                    </a>
+                </li>
+            </ul>
         </div>
 
-        <div class="text-right mt-4">
-            <button class="btn btn-primary">
-                Simpan Project
-            </button>
+        {!! Form::model($project, ['route' => 'project.store']) !!}
+        <div class="card-body project-form-body">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="info" role="tabpanel">
+                    @include('project.partials.form-project-info')
+                </div>
+                <div class="tab-pane fade" id="top-implementasi" role="tabpanel">
+                    @include('project.partials.form-top-implementasi')
+                </div>
+            </div>
+
+            <div class="project-form-actions">
+                <a href="{{ route('project.index') }}" class="btn project-btn-secondary"><i class="fas fa-arrow-left"></i> Batal</a>
+                <button type="submit" class="btn btn-primary project-btn-primary"><i class="fas fa-save"></i> Simpan Project</button>
+            </div>
         </div>
+        {!! Form::close() !!}
     </div>
-
-    {!! Form::close() !!}
 </div>
-
 @endsection
 
 @push('scripts')
@@ -63,22 +69,10 @@
             }
         }
 
-        $('#status_maintenance').on('change', function() {
-            toggleTipeMaintenance();
-        });
-
-        // Initialize on load
+        $('#status_maintenance').on('change', toggleTipeMaintenance);
         toggleTipeMaintenance();
-
-        // Team Support: Select All / Deselect All
-        $('#btn-select-all-ts').on('click', function(e) {
-            e.preventDefault();
-            $('.ts-checkbox').prop('checked', true);
-        });
-        $('#btn-deselect-all-ts').on('click', function(e) {
-            e.preventDefault();
-            $('.ts-checkbox').prop('checked', false);
-        });
+        $('#btn-select-all-ts').on('click', function(e) { e.preventDefault(); $('.ts-checkbox').prop('checked', true); });
+        $('#btn-deselect-all-ts').on('click', function(e) { e.preventDefault(); $('.ts-checkbox').prop('checked', false); });
     });
 </script>
 @endpush

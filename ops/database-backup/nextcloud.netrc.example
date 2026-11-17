@@ -1,0 +1,3 @@
+machine cloud.idsolusi.com
+login USERNAME_NEXTCLOUD
+password APP_PASSWORD_NEXTCLOUD
