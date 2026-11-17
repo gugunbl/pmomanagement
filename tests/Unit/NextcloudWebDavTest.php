@@ -55,17 +55,23 @@ class NextcloudWebDavTest extends TestCase
         $this->assertNull($report->uploadFilename('2026-11-12'));
     }
 
-    public function test_storage_filename_is_short_unique_and_does_not_contain_project_name()
+    public function test_storage_filename_keeps_legacy_format_and_limits_project_name()
     {
         $report = $this->makeReport(
             '2024_BBRI_SAP_BRIFIRST',
-            str_repeat('Nama project yang sangat panjang ', 10)
+            str_repeat('Project Sangat Panjang ', 10)
         );
+        $report->report_ke = 3;
+        $report->period_start = '2026-01-01';
+        $report->period_end = '2026-01-31';
 
-        $fileName = $report->storageFilename('2026-11-17 17:27:16', 'A1-B2_C3');
+        $fileName = $report->storageFilename('2026-11-17 17:27:16');
+        $projectName = 'Project Sangat Panjang Project Sangat Panjang Project Sangat Panjang';
+        $expected = '20261117_Laporan_PM_' . $projectName . '_3_20260101_20260131.pdf';
 
-        $this->assertSame('report-42-20261117172716-a1b2c3.pdf', $fileName);
-        $this->assertLessThan(100, strlen($fileName));
+        $this->assertSame($expected, $fileName);
+        $this->assertLessThanOrEqual(70, mb_strlen($projectName, 'UTF-8'));
+        $this->assertLessThan(255, strlen($fileName));
     }
 
     public function test_upload_uses_basic_auth_and_encodes_path_segments()

@@ -921,7 +921,10 @@ public function update(Request $request, Project $project)
             try {
                 $report->save();
             } catch (\Throwable $e) {
-                $this->deleteProjectReportFile($disk, $path, $report->id, 'rollback');
+                $uploadedToNewPath = !$oldPath || $oldPath !== $path || $oldDisk !== $disk;
+                if ($uploadedToNewPath) {
+                    $this->deleteProjectReportFile($disk, $path, $report->id, 'rollback');
+                }
 
                 Log::error('Project report metadata could not be saved after upload.', [
                     'report_id' => $report->id,
@@ -930,7 +933,10 @@ public function update(Request $request, Project $project)
                     'exception' => $e,
                 ]);
 
-                flash('File belum dapat disimpan karena terjadi kesalahan pada database. File baru sudah dibatalkan; silakan coba kembali.')->error();
+                $message = $uploadedToNewPath
+                    ? 'File belum dapat disimpan karena terjadi kesalahan pada database. File baru sudah dibatalkan; silakan coba kembali.'
+                    : 'Metadata laporan belum dapat diperbarui karena terjadi kesalahan pada database; silakan coba kembali.';
+                flash($message)->error();
                 return back()->withInput();
             }
 

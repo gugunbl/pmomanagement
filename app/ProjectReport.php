@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProjectReport extends Model
 {
+    private const UPLOAD_PROJECT_NAME_MAX_CHARACTERS = 70;
+    private const UPLOAD_PROJECT_NAME_MAX_BYTES = 120;
+
     protected $table = 'project_reports';
 
     protected $fillable = [
@@ -39,7 +42,22 @@ class ProjectReport extends Model
         $projectName = preg_replace('/[\x00-\x1F\x7F]/u', '', $projectName);
         $projectName = preg_replace('/\s+/u', ' ', trim($projectName));
         $projectName = trim($projectName, " .");
-        $projectName = $projectName === '' ? 'Project' : mb_substr($projectName, 0, 180, 'UTF-8');
+        if ($projectName === '') {
+            $projectName = 'Project';
+        } else {
+            $fullProjectName = $projectName;
+            $projectName = mb_substr($projectName, 0, self::UPLOAD_PROJECT_NAME_MAX_CHARACTERS, 'UTF-8');
+
+            if (mb_strlen($fullProjectName, 'UTF-8') > self::UPLOAD_PROJECT_NAME_MAX_CHARACTERS) {
+                $lastSpace = mb_strrpos($projectName, ' ', 0, 'UTF-8');
+                if ($lastSpace !== false && $lastSpace >= 50) {
+                    $projectName = mb_substr($projectName, 0, $lastSpace, 'UTF-8');
+                }
+            }
+
+            $projectName = mb_strcut($projectName, 0, self::UPLOAD_PROJECT_NAME_MAX_BYTES, 'UTF-8');
+            $projectName = rtrim($projectName, " .");
+        }
 
         return implode('_', [
             Carbon::parse($uploadDate ?: Carbon::now())->format('Ymd'),
@@ -53,23 +71,12 @@ class ProjectReport extends Model
     }
 
     /**
-     * Build a short, unique filename for the physical storage object.
-     *
-     * The descriptive report name remains available through uploadFilename()
-     * and is stored separately as uploaded_original_name.
+     * Keep the physical object name descriptive while applying a safe project
+     * name limit for Nextcloud and other filesystems.
      */
-    public function storageFilename($uploadDate = null, $uniqueToken = null)
+    public function storageFilename($uploadDate = null)
     {
-        $timestamp = Carbon::parse($uploadDate ?: Carbon::now())->format('YmdHis');
-        $token = $uniqueToken ?: bin2hex(random_bytes(8));
-        $token = preg_replace('/[^A-Za-z0-9]/', '', (string) $token);
-        $token = substr($token, 0, 16);
-
-        if ($token === '') {
-            $token = bin2hex(random_bytes(8));
-        }
-
-        return 'report-' . $this->getKey() . '-' . $timestamp . '-' . strtolower($token) . '.pdf';
+        return $this->uploadFilename($uploadDate);
     }
 
     public function comments()
