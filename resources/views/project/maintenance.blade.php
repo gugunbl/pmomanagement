@@ -15,7 +15,7 @@
             <h2 id="maintenance-title">Project Maintenance</h2>
             <p>Pantau masa kontrak, progres berita acara, dan penanggung jawab project secara ringkas.</p>
         </div>
-        <a href="{{ route('project.create') }}" class="btn maintenance-create-btn"><i class="fas fa-plus"></i> Project Baru</a>
+        <a href="{{ route('project.create') }}" class="btn project-create-btn"><i class="fas fa-plus"></i> Project Baru</a>
     </section>
 
     <section class="maintenance-metrics" aria-label="Ringkasan maintenance">

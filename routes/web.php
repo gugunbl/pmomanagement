@@ -56,6 +56,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/profile/{user}', 'UserController@profile')->name('profile.edit');
     Route::post('/profile/{user}', 'UserController@profileUpdate')->name('profile.update');
     Route::get('/dashboard-utilisasi', 'UtilizationDashboardController@index')->name('dashboard.utilisasi');
+    Route::get('/dashboard-utilisasi/manual', 'UtilizationDashboardController@createManual')->name('dashboard.utilisasi.manual');
     Route::post('/dashboard-utilisasi/import', 'UtilizationDashboardController@import')->name('dashboard.utilisasi.import');
     Route::get('/dashboard-utilisasi/import-status', 'UtilizationDashboardController@importStatuses')->name('dashboard.utilisasi.import-status');
     Route::post('/dashboard-utilisasi/import-status/{id}/read', 'UtilizationDashboardController@markImportStatusRead')->name('dashboard.utilisasi.import-status.read');
@@ -163,6 +164,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::get('/cases/get-sn/{id_project}', 'CaseController@getSerialNumbers')->name('cases.get-sn');
     Route::post('/cases/{case}/comments', 'CaseController@storeComment')->name('cases.comments.store');
     Route::get('/cases/{case}/relocation-ba', 'CaseController@downloadRelocationBa')->name('cases.relocation-ba.download');
+    Route::get('/cases/{case}/documents/{document}', 'CaseController@document')->name('cases.documents.show');
     Route::resource('cases', 'CaseController');
     Route::resource('interference-ratio', 'InterferenceRatioController');
 

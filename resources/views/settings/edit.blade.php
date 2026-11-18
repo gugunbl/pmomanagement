@@ -85,6 +85,16 @@
                                 {{ Form::text('company_currency_symbol', setting('company_currency_symbol'), ['class'=>"form-control"])}}
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ Form::label('utilization_effective_work_hours', 'Jam Kerja Efektif Utilisasi', ['class' => 'form-control-label']) }}
+                                <div class="input-group">
+                                    {{ Form::number('utilization_effective_work_hours', setting('utilization_effective_work_hours', 8), ['class' => 'form-control', 'min' => 1, 'max' => 24, 'step' => '0.5']) }}
+                                    <div class="input-group-append"><span class="input-group-text">jam/hari</span></div>
+                                </div>
+                                <small class="form-text text-muted">Digunakan sebagai dasar perhitungan persentase pada Dashboard Utilisasi.</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

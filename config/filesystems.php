@@ -37,7 +37,9 @@ return [
     'project_report_nextcloud_password' => env('PROJECT_REPORT_NEXTCLOUD_APP_PASSWORD', ''),
     'project_report_nextcloud_root' => env('PROJECT_REPORT_NEXTCLOUD_ROOT', 'IT PMO/Project'),
     'project_report_nextcloud_subdirectory' => env('PROJECT_REPORT_NEXTCLOUD_SUBDIRECTORY', '30_Preventive_Maintenance'),
+    'project_report_nextcloud_document_subdirectory' => env('PROJECT_REPORT_NEXTCLOUD_DOCUMENT_SUBDIRECTORY', '31_Document_Maintenance'),
     'project_report_nextcloud_timeout' => env('PROJECT_REPORT_NEXTCLOUD_TIMEOUT', 120),
+    'case_document_disk' => env('CASE_DOCUMENT_STORAGE_DISK', env('PROJECT_REPORT_STORAGE_DISK', 'public')),
 
     /*
     |--------------------------------------------------------------------------

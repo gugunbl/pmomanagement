@@ -1,24 +1,46 @@
 @extends('layouts.app')
 
+@section('hide_page_header', '1')
+
 @section('content')
+@php
+    $averageUtilization = $reportsForChart->count() ? round($reportsForChart->avg('work_utilization_percentage'), 1) : 0;
+    $totalActivities = $reportsForChart->sum('total_activities');
+    $employeeCount = $reportsForChart->pluck('employee_name')->unique()->count();
+@endphp
+<div class="util-page">
+    <section class="util-hero">
+        <div class="util-hero-main">
+            <div>
+                <span class="util-eyebrow">People Analytics</span>
+                <h1>Dashboard Utilisasi</h1>
+                <p>Pantau produktivitas harian, tren mingguan, dan detail aktivitas tim dalam satu workspace.</p>
+            </div>
+            <div class="util-hero-actions">
+                <a href="{{ route('dashboard.utilisasi.manual') }}" class="util-action util-action-primary"><i class="fas fa-plus"></i> Tambah Manual</a>
+                <button type="button" class="util-action util-action-glass" data-toggle="modal" data-target="#modalImport"><i class="fas fa-file-upload"></i> Import Data</button>
+            </div>
+        </div>
+        <div class="util-kpi-grid">
+            <div class="util-kpi"><span class="util-kpi-icon"><i class="fas fa-chart-line"></i></span><span><small>Rata-rata utilisasi</small><strong>{{ $averageUtilization }}%</strong></span></div>
+            <div class="util-kpi"><span class="util-kpi-icon"><i class="fas fa-users"></i></span><span><small>Karyawan terpantau</small><strong>{{ $employeeCount }}</strong></span></div>
+            <div class="util-kpi"><span class="util-kpi-icon"><i class="fas fa-calendar-check"></i></span><span><small>Laporan periode ini</small><strong>{{ $reportsForChart->count() }}</strong></span></div>
+            <div class="util-kpi"><span class="util-kpi-icon"><i class="fas fa-list-alt"></i></span><span><small>Total aktivitas</small><strong>{{ $totalActivities }}</strong></span></div>
+        </div>
+    </section>
+
 <div class="row">
     <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-header border-0">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="mb-0">Dashboard Utilisasi</h3>
-                    </div>
-                </div>
-            </div>
+        <div class="card shadow util-workspace-card">
             <div class="card-body">
                 <!-- Filter Section -->
-                <form action="{{ route('dashboard.utilisasi') }}" method="GET" class="mb-4">
+                <div class="util-section-heading"><span class="util-section-icon"><i class="fas fa-filter"></i></span><div><h2>Filter laporan</h2><p>Pilih karyawan dan rentang tanggal untuk memperbarui seluruh insight.</p></div></div>
+                <form action="{{ route('dashboard.utilisasi') }}" method="GET" class="util-filter mb-4">
                     <div class="row align-items-end">
                         <div class="col-md-4">
                             <div class="form-group mb-0">
-                                <label class="form-control-label">Employee Name(s)</label>
-                                <select name="employee_name[]" class="form-control select2" multiple data-placeholder="Select Employees">
+                                <label class="form-control-label">Nama karyawan</label>
+                                <select name="employee_name[]" class="form-control select2" multiple data-placeholder="Semua karyawan">
                                     @foreach($employees as $emp)
                                         <option value="{{ $emp }}" {{ is_array(request('employee_name')) && in_array($emp, request('employee_name')) ? 'selected' : '' }}>{{ $emp }}</option>
                                     @endforeach
@@ -27,12 +49,12 @@
                         </div>
                         <div class="col-md-5">
                             <div class="form-group mb-0">
-                                <label class="form-control-label">Report Date Range</label>
+                                <label class="form-control-label">Rentang tanggal laporan</label>
                                 <div class="input-daterange datepicker row align-items-center">
                                     <div class="col">
                                         <input class="form-control" name="start_date" placeholder="Start date" type="date" value="{{ $start_date }}">
                                     </div>
-                                    <div class="col-auto">to</div>
+                                    <div class="col-auto util-date-separator">hingga</div>
                                     <div class="col">
                                         <input class="form-control" name="end_date" placeholder="End date" type="date" value="{{ $end_date }}">
                                     </div>
@@ -40,30 +62,27 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ route('dashboard.utilisasi') }}" class="btn btn-secondary">Reset</a>
-                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalImport">
-                                <i class="fas fa-file-upload mr-1"></i> Upload
-                            </button>
+                            <div class="util-filter-actions">
+                                <button type="submit" class="util-button util-button-primary"><i class="fas fa-search"></i> Terapkan</button>
+                                <a href="{{ route('dashboard.utilisasi') }}" class="util-button util-button-muted">Reset</a>
+                            </div>
                         </div>
                     </div>
                 </form>
 
-                <hr class="my-4">
-
                 <!-- Tabs -->
-                <ul class="nav nav-pills nav-fill flex-column flex-sm-row mb-4" id="tabs-text" role="tablist">
+                <ul class="nav nav-pills nav-fill flex-column flex-sm-row mb-4 util-tabs" id="tabs-text" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link mb-sm-3 mb-md-0 {{ !request('page') ? 'active' : '' }}" id="tabs-dashboard-tab" data-toggle="tab" href="#tabs-dashboard" role="tab" aria-controls="tabs-dashboard" aria-selected="{{ !request('page') ? 'true' : 'false' }}">Dashboard Chart Trend Daily</a>
+                        <a class="nav-link mb-sm-3 mb-md-0 {{ !request('page') ? 'active' : '' }}" id="tabs-dashboard-tab" data-toggle="tab" href="#tabs-dashboard" role="tab" aria-controls="tabs-dashboard" aria-selected="{{ !request('page') ? 'true' : 'false' }}"><i class="fas fa-chart-bar mr-1"></i> Tren Harian</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-weekly-tab" data-toggle="tab" href="#tabs-weekly" role="tab" aria-controls="tabs-weekly" aria-selected="false">Dashboard Chart Trend Weekly</a>
+                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-weekly-tab" data-toggle="tab" href="#tabs-weekly" role="tab" aria-controls="tabs-weekly" aria-selected="false"><i class="fas fa-calendar-week mr-1"></i> Tren Mingguan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-highlevel-tab" data-toggle="tab" href="#tabs-highlevel" role="tab" aria-controls="tabs-highlevel" aria-selected="false">High Level Report</a>
+                        <a class="nav-link mb-sm-3 mb-md-0" id="tabs-highlevel-tab" data-toggle="tab" href="#tabs-highlevel" role="tab" aria-controls="tabs-highlevel" aria-selected="false"><i class="fas fa-th-large mr-1"></i> Ringkasan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mb-sm-3 mb-md-0 {{ request('page') ? 'active' : '' }}" id="tabs-detail-tab" data-toggle="tab" href="#tabs-detail" role="tab" aria-controls="tabs-detail" aria-selected="{{ request('page') ? 'true' : 'false' }}">Detail Grid</a>
+                        <a class="nav-link mb-sm-3 mb-md-0 {{ request('page') ? 'active' : '' }}" id="tabs-detail-tab" data-toggle="tab" href="#tabs-detail" role="tab" aria-controls="tabs-detail" aria-selected="{{ request('page') ? 'true' : 'false' }}"><i class="fas fa-list mr-1"></i> Detail Aktivitas</a>
                     </li>
                 </ul>
 
@@ -264,7 +283,12 @@
         </div>
     </div>
 </div>
+</div>
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/utilization-workspace.css') }}?v={{ @filemtime(public_path('assets/css/utilization-workspace.css')) ?: '1' }}">
+@endpush
 
 <!-- Modal Import -->
 <div class="modal fade" id="modalImport" tabindex="-1" role="dialog" aria-labelledby="modalImportLabel" aria-hidden="true">

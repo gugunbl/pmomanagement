@@ -25,6 +25,10 @@ class SettingController extends Controller
     }
 
     public function update(Request $request) {
+        $request->validate([
+            'utilization_effective_work_hours' => ['nullable', 'numeric', 'min:1', 'max:24'],
+        ]);
+
         $data = $request->except(['_token']);
         
         foreach ($data as $key => $value) {

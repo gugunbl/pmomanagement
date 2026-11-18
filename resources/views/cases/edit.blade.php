@@ -277,14 +277,33 @@
 
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">DOKUMENTASI & EVIDENCE</h6>
+                @php
+                    $evidenceDocument = $case->activeDocument(\App\CaseDocument::TYPE_EVIDENCE);
+                    $rcaDocument = $case->activeDocument(\App\CaseDocument::TYPE_RCA);
+                    $mopDocument = $case->activeDocument(\App\CaseDocument::TYPE_MOP);
+                    $failedDocumentUploads = $case->documents->where('status', 'failed')->take(3);
+                @endphp
+                @if($failedDocumentUploads->isNotEmpty())
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle mr-1"></i>Upload terakhir belum berhasil.</strong>
+                        File lama tetap aman dan aktif. Pilih kembali file di bawah untuk mencoba upload ulang.
+                    </div>
+                @endif
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Foto Evidence (PNG, JPG, JPEG)</label>
-                            @if($case->evidence_photo)
+                            @if($evidenceDocument)
+                                <div class="mb-2">
+                                    <a href="{{ route('cases.documents.show', [$case->id_case, $evidenceDocument->id]) }}" target="_blank">
+                                        <img src="{{ route('cases.documents.show', [$case->id_case, $evidenceDocument->id]) }}" class="img-thumbnail" style="height: 100px;">
+                                    </a>
+                                    <small class="d-block text-success"><i class="fas fa-cloud mr-1"></i>Nextcloud · versi {{ $evidenceDocument->version }}</small>
+                                </div>
+                            @elseif($case->evidence_photo)
                                 <div class="mb-2">
                                     <img src="{{ asset('storage/' . $case->evidence_photo) }}" class="img-thumbnail" style="height: 100px;">
-                                    <small class="d-block text-info">Foto saat ini</small>
+                                    <small class="d-block text-info"><i class="fas fa-archive mr-1"></i>Dokumen lama · local storage</small>
                                 </div>
                             @endif
                             <div class="custom-file">
@@ -298,10 +317,16 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File RCA / Document (PDF)</label>
-                            @if($case->rca_file)
+                            @if($rcaDocument)
+                                <div class="mb-2">
+                                    <a href="{{ route('cases.documents.show', [$case->id_case, $rcaDocument->id]) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-cloud mr-1"></i> Lihat RCA · v{{ $rcaDocument->version }}
+                                    </a>
+                                </div>
+                            @elseif($case->rca_file)
                                 <div class="mb-2">
                                     <a href="{{ asset('storage/' . $case->rca_file) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-file-pdf mr-1"></i> Lihat PDF Saat Ini
+                                        <i class="fas fa-archive mr-1"></i> Lihat RCA Lama
                                     </a>
                                 </div>
                             @endif
@@ -316,10 +341,16 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Upload File MOP (PDF)</label>
-                            @if($case->mop_file)
+                            @if($mopDocument)
+                                <div class="mb-2">
+                                    <a href="{{ route('cases.documents.show', [$case->id_case, $mopDocument->id]) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-cloud mr-1"></i> Lihat MOP · v{{ $mopDocument->version }}
+                                    </a>
+                                </div>
+                            @elseif($case->mop_file)
                                 <div class="mb-2">
                                     <a href="{{ asset('storage/' . $case->mop_file) }}" target="_blank" class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-file-pdf mr-1"></i> Lihat MOP Saat Ini
+                                        <i class="fas fa-archive mr-1"></i> Lihat MOP Lama
                                     </a>
                                 </div>
                             @endif

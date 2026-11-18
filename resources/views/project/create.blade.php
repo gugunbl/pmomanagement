@@ -32,7 +32,7 @@
             </ul>
         </div>
 
-        {!! Form::model($project, ['route' => 'project.store']) !!}
+        {!! Form::model($project, ['route' => 'project.store', 'id' => 'project-create-form']) !!}
         <div class="card-body project-form-body">
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="info" role="tabpanel">
@@ -45,10 +45,23 @@
 
             <div class="project-form-actions">
                 <a href="{{ route('project.index') }}" class="btn project-btn-secondary"><i class="fas fa-arrow-left"></i> Batal</a>
-                <button type="submit" class="btn btn-primary project-btn-primary"><i class="fas fa-save"></i> Simpan Project</button>
+                <button type="submit" id="project-save-button" class="btn btn-primary project-btn-primary">
+                    <i class="fas fa-save project-save-icon"></i>
+                    <span class="project-save-label">Simpan Project</span>
+                </button>
             </div>
         </div>
         {!! Form::close() !!}
+    </div>
+</div>
+
+<div id="project-save-loading" class="project-save-loading" role="status" aria-live="assertive" aria-hidden="true">
+    <div class="project-save-loading-card">
+        <span class="project-save-loading-spinner" aria-hidden="true"><i class="fas fa-spinner fa-spin"></i></span>
+        <div>
+            <strong>Menyimpan project…</strong>
+            <p>Data project sedang disimpan dan folder Nextcloud sedang disiapkan. Mohon tunggu.</p>
+        </div>
     </div>
 </div>
 @endsection
@@ -73,6 +86,45 @@
         toggleTipeMaintenance();
         $('#btn-select-all-ts').on('click', function(e) { e.preventDefault(); $('.ts-checkbox').prop('checked', true); });
         $('#btn-deselect-all-ts').on('click', function(e) { e.preventDefault(); $('.ts-checkbox').prop('checked', false); });
+
+        var $projectForm = $('#project-create-form');
+        var $saveButton = $('#project-save-button');
+        var $loadingNotice = $('#project-save-loading');
+
+        $projectForm.on('submit', function(event) {
+            if (this.checkValidity && !this.checkValidity()) {
+                return;
+            }
+
+            if ($projectForm.data('submitting')) {
+                event.preventDefault();
+                return;
+            }
+
+            $projectForm.data('submitting', true);
+            $saveButton
+                .prop('disabled', true)
+                .attr('aria-busy', 'true')
+                .find('.project-save-icon')
+                .removeClass('fa-save')
+                .addClass('fa-spinner fa-spin');
+            $saveButton.find('.project-save-label').text('Menyimpan project…');
+            $loadingNotice.addClass('is-visible').attr('aria-hidden', 'false');
+            $('body').addClass('project-save-in-progress');
+        });
+
+        $(window).on('pageshow', function(event) {
+            if (!event.originalEvent || !event.originalEvent.persisted) {
+                return;
+            }
+
+            $projectForm.removeData('submitting');
+            $saveButton.prop('disabled', false).removeAttr('aria-busy');
+            $saveButton.find('.project-save-icon').removeClass('fa-spinner fa-spin').addClass('fa-save');
+            $saveButton.find('.project-save-label').text('Simpan Project');
+            $loadingNotice.removeClass('is-visible').attr('aria-hidden', 'true');
+            $('body').removeClass('project-save-in-progress');
+        });
     });
 </script>
 @endpush

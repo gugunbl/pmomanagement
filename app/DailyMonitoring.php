@@ -28,11 +28,8 @@ class DailyMonitoring extends Model
         'user_id',
     ];
 
-    protected $dates = [
-        'report_datetime',
-    ];
-
     protected $casts = [
+        'report_datetime' => 'datetime',
         'images' => 'array',
     ];
 

@@ -126,6 +126,16 @@
                         </a>
                     @endcan
                     @can('view-user')
+                        <a href="{{ route('dashboard.utilisasi') }}" class="{{ request()->routeIs('dashboard.utilisasi') ? 'is-active' : '' }}">
+                            <span class="mobile-submenu-icon"><i class="fas fa-chart-bar"></i></span>
+                            <span class="mobile-submenu-copy"><strong>Dashboard Utilisasi</strong><small>Tren produktivitas dan aktivitas harian</small></span>
+                            <i class="fas fa-chevron-right mobile-submenu-arrow"></i>
+                        </a>
+                        <a href="{{ route('dashboard.utilisasi.manual') }}" class="{{ request()->routeIs('dashboard.utilisasi.manual') ? 'is-active' : '' }}">
+                            <span class="mobile-submenu-icon"><i class="fas fa-pen"></i></span>
+                            <span class="mobile-submenu-copy"><strong>Tambah Data Utilisasi</strong><small>Rancangan input aktivitas secara manual</small></span>
+                            <i class="fas fa-chevron-right mobile-submenu-arrow"></i>
+                        </a>
                         <a href="{{ route('users.index') }}" class="{{ request()->is('users*') ? 'is-active' : '' }}">
                             <span class="mobile-submenu-icon"><i class="fas fa-users"></i></span>
                             <span class="mobile-submenu-copy"><strong>Pengguna</strong><small>Kelola user dan akses aplikasi</small></span>

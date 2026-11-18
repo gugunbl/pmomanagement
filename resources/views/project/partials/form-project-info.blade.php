@@ -200,11 +200,14 @@
                 <div class="form-group">
                     {{ Form::label('link_dokumen', 'Folder Project di Nextcloud') }}
                     {{ Form::text('link_dokumen', null, [
-                        'class'=>'form-control',
+                        'class'=>'form-control'.($errors->has('link_dokumen') ? ' is-invalid' : ''),
                         'placeholder'=>'Contoh: 2025_VDI_Phase2'
                     ]) }}
+                    @error('link_dokumen')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                     <small class="form-text text-muted">
-                        Gunakan nama folder persis seperti di Nextcloud. Spasi diperbolehkan; jangan gunakan karakter / atau \\.
+                        Folder project beserta subfolder <strong>30_Preventive_Maintenance</strong> dan <strong>31_Document_Maintenance</strong> akan dibuat otomatis. Spasi diperbolehkan; jangan gunakan karakter / atau \\.
                     </small>
                 </div>
             </div>

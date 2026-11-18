@@ -96,6 +96,68 @@ class NextcloudWebDavTest extends TestCase
         $this->assertSame('Basic ' . base64_encode('pmomaintenance:app-password'), $history[0]['request']->getHeaderLine('Authorization'));
     }
 
+    public function test_ensure_project_folders_creates_project_and_report_directories()
+    {
+        $this->configureNextcloud();
+        $history = [];
+        $service = new NextcloudWebDav($this->client([
+            new Response(404),
+            new Response(201),
+            new Response(404),
+            new Response(201),
+            new Response(404),
+            new Response(201),
+        ], $history));
+
+        $service->ensureProjectFolders('2026_Project Baru');
+
+        $this->assertSame(['PROPFIND', 'MKCOL', 'PROPFIND', 'MKCOL', 'PROPFIND', 'MKCOL'], array_map(function ($item) {
+            return $item['request']->getMethod();
+        }, $history));
+        $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru',
+            (string) $history[1]['request']->getUri()
+        );
+        $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/30_Preventive_Maintenance',
+            (string) $history[3]['request']->getUri()
+        );
+        $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/31_Document_Maintenance',
+            (string) $history[5]['request']->getUri()
+        );
+    }
+
+    public function test_ensure_project_folders_does_not_recreate_existing_directories()
+    {
+        $this->configureNextcloud();
+        $history = [];
+        $service = new NextcloudWebDav($this->client([
+            new Response(207),
+            new Response(207),
+            new Response(207),
+        ], $history));
+
+        $service->ensureProjectFolders('2026_Project_Existing');
+
+        $this->assertSame(['PROPFIND', 'PROPFIND', 'PROPFIND'], array_map(function ($item) {
+            return $item['request']->getMethod();
+        }, $history));
+    }
+
+    public function test_case_document_path_uses_document_maintenance_directory()
+    {
+        $this->configureNextcloud();
+        $project = new Project();
+        $project->link_dokumen = '2026_Project_Baru';
+        $service = new NextcloudWebDav($this->client([new Response(207)]));
+
+        $this->assertSame(
+            'IT PMO/Project/2026_Project_Baru/31_Document_Maintenance/20261118_RCA_case_10.pdf',
+            $service->caseDocumentPath($project, '20261118_RCA_case_10.pdf')
+        );
+    }
+
     public function test_upload_does_not_close_a_stream_that_the_http_handler_already_closed()
     {
         $this->configureNextcloud();
@@ -153,6 +215,7 @@ class NextcloudWebDavTest extends TestCase
             'filesystems.project_report_nextcloud_password' => 'app-password',
             'filesystems.project_report_nextcloud_root' => 'IT PMO/Project',
             'filesystems.project_report_nextcloud_subdirectory' => '30_Preventive_Maintenance',
+            'filesystems.project_report_nextcloud_document_subdirectory' => '31_Document_Maintenance',
             'filesystems.project_report_nextcloud_timeout' => 10,
         ]);
     }

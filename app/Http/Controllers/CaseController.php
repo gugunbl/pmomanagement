@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\MCase;
+use App\CaseDocument;
 use App\Project;
 use App\Perangkat;
 use App\User;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\CaseDocumentStorage;
+use App\Services\NextcloudWebDav;
+use App\Services\NextcloudWebDavException;
 
 class CaseController extends Controller
 {
@@ -132,27 +136,18 @@ class CaseController extends Controller
 
         $validated['user_id'] = Auth::id();
 
-        // Handle Photo Upload
-        if ($request->hasFile('evidence_photo')) {
-            $path = $request->file('evidence_photo')->store('cases/photos', 'public');
-            $validated['evidence_photo'] = $path;
-        }
-
-        // Handle RCA File Upload
-        if ($request->hasFile('rca_file')) {
-            $path = $request->file('rca_file')->store('cases/files', 'public');
-            $validated['rca_file'] = $path;
-        }
-
-        // Handle MOP File Upload
-        if ($request->hasFile('mop_file')) {
-            $path = $request->file('mop_file')->store('cases/files', 'public');
-            $validated['mop_file'] = $path;
-        }
+        $uploads = $this->caseDocumentUploads($request);
+        unset($validated['evidence_photo'], $validated['rca_file'], $validated['mop_file']);
 
         $case = MCase::create($validated);
 
-        flash('Case berhasil ditambahkan!')->success();
+        $failedDocuments = $this->storeCaseDocuments($case, $uploads);
+
+        if (empty($failedDocuments)) {
+            flash('Case dan dokumen berhasil disimpan!')->success();
+        } else {
+            flash('Case berhasil disimpan, tetapi upload ' . implode(', ', $failedDocuments) . ' gagal. Dokumen dapat diunggah kembali dari halaman edit.')->warning();
+        }
 
         if ($case->type === 'Relokasi/Reposisi') {
             return redirect()->route('cases.show', $case->id_case)
@@ -196,7 +191,7 @@ class CaseController extends Controller
 
     public function show($case)
     {
-        $case = MCase::with(['project', 'user'])->findOrFail($case);
+        $case = MCase::with(['project', 'user', 'documents'])->findOrFail($case);
         $title = 'Detail Case';
 
         // Fetch affected devices based on SN
@@ -212,7 +207,7 @@ class CaseController extends Controller
 
     public function edit($case)
     {
-        $case = MCase::findOrFail($case);
+        $case = MCase::with('documents')->findOrFail($case);
         $title = 'Edit Case';
         $user = Auth::user();
         
@@ -274,40 +269,62 @@ class CaseController extends Controller
             'mop_file' => 'nullable|mimes:pdf|max:10240',
         ]);
 
-        // Handle Photo Upload
-        if ($request->hasFile('evidence_photo')) {
-            // Delete old file if exists
-            if ($caseModel->evidence_photo) {
-                Storage::disk('public')->delete($caseModel->evidence_photo);
-            }
-            $path = $request->file('evidence_photo')->store('cases/photos', 'public');
-            $validated['evidence_photo'] = $path;
-        }
-
-        // Handle RCA File Upload
-        if ($request->hasFile('rca_file')) {
-            // Delete old file if exists
-            if ($caseModel->rca_file) {
-                Storage::disk('public')->delete($caseModel->rca_file);
-            }
-            $path = $request->file('rca_file')->store('cases/files', 'public');
-            $validated['rca_file'] = $path;
-        }
-
-        // Handle MOP File Upload
-        if ($request->hasFile('mop_file')) {
-            // Delete old file if exists
-            if ($caseModel->mop_file) {
-                Storage::disk('public')->delete($caseModel->mop_file);
-            }
-            $path = $request->file('mop_file')->store('cases/files', 'public');
-            $validated['mop_file'] = $path;
-        }
+        $uploads = $this->caseDocumentUploads($request);
+        unset($validated['evidence_photo'], $validated['rca_file'], $validated['mop_file']);
 
         $caseModel->update($validated);
 
-        flash('Case berhasil diupdate!')->success();
+        $failedDocuments = $this->storeCaseDocuments($caseModel, $uploads);
+
+        if (empty($failedDocuments)) {
+            flash('Case berhasil diupdate!')->success();
+        } else {
+            flash('Case berhasil diupdate, tetapi upload ' . implode(', ', $failedDocuments) . ' gagal. File sebelumnya tetap aktif.')->warning();
+        }
         return redirect()->route('cases.index');
+    }
+
+    public function document($case, $document)
+    {
+        $caseModel = MCase::findOrFail($case);
+        $this->authorizeCaseAccess($caseModel);
+
+        $caseDocument = CaseDocument::where('case_id', $caseModel->id_case)
+            ->whereKey($document)
+            ->where('status', 'available')
+            ->firstOrFail();
+
+        $fileName = $caseDocument->original_name ?: $caseDocument->stored_name ?: basename($caseDocument->path);
+        $headers = [
+            'Content-Type' => $caseDocument->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="' . str_replace(['"', "\r", "\n"], '', $fileName) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        if ($caseDocument->disk === 'nextcloud') {
+            try {
+                $response = app(NextcloudWebDav::class)->download($caseDocument->path);
+            } catch (NextcloudWebDavException $e) {
+                abort($e->getStatusCode() === 404 ? 404 : 502, $e->getMessage());
+            }
+
+            $stream = $response->getBody();
+            return response()->stream(function () use ($stream) {
+                while (!$stream->eof()) {
+                    echo $stream->read(8192);
+                }
+            }, 200, $headers);
+        }
+
+        abort_unless(Storage::disk($caseDocument->disk)->exists($caseDocument->path), 404);
+        $stream = Storage::disk($caseDocument->disk)->readStream($caseDocument->path);
+
+        return response()->stream(function () use ($stream) {
+            if (is_resource($stream)) {
+                fpassthru($stream);
+                fclose($stream);
+            }
+        }, 200, $headers);
     }
 
     public function storeComment(Request $request, $case)
@@ -374,5 +391,42 @@ class CaseController extends Controller
             })
             ->unique('id')
             ->values();
+    }
+
+    private function caseDocumentUploads(Request $request)
+    {
+        return array_filter([
+            CaseDocument::TYPE_EVIDENCE => $request->file('evidence_photo'),
+            CaseDocument::TYPE_RCA => $request->file('rca_file'),
+            CaseDocument::TYPE_MOP => $request->file('mop_file'),
+        ]);
+    }
+
+    private function storeCaseDocuments(MCase $case, array $uploads)
+    {
+        $labels = [
+            CaseDocument::TYPE_EVIDENCE => 'Foto Evidence',
+            CaseDocument::TYPE_RCA => 'Dokumen RCA',
+            CaseDocument::TYPE_MOP => 'Dokumen MOP',
+        ];
+        $failed = [];
+
+        foreach ($uploads as $type => $upload) {
+            $document = app(CaseDocumentStorage::class)->store($case, $type, $upload, Auth::id());
+            if (!$document || $document->status !== 'available') {
+                $failed[] = $labels[$type] ?? $type;
+            }
+        }
+
+        return $failed;
+    }
+
+    private function authorizeCaseAccess(MCase $case)
+    {
+        $projectIds = Auth::user()->projects()->pluck('m_project.id_project');
+
+        if ($projectIds->isNotEmpty()) {
+            abort_unless($projectIds->contains((int) $case->id_project), 403);
+        }
     }
 }

@@ -276,16 +276,28 @@
 
                 <hr class="my-4" />
                 <h6 class="heading-small text-muted mb-4">Dokumentasi & Evidence</h6>
+                @php
+                    $evidenceDocument = $case->activeDocument(\App\CaseDocument::TYPE_EVIDENCE);
+                    $rcaDocument = $case->activeDocument(\App\CaseDocument::TYPE_RCA);
+                    $mopDocument = $case->activeDocument(\App\CaseDocument::TYPE_MOP);
+                @endphp
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">Foto Evidence</label>
-                            @if($case->evidence_photo)
+                            @if($evidenceDocument)
+                                <div class="mt-2 text-center p-3 bg-secondary rounded">
+                                    <a href="{{ route('cases.documents.show', [$case->id_case, $evidenceDocument->id]) }}" target="_blank">
+                                        <img src="{{ route('cases.documents.show', [$case->id_case, $evidenceDocument->id]) }}" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                                    </a>
+                                    <small class="d-block mt-2 text-success"><i class="fas fa-cloud mr-1"></i>Nextcloud · versi {{ $evidenceDocument->version }}</small>
+                                </div>
+                            @elseif($case->evidence_photo)
                                 <div class="mt-2 text-center p-3 bg-secondary rounded">
                                     <a href="{{ asset('storage/' . $case->evidence_photo) }}" target="_blank">
                                         <img src="{{ asset('storage/' . $case->evidence_photo) }}" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
                                     </a>
-                                    <small class="d-block mt-2 text-muted">Klik foto untuk memperbesar</small>
+                                    <small class="d-block mt-2 text-muted"><i class="fas fa-archive mr-1"></i>Dokumen lama · klik untuk memperbesar</small>
                                 </div>
                             @else
                                 <p class="form-control-static text-muted"><em>Tidak ada foto evidence.</em></p>
@@ -295,7 +307,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File RCA / Document</label>
-                            @if($case->rca_file)
+                            @if($rcaDocument || $case->rca_file)
                                 <div class="mt-2">
                                     <div class="card card-stats mb-4 mb-xl-0 border shadow-sm">
                                         <div class="card-body">
@@ -311,9 +323,10 @@
                                                 </div>
                                             </div>
                                             <p class="mt-3 mb-0 text-muted text-sm">
-                                                <a href="{{ asset('storage/' . $case->rca_file) }}" target="_blank" class="btn btn-sm btn-primary">
+                                                <a href="{{ $rcaDocument ? route('cases.documents.show', [$case->id_case, $rcaDocument->id]) : asset('storage/' . $case->rca_file) }}" target="_blank" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-download mr-1"></i> Download / Lihat File
                                                 </a>
+                                                <small class="d-block mt-2 {{ $rcaDocument ? 'text-success' : 'text-muted' }}">{{ $rcaDocument ? 'Nextcloud · versi '.$rcaDocument->version : 'Dokumen lama · local storage' }}</small>
                                             </p>
                                         </div>
                                     </div>
@@ -326,7 +339,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="form-control-label">File MOP</label>
-                            @if($case->mop_file)
+                            @if($mopDocument || $case->mop_file)
                                 <div class="mt-2">
                                     <div class="card card-stats mb-4 mb-xl-0 border shadow-sm">
                                         <div class="card-body">
@@ -342,9 +355,10 @@
                                                 </div>
                                             </div>
                                             <p class="mt-3 mb-0 text-muted text-sm">
-                                                <a href="{{ asset('storage/' . $case->mop_file) }}" target="_blank" class="btn btn-sm btn-success">
+                                                <a href="{{ $mopDocument ? route('cases.documents.show', [$case->id_case, $mopDocument->id]) : asset('storage/' . $case->mop_file) }}" target="_blank" class="btn btn-sm btn-success">
                                                     <i class="fas fa-download mr-1"></i> Download / Lihat File
                                                 </a>
+                                                <small class="d-block mt-2 {{ $mopDocument ? 'text-success' : 'text-muted' }}">{{ $mopDocument ? 'Nextcloud · versi '.$mopDocument->version : 'Dokumen lama · local storage' }}</small>
                                             </p>
                                         </div>
                                     </div>

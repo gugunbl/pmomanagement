@@ -2,6 +2,10 @@
 
 @section('content')
 @php
+    $openTicketProjects = $openTicketProjects ?? collect();
+    $topOpenTicketProjects = $openTicketProjects->take(3);
+    $remainingOpenProjects = max(0, $openTicketProjects->count() - $topOpenTicketProjects->count());
+    $totalOpenProjectTickets = $openTicketProjects->sum('open_count');
     $ticketKpis = [
         ['label' => 'Tiket Bulan Lalu', 'value' => $tiketBulanLalu ?? 0, 'icon' => 'fa-history', 'meta' => 'Periode sebelumnya'],
         ['label' => 'Tiket Bulan Ini', 'value' => $tiketBulanIni ?? 0, 'icon' => 'fa-calendar-check', 'meta' => 'Periode berjalan'],
@@ -36,10 +40,17 @@
     </section>
 
     <section class="card app-panel mb-0">
-        <div class="app-panel-header"><div><h2>Top 10 Project</h2><p>Project dengan tiket terbanyak</p></div></div>
+        <div class="app-panel-header">
+            <div><h2>Project dengan Tiket Open</h2><p>3 project yang membutuhkan perhatian lebih dahulu</p></div>
+            @if($remainingOpenProjects > 0)
+                <button type="button" class="portfolio-detail-button" data-toggle="modal" data-target="#openTicketProjectModal">
+                    <i class="far fa-eye"></i> Lihat semua
+                </button>
+            @endif
+        </div>
         <div class="app-panel-body py-2">
             <ul class="app-list">
-                @forelse($top10Projects as $project)
+                @forelse($topOpenTicketProjects as $project)
                     <li class="app-list-item align-items-start">
                         <div class="pr-2">
                             <a class="app-list-item-title" href="{{ route('cases.index', ['id_project' => $project->id_project]) }}" title="{{ $project->nama_project }}">{{ Str::limit($project->nama_project, 48) }}</a>
@@ -51,12 +62,61 @@
                         </div>
                     </li>
                 @empty
-                    <li class="py-4 text-center text-muted small">Belum ada data tiket.</li>
+                    <li class="py-4 text-center text-muted small">Tidak ada project dengan tiket open.</li>
                 @endforelse
             </ul>
+            @if($remainingOpenProjects > 0)
+                <div class="user-open-project-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Ada <strong>{{ $remainingOpenProjects }} project lainnya</strong> yang masih memiliki tiket open.</span>
+                </div>
+            @endif
         </div>
     </section>
 </div>
+
+@if($remainingOpenProjects > 0)
+    <div class="modal fade monitor-modal user-open-project-modal" id="openTicketProjectModal" tabindex="-1" role="dialog" aria-labelledby="openTicketProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <span class="monitor-eyebrow">Rincian tiket aktif</span>
+                        <h5 class="modal-title" id="openTicketProjectModalLabel">Project dengan tiket open</h5>
+                    </div>
+                    <button type="button" class="close" data-open-project-modal-close aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="monitor-modal-project-meta">
+                        <div><span>Total project</span><strong>{{ $openTicketProjects->count() }}</strong></div>
+                        <div><span>Total tiket open</span><strong>{{ $totalOpenProjectTickets }}</strong></div>
+                    </div>
+                    <div class="user-open-project-list">
+                        @foreach($openTicketProjects as $index => $project)
+                            <article class="user-open-project-row">
+                                <span class="user-open-project-rank" aria-label="Urutan {{ $index + 1 }}">{{ $index + 1 }}</span>
+                                <div class="user-open-project-copy">
+                                    <strong>{{ $project->nama_project }}</strong>
+                                    <span><i class="fas fa-layer-group"></i>{{ $project->tipe_maintenance ?: 'Tipe belum ditentukan' }}</span>
+                                </div>
+                                <div class="user-open-project-actions">
+                                    <span class="user-ticket-metric is-open"><small>Open</small><strong>{{ $project->open_count }}</strong></span>
+                                    <span class="user-ticket-metric is-closed"><small>Closed</small><strong>{{ $project->closed_count }}</strong></span>
+                                    <a href="{{ route('cases.index', ['id_project' => $project->id_project]) }}" class="user-open-project-link" aria-label="Lihat tiket {{ $project->nama_project }}">
+                                        <i class="fas fa-arrow-right"></i><span>Lihat tiket</span>
+                                    </a>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-open-project-modal-close>Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -80,6 +140,29 @@ if (ticketCanvas) {
             plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 18 } } },
             scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
+    });
+}
+
+const openTicketProjectModal = $('#openTicketProjectModal');
+if (openTicketProjectModal.length) {
+    const modalTrigger = $('[data-target="#openTicketProjectModal"]');
+    openTicketProjectModal.appendTo(document.body);
+
+    const resetOpenTicketProjectModal = () => {
+        openTicketProjectModal.removeClass('show').hide().attr('aria-hidden', 'true');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        modalTrigger.trigger('focus');
+    };
+
+    openTicketProjectModal.on('hidden.bs.modal', resetOpenTicketProjectModal);
+    openTicketProjectModal.on('click', '[data-open-project-modal-close]', function () {
+        openTicketProjectModal.modal('hide');
+        window.setTimeout(() => {
+            if (openTicketProjectModal.hasClass('show') || $('.modal-backdrop').length) {
+                resetOpenTicketProjectModal();
+            }
+        }, 400);
     });
 }
 </script>

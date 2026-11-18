@@ -193,9 +193,15 @@
                                     </li>
                                     @endcan
                                     <li class="nav-item">
-                                        <a href="{{route('dashboard.utilisasi')}}" class="nav-link">
+                                        <a href="{{route('dashboard.utilisasi')}}" class="nav-link {{ request()->routeIs('dashboard.utilisasi') ? 'active' : '' }}">
                                             <span class="sidenav-mini-icon">D </span>
                                             <span class="sidenav-normal">Dashboard Utilisasi</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('dashboard.utilisasi.manual') }}" class="nav-link {{ request()->routeIs('dashboard.utilisasi.manual') ? 'active' : '' }}">
+                                            <span class="sidenav-mini-icon">T </span>
+                                            <span class="sidenav-normal">Tambah Data Utilisasi</span>
                                         </a>
                                     </li>
                                 </ul>

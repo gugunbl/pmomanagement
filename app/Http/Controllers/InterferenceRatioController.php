@@ -26,6 +26,12 @@ class InterferenceRatioController extends Controller
         // Check if user has specific assigned projects
         if (count($userProjects) > 0) {
             $query->whereIn('id_project', $userProjects);
+            $projects = Project::whereIn('id_project', $userProjects)
+                ->orderBy('nama_project')
+                ->pluck('nama_project', 'id_project');
+        } else {
+            $projects = Project::orderBy('nama_project')
+                ->pluck('nama_project', 'id_project');
         }
 
         // Apply filters if needed
@@ -35,7 +41,7 @@ class InterferenceRatioController extends Controller
 
         $ratios = $query->orderBy('tanggal', 'desc')->orderBy('waktu', 'desc')->paginate(setting('record_per_page', 15))->withQueryString();
 
-        return view('interference_ratio.index', compact('title', 'ratios'));
+        return view('interference_ratio.index', compact('title', 'ratios', 'projects'));
     }
 
     public function create()

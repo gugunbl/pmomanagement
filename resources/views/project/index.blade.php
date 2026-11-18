@@ -1,17 +1,25 @@
 @extends('layouts.app')
 
-@push('pg_btn')
-    @can('create-project')
-        <a href="{{ route('project.create') }}" class="btn btn-sm btn-neutral"><i class="fas fa-plus mr-1"></i> Project Baru</a>
-    @endcan
-@endpush
+@section('body_class', 'project-workspace-body')
 
 @section('content')
+<div class="maintenance-workspace project-list-workspace">
+    <section class="maintenance-overview" aria-labelledby="project-list-title">
+        <div class="maintenance-overview-copy">
+            <span class="project-kicker">Project portfolio</span>
+            <h2 id="project-list-title">Semua Project</h2>
+            <p>Cari, pantau status, dan buka detail seluruh project dari satu workspace.</p>
+        </div>
+        @can('create-project')
+            <a href="{{ route('project.create') }}" class="btn project-create-btn"><i class="fas fa-plus"></i> Project Baru</a>
+        @endcan
+    </section>
+
 <section class="card app-panel mb-5">
     <div class="app-panel-header">
         <div>
-            <h2>Semua Project</h2>
-            <p>Cari, pantau status, dan buka detail project dari satu tempat.</p>
+            <h2>Daftar Project</h2>
+            <p>Gunakan pencarian dan filter untuk menemukan project yang dibutuhkan.</p>
         </div>
         <span class="badge badge-light">{{ $projects->total() }} data</span>
     </div>
@@ -109,4 +117,5 @@
         {{ $projects->withQueryString()->links() }}
     </div>
 </section>
+</div>
 @endsection

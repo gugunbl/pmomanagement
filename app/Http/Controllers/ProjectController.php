@@ -29,6 +29,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Services\NextcloudWebDav;
+use App\Services\NextcloudWebDavException;
 
 
 class ProjectController extends Controller
@@ -284,7 +286,8 @@ public function store(Request $request)
         'top_impl_total' => 'nullable|integer|min:1|max:20',
     ]);
 
-    DB::transaction(function () use ($validated, $request) {
+    try {
+        DB::transaction(function () use ($validated, $request) {
 
         // ================= SIMPAN PROJECT =================
         $validated['tahun'] = Carbon::createFromFormat(
@@ -322,9 +325,31 @@ public function store(Request $request)
                 ]);
             }
         }
-    });
 
-    flash('Project & TOP Implementasi berhasil disimpan')->success();
+        // Provision the external folder last so any database failure above
+        // happens before Nextcloud is changed. A WebDAV failure rolls back
+        // this database transaction.
+        if (config('filesystems.project_report_disk') === 'nextcloud') {
+            app(NextcloudWebDav::class)->ensureProjectFolders($project->link_dokumen);
+        }
+        });
+    } catch (NextcloudWebDavException $e) {
+        Log::warning('Pembuatan folder project di Nextcloud gagal.', [
+            'folder' => $validated['link_dokumen'] ?? null,
+            'user_id' => Auth::id(),
+            'message' => $e->getMessage(),
+        ]);
+
+        return back()
+            ->withInput()
+            ->withErrors(['link_dokumen' => 'Folder Nextcloud gagal dibuat: ' . $e->getMessage()]);
+    }
+
+    $successMessage = config('filesystems.project_report_disk') === 'nextcloud'
+        ? 'Project berhasil disimpan dan folder Nextcloud telah disiapkan.'
+        : 'Project & TOP Implementasi berhasil disimpan';
+
+    flash($successMessage)->success();
     return redirect()->route('project.index');
 }
 

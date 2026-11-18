@@ -59,4 +59,28 @@ class MCase extends Model
     {
         return $this->hasMany(CaseComment::class, 'case_id', 'id_case')->orderBy('created_at', 'desc');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(CaseDocument::class, 'case_id', 'id_case')
+            ->orderByDesc('version');
+    }
+
+    public function activeDocument($type)
+    {
+        if ($this->relationLoaded('documents')) {
+            return $this->documents
+                ->first(function ($document) use ($type) {
+                    return $document->document_type === $type
+                        && $document->is_active
+                        && $document->status === 'available';
+                });
+        }
+
+        return $this->documents()
+            ->where('document_type', $type)
+            ->where('is_active', true)
+            ->where('status', 'available')
+            ->first();
+    }
 }

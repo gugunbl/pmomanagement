@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Storage;
 
 class UtilizationDashboardController extends Controller
 {
+    public function createManual()
+    {
+        $employeeName = auth()->user()->name;
+        $effectiveWorkHours = (float) setting('utilization_effective_work_hours', 8);
+
+        return view('dashboard.utilisasi-manual', compact('employeeName', 'effectiveWorkHours'));
+    }
+
     public function index(Request $request)
     {
         $employee_names = $request->get('employee_name', []);
