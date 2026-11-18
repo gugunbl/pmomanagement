@@ -39,6 +39,8 @@ return [
     'project_report_nextcloud_subdirectory' => env('PROJECT_REPORT_NEXTCLOUD_SUBDIRECTORY', '30_Preventive_Maintenance'),
     'project_report_nextcloud_document_subdirectory' => env('PROJECT_REPORT_NEXTCLOUD_DOCUMENT_SUBDIRECTORY', '31_Document_Maintenance'),
     'project_report_nextcloud_timeout' => env('PROJECT_REPORT_NEXTCLOUD_TIMEOUT', 120),
+      'project_ba_disk' => env('PROJECT_BA_STORAGE_DISK', 'nextcloud'),
+      'project_ba_path' => env('PROJECT_BA_STORAGE_PATH', 'project_ba/files'),
     'case_document_disk' => env('CASE_DOCUMENT_STORAGE_DISK', env('PROJECT_REPORT_STORAGE_DISK', 'public')),
 
     /*

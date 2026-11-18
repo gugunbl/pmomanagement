@@ -166,6 +166,54 @@
             </div>
 
             <div class="card mb-5">
+                <div class="card-header bg-transparent"><h4 class="mb-0">Report Period Reminder Settings</h4></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ Form::hidden('report_period_reminder_enabled', 0) }}
+                                <div class="custom-control custom-switch">
+                                    {{ Form::checkbox('report_period_reminder_enabled', 1, (bool) setting('report_period_reminder_enabled', 1), ['class' => 'custom-control-input', 'id' => 'report_period_reminder_enabled']) }}
+                                    {{ Form::label('report_period_reminder_enabled', 'Aktifkan reminder periode laporan', ['class' => 'custom-control-label']) }}
+                                </div>
+                                <small class="form-text text-muted">Dikirim ketika tanggal hari ini sama dengan periode selesai laporan.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                {{ Form::label('report_period_reminder_time', 'Jam Pengiriman', ['class' => 'form-control-label']) }}
+                                {{ Form::time('report_period_reminder_time', setting('report_period_reminder_time', '08:00'), ['class' => 'form-control']) }}
+                                <small class="form-text text-muted">Menggunakan zona waktu Asia/Jakarta.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{ Form::label('report_period_reminder_to', 'Recipient Fallback / CC', ['class' => 'form-control-label']) }}
+                                {{ Form::text('report_period_reminder_to', setting('report_period_reminder_to'), ['class' => 'form-control', 'placeholder' => 'pmo@example.com, admin@example.com']) }}
+                                <small class="form-text text-muted">PM Maintenance menjadi penerima utama. Daftar ini menjadi CC, atau penerima utama jika email PM belum tersedia.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{ Form::label('report_period_reminder_subject', 'Subject Email', ['class' => 'form-control-label']) }}
+                                {{ Form::text('report_period_reminder_subject', setting('report_period_reminder_subject', '[PMO] Periode Laporan #{report_ke} Memasuki Tanggal Akhir - {project}'), ['class' => 'form-control']) }}
+                                <small class="form-text text-muted">Variabel: <code>{report_ke}</code> dan <code>{project}</code>.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {{ Form::label('report_period_reminder_body', 'Pesan Pembuka', ['class' => 'form-control-label']) }}
+                                {{ Form::textarea('report_period_reminder_body', setting('report_period_reminder_body', 'Periode laporan telah memasuki tanggal akhir hari ini. Mohon mengatur jadwal pembuatan laporan PM.'), ['class' => 'form-control', 'rows' => 4]) }}
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-3 text-right">
+                            {!! Form::submit('Update Settings', ['class' => 'btn btn-primary']) !!}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-5">
                 <div class="card-header bg-transparent"><h4 class="mb-0">Ticketing System Settings</h4></div>
                 <div class="card-body">
                     <div class="row">

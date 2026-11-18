@@ -21,8 +21,9 @@
 
     <section class="ba-control-panel">
         <div class="ba-tabs" role="tablist" aria-label="Status periode BA">
-            <a class="{{ $activeTab === 'progress' ? 'active' : '' }}" href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'progress', 'page' => null])) }}"><i class="fas fa-exclamation-circle"></i><span>Progress BA<small>Jatuh tempo / overdue</small></span></a>
-            <a class="{{ $activeTab === 'open' ? 'active' : '' }}" href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'open', 'page' => null])) }}"><i class="far fa-clock"></i><span>BA Open<small>Periode mendatang</small></span></a>
+            <a class="{{ $activeTab === 'progress' ? 'active' : '' }}" href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'progress', 'page' => null])) }}"><i class="fas fa-exclamation-circle"></i><span>Progress BA<small>{{ $progressCount }} jatuh tempo / overdue</small></span></a>
+            <a class="{{ $activeTab === 'open' ? 'active' : '' }}" href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'open', 'page' => null])) }}"><i class="far fa-clock"></i><span>BA Open<small>{{ $openCount }} periode mendatang</small></span></a>
+            <a class="{{ $activeTab === 'paid' ? 'active' : '' }}" href="{{ route('project.ba.monitoring', array_merge(request()->query(), ['tab' => 'paid', 'page' => null])) }}"><i class="fas fa-file-invoice-dollar"></i><span>Paid &amp; Dokumen<small>{{ $paidCount }} BA siap diarsipkan</small></span></a>
         </div>
 
         <form action="{{ route('project.ba.monitoring') }}" method="GET" class="ba-filter-form">
@@ -52,7 +53,10 @@
     </section>
 
     <div class="monitor-section-heading">
-        <div><h3>{{ $activeTab === 'progress' ? 'BA perlu tindak lanjut' : 'BA periode mendatang' }}</h3><p>Urutan berdasarkan tanggal akhir BA terdekat.</p></div>
+        <div>
+            <h3>{{ $activeTab === 'progress' ? 'BA perlu tindak lanjut' : ($activeTab === 'open' ? 'BA periode mendatang' : 'BA paid & dokumen') }}</h3>
+            <p>{{ $activeTab === 'paid' ? 'Upload, lihat, atau ganti dokumen BA yang sudah dibayar.' : 'Urutan berdasarkan tanggal akhir BA terdekat.' }}</p>
+        </div>
         <span>{{ $listBA->firstItem() ?? 0 }}–{{ $listBA->lastItem() ?? 0 }} dari {{ $listBA->total() }}</span>
     </div>
 
@@ -88,7 +92,7 @@
                     </div>
                 </header>
 
-                <div class="ba-record-head ba-record-grid"><span>TOP</span><span>Periode BA</span><span>Status</span><span>Progress signer</span></div>
+                <div class="ba-record-head ba-record-grid"><span>TOP</span><span>Periode BA</span><span>Status</span><span>Progress signer</span><span>Aksi</span></div>
                 <div class="monitor-record-list">
                     @foreach($projectBAs as $ba)
                         @php
@@ -130,6 +134,22 @@
                                 @else
                                     <span class="monitor-action-hint"><i class="fas fa-user-slash"></i> Signer belum diatur</span>
                                 @endif
+                            </div>
+                            <div data-label="Aksi" class="monitor-record-actions ba-document-actions">
+                                @can('monitoring-laporan-upload-laporan')
+                                    @if($ba->status === 'paid')
+                                        @if($ba->uploaded_file)
+                                            <a href="{{ route('project.ba.download', $ba->id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i><span>Lihat file</span></a>
+                                            <a href="{{ route('project.ba.upload.form', $ba->id) }}" class="btn btn-sm btn-success"><i class="fas fa-sync-alt"></i><span>Ganti</span></a>
+                                        @else
+                                            <a href="{{ route('project.ba.upload.form', $ba->id) }}" class="btn btn-sm btn-primary"><i class="fas fa-cloud-upload-alt"></i><span>Upload BA</span></a>
+                                        @endif
+                                    @else
+                                        <span class="monitor-action-hint"><i class="fas fa-lock"></i> Setelah paid</span>
+                                    @endif
+                                @else
+                                    <span class="monitor-action-hint">Tidak ada akses upload</span>
+                                @endcan
                             </div>
                         </div>
                     @endforeach
@@ -205,7 +225,12 @@ $(function () {
             url: '/project/monitoring-ba/' + element.data('id') + '/update',
             method: 'POST',
             data: { _token: '{{ csrf_token() }}', status: element.val(), field: element.data('field') },
-            success: function (response) { if (response.success) { showNotification(); if (response.reload) location.reload(); } },
+            success: function (response) {
+                if (!response.success) return;
+                showNotification();
+                if (response.redirect) { window.location.href = response.redirect; return; }
+                if (response.reload) location.reload();
+            },
             error: function (xhr) { alert('Error updating data'); console.error(xhr); },
             complete: function () { element.removeClass('is-loading'); }
         });

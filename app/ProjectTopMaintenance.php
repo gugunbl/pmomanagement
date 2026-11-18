@@ -4,6 +4,8 @@
 
 namespace App;
 
+use App\Support\NextcloudFilename;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectTopMaintenance extends Model
@@ -17,8 +19,31 @@ class ProjectTopMaintenance extends Model
         'periode_end',
         'status',
         'keterangan',
-        'signers'
+        'signers',
+        'uploaded_file',
+        'uploaded_disk',
+        'uploaded_original_name',
+        'uploaded_at',
+        'uploaded_by',
     ];
+
+    protected $casts = [
+        'periode_start' => 'date',
+        'periode_end' => 'date',
+        'uploaded_at' => 'datetime',
+    ];
+
+    public function uploadFilename($uploadDate = null)
+    {
+        $projectName = NextcloudFilename::projectName($this->project ? $this->project->nama_project : '');
+
+        return implode('_', [
+            'BA',
+            'TOP' . $this->top_ke,
+            $projectName,
+            Carbon::parse($uploadDate ?: Carbon::now())->format('Ymd'),
+        ]) . '.pdf';
+    }
 
     public function project()
     {

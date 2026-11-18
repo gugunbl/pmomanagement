@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Project;
 use App\ProjectReport;
+use App\ProjectTopMaintenance;
 use App\Services\NextcloudWebDav;
 use App\Services\NextcloudWebDavException;
 use GuzzleHttp\Client;
@@ -156,6 +157,29 @@ class NextcloudWebDavTest extends TestCase
             'IT PMO/Project/2026_Project_Baru/31_Document_Maintenance/20261118_RCA_case_10.pdf',
             $service->caseDocumentPath($project, '20261118_RCA_case_10.pdf')
         );
+    }
+
+    public function test_ba_filename_and_path_use_document_directory_and_limited_project_name()
+    {
+        $this->configureNextcloud();
+        $project = new Project();
+        $project->link_dokumen = '2026_Project_Baru';
+        $project->nama_project = str_repeat('Project Sangat Panjang ', 10);
+
+        $ba = new ProjectTopMaintenance();
+        $ba->top_ke = 4;
+        $ba->setRelation('project', $project);
+
+        $projectName = 'Project Sangat Panjang Project Sangat Panjang Project Sangat Panjang';
+        $fileName = 'BA_TOP4_' . $projectName . '_20261118.pdf';
+        $service = new NextcloudWebDav($this->client([new Response(207)]));
+
+        $this->assertSame($fileName, $ba->uploadFilename('2026-11-18'));
+        $this->assertSame(
+            'IT PMO/Project/2026_Project_Baru/31_Document_Maintenance/' . $fileName,
+            $service->maintenanceDocumentPath($project, $fileName)
+        );
+        $this->assertLessThan(255, strlen($fileName));
     }
 
     public function test_upload_does_not_close_a_stream_that_the_http_handler_already_closed()

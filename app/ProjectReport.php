@@ -3,13 +3,11 @@
 namespace App;
 
 use Carbon\Carbon;
+use App\Support\NextcloudFilename;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectReport extends Model
 {
-    private const UPLOAD_PROJECT_NAME_MAX_CHARACTERS = 70;
-    private const UPLOAD_PROJECT_NAME_MAX_BYTES = 120;
-
     protected $table = 'project_reports';
 
     protected $fillable = [
@@ -25,6 +23,12 @@ class ProjectReport extends Model
         'uploaded_original_name',
     ];
 
+    protected $casts = [
+        'period_start' => 'date',
+        'period_end' => 'date',
+        'submission_date' => 'date',
+    ];
+
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id', 'id_project');
@@ -37,27 +41,7 @@ class ProjectReport extends Model
         }
 
         $project = $this->project;
-        $projectName = $project ? (string) $project->nama_project : '';
-        $projectName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', $projectName);
-        $projectName = preg_replace('/[\x00-\x1F\x7F]/u', '', $projectName);
-        $projectName = preg_replace('/\s+/u', ' ', trim($projectName));
-        $projectName = trim($projectName, " .");
-        if ($projectName === '') {
-            $projectName = 'Project';
-        } else {
-            $fullProjectName = $projectName;
-            $projectName = mb_substr($projectName, 0, self::UPLOAD_PROJECT_NAME_MAX_CHARACTERS, 'UTF-8');
-
-            if (mb_strlen($fullProjectName, 'UTF-8') > self::UPLOAD_PROJECT_NAME_MAX_CHARACTERS) {
-                $lastSpace = mb_strrpos($projectName, ' ', 0, 'UTF-8');
-                if ($lastSpace !== false && $lastSpace >= 50) {
-                    $projectName = mb_substr($projectName, 0, $lastSpace, 'UTF-8');
-                }
-            }
-
-            $projectName = mb_strcut($projectName, 0, self::UPLOAD_PROJECT_NAME_MAX_BYTES, 'UTF-8');
-            $projectName = rtrim($projectName, " .");
-        }
+        $projectName = NextcloudFilename::projectName($project ? $project->nama_project : '');
 
         return implode('_', [
             Carbon::parse($uploadDate ?: Carbon::now())->format('Ymd'),
@@ -87,5 +71,25 @@ class ProjectReport extends Model
     public function statusLogs()
     {
         return $this->hasMany(ProjectReportStatusLog::class, 'project_report_id', 'id')->orderBy('created_at', 'desc');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(ProjectReportNotification::class, 'project_report_id', 'id')
+            ->orderByDesc('created_at');
+    }
+
+    public function latestPeriodEndNotification()
+    {
+        if ($this->relationLoaded('notifications')) {
+            return $this->notifications
+                ->first(function ($notification) {
+                    return $notification->notification_type === 'period_end';
+                });
+        }
+
+        return $this->notifications()
+            ->where('notification_type', 'period_end')
+            ->first();
     }
 }

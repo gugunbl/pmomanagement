@@ -27,6 +27,17 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('maintenance:reminder')
             ->dailyAt('18:30');
+
+        $reminderTime = setting('report_period_reminder_time', '08:00');
+        if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', (string) $reminderTime)) {
+            $reminderTime = '08:00';
+        }
+
+        $schedule->command('reports:period-end-reminder')
+            ->dailyAt($reminderTime)
+            ->timezone(config('app.timezone', 'Asia/Jakarta'))
+            ->withoutOverlapping()
+            ->onOneServer();
     }
 
 

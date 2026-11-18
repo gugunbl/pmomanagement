@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Services\NextcloudWebDav;
 use App\Services\NextcloudWebDavException;
+use App\Services\ProjectReportPeriodReminder;
 
 
 class ProjectController extends Controller
@@ -723,15 +724,17 @@ public function update(Request $request, Project $project)
         $request->validate([
             'customer' => 'nullable|string|max:255',
             'project' => 'nullable|integer|min:1',
+            'tab' => 'nullable|in:all,action',
         ]);
 
+        $activeTab = $request->query('tab', 'all');
         $selectedCustomer = trim((string) $request->query('customer', ''));
         $selectedCustomer = $selectedCustomer !== '' ? $selectedCustomer : null;
         $selectedProjectId = $selectedCustomer !== null && $request->filled('project')
             ? (int) $request->query('project')
             : null;
 
-        $query = ProjectReport::with(['project.comments.user', 'comments.user'])
+        $query = ProjectReport::with(['project.comments.user', 'comments.user', 'notifications'])
             ->whereHas('project');
 
         if ($selectedCustomer !== null) {
@@ -744,12 +747,38 @@ public function update(Request $request, Project $project)
             $query->where('project_id', $selectedProjectId);
         }
 
+        $allReportsCount = (clone $query)->count();
+        $actionReportsCount = (clone $query)
+            ->where('status', '<>', 'signoff')
+            ->where(function ($reportQuery) {
+                $reportQuery->whereNull('uploaded_file')
+                    ->orWhere('uploaded_file', '');
+            })
+            ->count();
+
+        if ($activeTab === 'action') {
+            $query->where('status', '<>', 'signoff')
+                ->where(function ($reportQuery) {
+                    $reportQuery->whereNull('uploaded_file')
+                        ->orWhere('uploaded_file', '');
+                });
+        }
+
         $mainQuery = clone $query;
         $mainQuery->join('m_project', 'project_reports.project_id', '=', 'm_project.id_project')
-            ->select('project_reports.*')
-            ->selectRaw('(SELECT MIN(period_end) FROM project_reports as pr2 WHERE pr2.project_id = project_reports.project_id) as min_period_end')
+            ->select('project_reports.*');
+
+        if ($activeTab === 'action') {
+            $mainQuery->selectRaw("(SELECT MIN(pr2.period_end) FROM project_reports as pr2 WHERE pr2.project_id = project_reports.project_id AND pr2.status <> 'signoff' AND (pr2.uploaded_file IS NULL OR pr2.uploaded_file = '')) as min_period_end");
+        } else {
+            $mainQuery->selectRaw('(SELECT MIN(period_end) FROM project_reports as pr2 WHERE pr2.project_id = project_reports.project_id) as min_period_end');
+        }
+
+        $mainQuery
+            ->orderByRaw('min_period_end IS NULL')
             ->orderBy('min_period_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
+            ->orderByRaw('project_reports.period_end IS NULL')
             ->orderBy('project_reports.period_end', 'asc');
 
         $queryForOffset = clone $mainQuery;
@@ -791,7 +820,10 @@ public function update(Request $request, Project $project)
             'customerOptions',
             'projectOptions',
             'selectedCustomer',
-            'selectedProjectId'
+            'selectedProjectId',
+            'activeTab',
+            'allReportsCount',
+            'actionReportsCount'
         ));
     }
 
@@ -836,6 +868,29 @@ public function update(Request $request, Project $project)
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function reportReminderResend(ProjectReport $report, ProjectReportPeriodReminder $reminder)
+    {
+        abort_unless(
+            Auth::user()->can('send-maintenance-reminder') || Auth::user()->can('monitoring-laporan-upload-laporan'),
+            403
+        );
+
+        if ($report->status === 'signoff' || $report->uploaded_file) {
+            flash('Reminder tidak diperlukan karena laporan sudah signoff atau file sudah tersedia.')->info();
+            return back();
+        }
+
+        $notification = $reminder->send($report, true);
+
+        if ($notification->status === 'sent') {
+            flash('Reminder periode laporan berhasil dikirim ulang.')->success();
+        } else {
+            flash('Reminder belum berhasil dikirim: ' . $notification->error_message)->error();
+        }
+
+        return back();
     }
 
     public function reportCommentStore(Request $request, ProjectReport $report)
@@ -1028,21 +1083,10 @@ public function update(Request $request, Project $project)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
-        $activeTab = $request->tab ?: 'progress';
+        $activeTab = in_array($request->tab, ['progress', 'open', 'paid'], true) ? $request->tab : 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance', 'project.comments.user', 'comments.user', 'statusLogs.user'])
-            ->where('status', '!=', 'paid')
             ->whereHas('project');
-
-        // Tab filtering logic
-        $today = \Carbon\Carbon::today()->format('Y-m-d');
-        if ($activeTab == 'progress') {
-            // Overdue or exactly today
-            $query->where('periode_end', '<=', $today);
-        } else {
-            // Future
-            $query->where('periode_end', '>', $today);
-        }
 
         // Filter PM Maintenance
         if ($pm_maintenance) {
@@ -1058,6 +1102,14 @@ public function update(Request $request, Project $project)
             });
         }
 
+        $tabCountsQuery = clone $query;
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        $progressCount = (clone $tabCountsQuery)->where('status', '!=', 'paid')->where('periode_end', '<=', $today)->count();
+        $openCount = (clone $tabCountsQuery)->where('status', '!=', 'paid')->where('periode_end', '>', $today)->count();
+        $paidCount = (clone $tabCountsQuery)->where('status', 'paid')->count();
+
+        $this->applyMonitoringBATab($query, $activeTab, $today);
+
         // --- CALCULATE SUMMARY ---
         // clone query to count before pagination
         $countQuery = clone $query;
@@ -1066,9 +1118,11 @@ public function update(Request $request, Project $project)
         // --- END CALCULATE ---
 
         $mainQuery = clone $query;
+        $minPeriodStatus = $activeTab === 'paid' ? 'ptm2.status = "paid"' : 'ptm2.status != "paid"';
         $mainQuery->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
-            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ' . $minPeriodStatus . ') as min_periode_end')
+            ->orderByRaw('min_periode_end IS NULL')
             ->orderBy('min_periode_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
             ->orderBy('project_top_maintenance.periode_end', 'asc');
@@ -1095,25 +1149,20 @@ public function update(Request $request, Project $project)
 
         $title = 'Monitoring BA (TOP Maintenance)';
 
-        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab', 'totalProjects', 'totalBA', 'startProjectCounter'));
+        return view('project.monitoring-ba', compact('listBA', 'listPM', 'search', 'pm_maintenance', 'title', 'activeTab', 'totalProjects', 'totalBA', 'startProjectCounter', 'progressCount', 'openCount', 'paidCount'));
     }
 
     public function exportBAPdf(Request $request)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
-        $activeTab = $request->tab ?: 'progress';
+        $activeTab = in_array($request->tab, ['progress', 'open', 'paid'], true) ? $request->tab : 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
-            ->where('status', '!=', 'paid')
             ->whereHas('project');
 
         $today = \Carbon\Carbon::today()->format('Y-m-d');
-        if ($activeTab == 'progress') {
-            $query->where('periode_end', '<=', $today);
-        } else {
-            $query->where('periode_end', '>', $today);
-        }
+        $this->applyMonitoringBATab($query, $activeTab, $today);
 
         if ($pm_maintenance) {
             $query->whereHas('project', function ($q) use ($pm_maintenance) {
@@ -1127,15 +1176,17 @@ public function update(Request $request, Project $project)
             });
         }
 
+        $minPeriodStatus = $activeTab === 'paid' ? 'ptm2.status = "paid"' : 'ptm2.status != "paid"';
         $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
-            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ' . $minPeriodStatus . ') as min_periode_end')
             ->orderBy('min_periode_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
             ->orderBy('project_top_maintenance.periode_end', 'asc')
             ->get();
 
-        $title = 'Monitoring BA (TOP Maintenance) - ' . ($activeTab == 'progress' ? 'Progress BA' : 'BA Open');
+        $tabTitles = ['progress' => 'Progress BA', 'open' => 'BA Open', 'paid' => 'Paid & Dokumen'];
+        $title = 'Monitoring BA (TOP Maintenance) - ' . $tabTitles[$activeTab];
 
         $pdf = Pdf::loadView('project.monitoring-ba-pdf', compact('listBA', 'title'))
                   ->setPaper('A4', 'landscape');
@@ -1147,18 +1198,13 @@ public function update(Request $request, Project $project)
     {
         $search = $request->search;
         $pm_maintenance = $request->pm_maintenance;
-        $activeTab = $request->tab ?: 'progress';
+        $activeTab = in_array($request->tab, ['progress', 'open', 'paid'], true) ? $request->tab : 'progress';
 
         $query = \App\ProjectTopMaintenance::with(['project.mPMMaintenance'])
-            ->where('status', '!=', 'paid')
             ->whereHas('project');
 
         $today = \Carbon\Carbon::today()->format('Y-m-d');
-        if ($activeTab == 'progress') {
-            $query->where('periode_end', '<=', $today);
-        } else {
-            $query->where('periode_end', '>', $today);
-        }
+        $this->applyMonitoringBATab($query, $activeTab, $today);
 
         if ($pm_maintenance) {
             $query->whereHas('project', function ($q) use ($pm_maintenance) {
@@ -1172,9 +1218,10 @@ public function update(Request $request, Project $project)
             });
         }
 
+        $minPeriodStatus = $activeTab === 'paid' ? 'ptm2.status = "paid"' : 'ptm2.status != "paid"';
         $listBA = $query->join('m_project', 'project_top_maintenance.project_id', '=', 'm_project.id_project')
             ->select('project_top_maintenance.*')
-            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ptm2.status != "paid") as min_periode_end')
+            ->selectRaw('(SELECT MIN(periode_end) FROM project_top_maintenance as ptm2 WHERE ptm2.project_id = project_top_maintenance.project_id AND ' . $minPeriodStatus . ') as min_periode_end')
             ->orderBy('min_periode_end', 'asc')
             ->orderBy('m_project.nama_project', 'asc')
             ->orderBy('project_top_maintenance.periode_end', 'asc')
@@ -1241,10 +1288,155 @@ public function update(Request $request, Project $project)
         flash('Perubahan BA berhasil disimpan!')->success();
 
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => true, 'reload' => true]);
+            return response()->json([
+                'success' => true,
+                'reload' => $newStatus !== 'paid',
+                'redirect' => $newStatus === 'paid' ? route('project.ba.monitoring', ['tab' => 'paid']) : null,
+            ]);
         }
 
-        return redirect()->route('project.ba.monitoring', array_merge(request()->query(), ['tab' => $request->tab ?: 'progress']));
+        return redirect()->route('project.ba.monitoring', array_merge(request()->query(), ['tab' => $newStatus === 'paid' ? 'paid' : ($request->tab ?: 'progress')]));
+    }
+
+    private function applyMonitoringBATab($query, $activeTab, $today)
+    {
+        if ($activeTab === 'paid') {
+            $query->where('status', 'paid');
+        } elseif ($activeTab === 'open') {
+            $query->where('status', '!=', 'paid')->where('periode_end', '>', $today);
+        } else {
+            $query->where('status', '!=', 'paid')->where('periode_end', '<=', $today);
+        }
+
+        return $query;
+    }
+
+    public function monitoringBAUploadForm(ProjectTopMaintenance $ba)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($ba->status === 'paid', 403);
+
+        $ba->loadMissing('project');
+        $uploadFileName = $ba->uploadFilename();
+
+        return view('project.ba-upload', compact('ba', 'uploadFileName'));
+    }
+
+    public function monitoringBAUpload(Request $request, ProjectTopMaintenance $ba)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($ba->status === 'paid', 403);
+
+        $maxUploadKb = intval(config('filesystems.project_report_max_upload_kb', 51200));
+        $request->validate([
+            'upload_file' => 'required|file|mimes:pdf|max:' . $maxUploadKb,
+        ], [
+            'upload_file.uploaded' => 'File gagal diterima oleh PHP. Periksa batas ukuran upload server lalu coba kembali.',
+            'upload_file.max' => 'Ukuran PDF tidak boleh melebihi ' . number_format($maxUploadKb / 1024) . ' MB.',
+            'upload_file.mimes' => 'Dokumen BA harus berformat PDF.',
+        ]);
+
+        $ba->loadMissing('project');
+        $upload = $request->file('upload_file');
+        $fileName = $ba->uploadFilename();
+        $disk = config('filesystems.project_ba_disk', 'nextcloud');
+        $oldPath = $ba->uploaded_file;
+        $oldDisk = $ba->uploaded_disk ?: 'nextcloud';
+
+        try {
+            if ($disk === 'nextcloud') {
+                $nextcloud = app(NextcloudWebDav::class);
+                $path = $nextcloud->maintenanceDocumentPath($ba->project, $fileName);
+                $nextcloud->upload($upload->getRealPath(), $path);
+            } else {
+                $directory = trim(config('filesystems.project_ba_path', 'project_ba/files'), '/');
+                $path = $upload->storeAs($directory, $fileName, $disk);
+                if (!$path) {
+                    throw new \RuntimeException('File BA gagal disimpan ke storage.');
+                }
+            }
+        } catch (NextcloudWebDavException $e) {
+            flash('Upload BA ke Nextcloud gagal: ' . $e->getMessage())->error();
+            return back()->withInput();
+        } catch (\Throwable $e) {
+            Log::error('BA upload failed.', ['ba_id' => $ba->id, 'exception' => $e]);
+            flash('File BA gagal disimpan. Silakan coba kembali.')->error();
+            return back()->withInput();
+        }
+
+        $ba->uploaded_file = $path;
+        $ba->uploaded_disk = $disk;
+        $ba->uploaded_original_name = $fileName;
+        $ba->uploaded_at = now();
+        $ba->uploaded_by = Auth::id();
+
+        try {
+            $ba->save();
+        } catch (\Throwable $e) {
+            $uploadedToNewPath = !$oldPath || $oldPath !== $path || $oldDisk !== $disk;
+            if ($uploadedToNewPath) {
+                $this->deleteProjectBAFile($disk, $path, $ba->id, 'rollback');
+            }
+            Log::error('BA upload metadata could not be saved.', ['ba_id' => $ba->id, 'exception' => $e]);
+            flash($uploadedToNewPath
+                ? 'Metadata BA gagal disimpan; file baru sudah dibatalkan. Silakan coba kembali.'
+                : 'Metadata BA gagal diperbarui. File pada lokasi sebelumnya tetap tersedia; silakan coba kembali.'
+            )->error();
+            return back()->withInput();
+        }
+
+        if ($oldPath && ($oldPath !== $path || $oldDisk !== $disk)) {
+            $this->deleteProjectBAFile($oldDisk, $oldPath, $ba->id, 'replacement');
+        }
+
+        flash('Dokumen BA berhasil diupload ke Nextcloud!')->success();
+        return redirect()->route('project.ba.upload.form', $ba->id);
+    }
+
+    public function monitoringBADownload(ProjectTopMaintenance $ba)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($ba->uploaded_file, 404);
+
+        $disk = $ba->uploaded_disk ?: 'nextcloud';
+        $downloadName = $ba->uploaded_original_name ?: basename($ba->uploaded_file);
+
+        if ($disk === 'nextcloud') {
+            try {
+                $response = app(NextcloudWebDav::class)->download($ba->uploaded_file);
+            } catch (NextcloudWebDavException $e) {
+                abort($e->getStatusCode() === 404 ? 404 : 502, $e->getMessage());
+            }
+
+            $stream = $response->getBody();
+            return response()->streamDownload(function () use ($stream) {
+                while (!$stream->eof()) {
+                    echo $stream->read(8192);
+                }
+            }, $downloadName, ['Content-Type' => 'application/pdf']);
+        }
+
+        abort_unless(Storage::disk($disk)->exists($ba->uploaded_file), 404);
+        return Storage::disk($disk)->download($ba->uploaded_file, $downloadName);
+    }
+
+    private function deleteProjectBAFile($disk, $path, $baId, $reason)
+    {
+        try {
+            if ($disk === 'nextcloud') {
+                app(NextcloudWebDav::class)->delete($path);
+            } else {
+                Storage::disk($disk)->delete($path);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('BA file cleanup failed.', [
+                'ba_id' => $baId,
+                'disk' => $disk,
+                'path' => $path,
+                'reason' => $reason,
+                'exception' => $e,
+            ]);
+        }
     }
 
     public function monitoringBASignersUpdate(Request $request, ProjectTopMaintenance $ba)

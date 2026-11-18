@@ -109,6 +109,11 @@ class NextcloudWebDav
 
     public function caseDocumentPath(Project $project, $fileName)
     {
+        return $this->maintenanceDocumentPath($project, $fileName);
+    }
+
+    public function maintenanceDocumentPath(Project $project, $fileName)
+    {
         $projectFolder = trim((string) $project->link_dokumen);
         $subdirectory = trim((string) config('filesystems.project_report_nextcloud_document_subdirectory', '31_Document_Maintenance'));
 
@@ -121,7 +126,7 @@ class NextcloudWebDav
         }
 
         if ($fileName === '' || strpos($fileName, '/') !== false || strpos($fileName, '\\') !== false) {
-            throw new NextcloudWebDavException('Nama dokumen case tidak valid.');
+            throw new NextcloudWebDavException('Nama dokumen maintenance tidak valid.');
         }
 
         $root = trim((string) config('filesystems.project_report_nextcloud_root', ''), '/');

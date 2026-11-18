@@ -23,7 +23,20 @@
         </div>
     </section>
 
-    <form id="report-monitoring-filters" method="GET" action="{{ route('project.report.monitoring') }}" class="monitor-filter-panel">
+    <section class="ba-control-panel report-control-panel">
+        <nav class="ba-tabs report-tabs" aria-label="Kategori monitoring laporan">
+            <a href="{{ route('project.report.monitoring', array_merge(request()->query(), ['tab' => 'all', 'page' => null])) }}" class="{{ $activeTab === 'all' ? 'active' : '' }}" @if($activeTab === 'all') aria-current="page" @endif>
+                <i class="fas fa-layer-group"></i>
+                <span>Semua Laporan<small>{{ $allReportsCount }} laporan sesuai filter</small></span>
+            </a>
+            <a href="{{ route('project.report.monitoring', array_merge(request()->query(), ['tab' => 'action', 'page' => null])) }}" class="{{ $activeTab === 'action' ? 'active' : '' }}" @if($activeTab === 'action') aria-current="page" @endif>
+                <i class="fas fa-clipboard-check"></i>
+                <span>Perlu Ditindaklanjuti<small>{{ $actionReportsCount }} belum signoff &amp; upload</small></span>
+            </a>
+        </nav>
+
+    <form id="report-monitoring-filters" method="GET" action="{{ route('project.report.monitoring') }}" class="monitor-filter-panel report-filter-panel">
+        <input type="hidden" name="tab" value="{{ $activeTab }}">
         <div class="monitor-filter-heading">
             <div class="monitor-filter-heading-copy">
                 <span class="monitor-filter-icon"><i class="fas fa-sliders-h"></i></span>
@@ -64,13 +77,18 @@
             </div>
             <div class="monitor-filter-actions">
                 <button id="report-monitoring-apply" type="submit" class="btn btn-primary"><i class="fas fa-filter"></i><span>Terapkan filter</span></button>
-                <a id="report-monitoring-reset" href="{{ route('project.report.monitoring') }}" class="btn btn-outline-secondary"><i class="fas fa-undo-alt"></i><span>Reset</span></a>
+                <a id="report-monitoring-reset" href="{{ route('project.report.monitoring', ['tab' => $activeTab]) }}" class="btn btn-outline-secondary"><i class="fas fa-undo-alt"></i><span>Reset</span></a>
             </div>
         </div>
     </form>
+    </section>
 
     <div class="monitor-section-heading">
-        <div><h3>Daftar laporan</h3><p>Diurutkan berdasarkan periode laporan terdekat.</p></div>
+        @if($activeTab === 'action')
+            <div><h3>Laporan perlu ditindaklanjuti</h3><p>Belum signoff dan belum diunggah, diurutkan dari periode selesai terdekat.</p></div>
+        @else
+            <div><h3>Daftar seluruh laporan</h3><p>Ringkasan seluruh periode laporan berdasarkan project.</p></div>
+        @endif
         <span>{{ $reports->firstItem() ?? 0 }}–{{ $reports->lastItem() ?? 0 }} dari {{ $reports->total() }}</span>
     </div>
 
@@ -129,10 +147,41 @@
                 </div>
                 <div class="monitor-record-list">
                     @foreach($projectReports as $report)
-                        <div class="monitor-record report-grid">
+                        @php
+                            $periodEnd = $report->period_end ? \Carbon\Carbon::parse($report->period_end)->startOfDay() : null;
+                            $daysToPeriodEnd = $periodEnd ? now()->startOfDay()->diffInDays($periodEnd, false) : null;
+                        @endphp
+                        <div class="monitor-record report-grid {{ $activeTab === 'action' && $daysToPeriodEnd !== null && $daysToPeriodEnd < 0 ? 'is-report-overdue' : '' }}">
                             <div data-label="Report"><span class="monitor-record-index">#{{ $report->report_ke }}</span></div>
                             <div data-label="Periode mulai"><i class="far fa-calendar-alt"></i>{{ $report->period_start ? \Carbon\Carbon::parse($report->period_start)->format('d M Y') : '-' }}</div>
-                            <div data-label="Periode selesai"><i class="far fa-calendar-check"></i>{{ $report->period_end ? \Carbon\Carbon::parse($report->period_end)->format('d M Y') : '-' }}</div>
+                            <div data-label="Periode selesai" class="monitor-period-end">
+                                <span><i class="far fa-calendar-check"></i>{{ $report->period_end ? \Carbon\Carbon::parse($report->period_end)->format('d M Y') : '-' }}</span>
+                                @if($activeTab === 'action' && $daysToPeriodEnd !== null)
+                                    @if($daysToPeriodEnd < 0)
+                                        <small class="report-deadline-state is-overdue"><i class="fas fa-exclamation-circle"></i> Lewat {{ abs($daysToPeriodEnd) }} hari</small>
+                                    @elseif($daysToPeriodEnd === 0)
+                                        <small class="report-deadline-state is-today"><i class="fas fa-bell"></i> Berakhir hari ini</small>
+                                    @else
+                                        <small class="report-deadline-state is-upcoming"><i class="far fa-clock"></i> {{ $daysToPeriodEnd }} hari lagi</small>
+                                    @endif
+                                @endif
+                                @php($periodReminder = $report->latestPeriodEndNotification())
+                                @if($periodReminder && $periodReminder->status === 'sent')
+                                    <small class="report-reminder-state is-sent" title="{{ optional($periodReminder->sent_at)->format('d M Y H:i') }}"><i class="fas fa-envelope"></i> Reminder terkirim</small>
+                                @elseif($periodReminder && $periodReminder->status === 'failed')
+                                    <div class="report-reminder-failed">
+                                        <small class="report-reminder-state is-failed" title="{{ $periodReminder->error_message }}"><i class="fas fa-exclamation-circle"></i> Reminder gagal</small>
+                                        @canany(['send-maintenance-reminder', 'monitoring-laporan-upload-laporan'])
+                                            <form method="POST" action="{{ route('project.report.reminder.resend', $report->id) }}">
+                                                @csrf
+                                                <button type="submit" class="report-reminder-retry"><i class="fas fa-redo"></i> Kirim ulang</button>
+                                            </form>
+                                        @endcanany
+                                    </div>
+                                @elseif($report->period_end && \Carbon\Carbon::parse($report->period_end)->isToday() && $report->status !== 'signoff')
+                                    <small class="report-reminder-state is-pending"><i class="far fa-clock"></i> Menunggu scheduler</small>
+                                @endif
+                            </div>
                             <div data-label="Status">
                                 <select class="form-control editable monitor-status-select status-{{ $report->status }}" data-id="{{ $report->id }}" data-field="status" aria-label="Status report {{ $report->report_ke }}">
                                     <option value="open" @selected($report->status === 'open')>Open</option>
@@ -207,11 +256,16 @@
             </div>
         @empty
             <div class="monitor-empty-state">
-                <i class="far fa-folder-open"></i>
-                @if($selectedCustomer !== null || $selectedProjectId !== null)
+                @if($activeTab === 'action' && $selectedCustomer === null && $selectedProjectId === null)
+                    <i class="fas fa-check-circle is-success"></i>
+                    <h3>Semua laporan sudah tertangani</h3>
+                    <p>Tidak ada laporan yang sekaligus menunggu signoff dan upload.</p>
+                @elseif($selectedCustomer !== null || $selectedProjectId !== null)
+                    <i class="far fa-folder-open"></i>
                     <h3>Laporan tidak ditemukan</h3>
-                    <p>Tidak ada laporan untuk customer atau project yang dipilih.</p>
+                    <p>Tidak ada laporan pada tab ini untuk customer atau project yang dipilih.</p>
                 @else
+                    <i class="far fa-folder-open"></i>
                     <h3>Belum ada laporan</h3>
                     <p>Data laporan project belum tersedia.</p>
                 @endif

@@ -27,6 +27,11 @@ class SettingController extends Controller
     public function update(Request $request) {
         $request->validate([
             'utilization_effective_work_hours' => ['nullable', 'numeric', 'min:1', 'max:24'],
+            'report_period_reminder_enabled' => ['nullable', 'boolean'],
+            'report_period_reminder_time' => ['nullable', 'date_format:H:i'],
+            'report_period_reminder_to' => ['nullable', 'string', 'max:2000'],
+            'report_period_reminder_subject' => ['nullable', 'string', 'max:255'],
+            'report_period_reminder_body' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $data = $request->except(['_token']);

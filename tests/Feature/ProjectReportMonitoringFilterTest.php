@@ -34,6 +34,7 @@ class ProjectReportMonitoringFilterTest extends TestCase
             $table->date('period_start')->nullable();
             $table->date('period_end')->nullable();
             $table->string('status')->default('progress');
+            $table->text('uploaded_file')->nullable();
         });
 
         Schema::create('project_comments', function (Blueprint $table) {
@@ -52,6 +53,19 @@ class ProjectReportMonitoringFilterTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('project_report_notifications', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('project_report_id');
+            $table->string('notification_type')->default('period_end');
+            $table->date('trigger_date');
+            $table->text('recipient_snapshot')->nullable();
+            $table->string('status')->default('pending');
+            $table->unsignedTinyInteger('attempts')->default(0);
+            $table->timestamp('sent_at')->nullable();
+            $table->text('error_message')->nullable();
+            $table->timestamps();
+        });
+
         DB::table('m_project')->insert([
             ['id_project' => 1, 'customer' => 'Customer A', 'nama_project' => 'Alpha', 'nomor_spk' => 'SPK-1'],
             ['id_project' => 2, 'customer' => 'Customer A', 'nama_project' => 'Beta', 'nomor_spk' => 'SPK-2'],
@@ -59,9 +73,9 @@ class ProjectReportMonitoringFilterTest extends TestCase
         ]);
 
         DB::table('project_reports')->insert([
-            ['id' => 11, 'project_id' => 1, 'report_ke' => 1, 'period_end' => '2026-01-31', 'status' => 'progress'],
-            ['id' => 12, 'project_id' => 2, 'report_ke' => 1, 'period_end' => '2026-02-28', 'status' => 'signoff'],
-            ['id' => 13, 'project_id' => 3, 'report_ke' => 1, 'period_end' => '2026-03-31', 'status' => 'progress'],
+            ['id' => 11, 'project_id' => 1, 'report_ke' => 1, 'period_end' => '2026-01-31', 'status' => 'progress', 'uploaded_file' => null],
+            ['id' => 12, 'project_id' => 2, 'report_ke' => 1, 'period_end' => '2026-02-28', 'status' => 'signoff', 'uploaded_file' => null],
+            ['id' => 13, 'project_id' => 3, 'report_ke' => 1, 'period_end' => '2026-03-31', 'status' => 'progress', 'uploaded_file' => 'laporan/customer-b.pdf'],
         ]);
     }
 
@@ -88,5 +102,17 @@ class ProjectReportMonitoringFilterTest extends TestCase
 
         $this->assertTrue($viewData['projectOptions']->isEmpty());
         $this->assertSame(3, $viewData['reports']->total());
+    }
+
+    public function test_action_tab_only_shows_unsigned_reports_without_an_uploaded_file(): void
+    {
+        $viewData = app(ProjectController::class)
+            ->reportMonitoring(Request::create('/project/report-monitoring', 'GET', ['tab' => 'action']))
+            ->getData();
+
+        $this->assertSame('action', $viewData['activeTab']);
+        $this->assertSame([11], $viewData['reports']->getCollection()->pluck('id')->all());
+        $this->assertSame(3, $viewData['allReportsCount']);
+        $this->assertSame(1, $viewData['actionReportsCount']);
     }
 }

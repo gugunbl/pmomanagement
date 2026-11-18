@@ -97,6 +97,9 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->middleware('permission:monitoring-laporan-upload-laporan')
         ->name('project.report.upload');
 
+    Route::post('/project/report-monitoring/{report}/resend-reminder', 'ProjectController@reportReminderResend')
+        ->name('project.report.reminder.resend');
+
     Route::get('/project/report-monitoring/{report}/download', 'ProjectController@reportDownload')
         ->middleware('permission:monitoring-laporan-upload-laporan')
         ->name('project.report.download');
@@ -105,6 +108,15 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/project/monitoring-ba/{ba}/update', 'ProjectController@monitoringBAUpdate')->name('project.ba.monitoring.update');
     Route::post('/project/monitoring-ba/{ba}/signers', 'ProjectController@monitoringBASignersUpdate')->name('project.ba.monitoring.signers.update');
     Route::post('/project/monitoring-ba/{ba}/comments', 'ProjectController@monitoringBACommentStore')->name('project.ba.comments.store');
+    Route::get('/project/monitoring-ba/{ba}/upload', 'ProjectController@monitoringBAUploadForm')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.ba.upload.form');
+    Route::post('/project/monitoring-ba/{ba}/upload', 'ProjectController@monitoringBAUpload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.ba.upload');
+    Route::get('/project/monitoring-ba/{ba}/download', 'ProjectController@monitoringBADownload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.ba.download');
     Route::post('/project/{project}/comments', 'ProjectController@projectCommentStore')->name('project.comments.store');
     Route::get('/project/monitoring-ba/export/pdf', 'ProjectController@exportBAPdf')->name('project.ba.export.pdf');
     Route::get('/project/monitoring-ba/export/excel', 'ProjectController@exportBAExcel')->name('project.ba.export.excel');
