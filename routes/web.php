@@ -97,6 +97,23 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
         ->middleware('permission:monitoring-laporan-upload-laporan')
         ->name('project.report.upload');
 
+    Route::post('/project/report-monitoring/{report}/register-nextcloud', 'ProjectController@reportRegisterNextcloud')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.register-nextcloud');
+
+    Route::post('/project/report-monitoring/{report}/team-files/{teamFile}/upload', 'ProjectController@reportTeamFileUpload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.team-file.upload');
+    Route::post('/project/report-monitoring/{report}/team-files/{teamFile}/register-nextcloud', 'ProjectController@reportTeamFileRegisterNextcloud')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.team-file.register-nextcloud');
+    Route::get('/project/report-monitoring/{report}/team-files/{teamFile}/download', 'ProjectController@reportTeamFileDownload')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.team-file.download');
+    Route::post('/project/report-monitoring/{report}/team-files/{teamFile}/assign-legacy', 'ProjectController@reportTeamFileAssignLegacy')
+        ->middleware('permission:monitoring-laporan-upload-laporan')
+        ->name('project.report.team-file.assign-legacy');
+
     Route::post('/project/report-monitoring/{report}/resend-reminder', 'ProjectController@reportReminderResend')
         ->name('project.report.reminder.resend');
 

@@ -68,6 +68,11 @@ class ProjectReport extends Model
         return $this->hasMany(ProjectReportComment::class, 'project_report_id', 'id')->orderBy('created_at', 'desc');
     }
 
+    public function teamFiles()
+    {
+        return $this->hasMany(ProjectReportTeamFile::class, 'project_report_id', 'id');
+    }
+
     public function statusLogs()
     {
         return $this->hasMany(ProjectReportStatusLog::class, 'project_report_id', 'id')->orderBy('created_at', 'desc');

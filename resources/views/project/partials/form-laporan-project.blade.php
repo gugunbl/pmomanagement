@@ -36,6 +36,13 @@
             @for($i = 1; $i <= $totalReports; $i++)
                 @php
                     $report = $project->reports->firstWhere('report_ke', $i);
+                    // HTML date inputs only accept an ISO date (Y-m-d). Passing a
+                    // Carbon instance directly renders a timestamp and makes the
+                    // browser show an empty dd/mm/yyyy field even though the date
+                    // is already stored in the database.
+                    $periodStart = optional(optional($report)->period_start)->format('Y-m-d');
+                    $periodEnd = optional(optional($report)->period_end)->format('Y-m-d');
+                    $submissionDate = optional(optional($report)->submission_date)->format('Y-m-d');
                 @endphp
 
                 <tr>
@@ -44,21 +51,21 @@
                     <td>
                         <input type="date"
                                name="project_reports[{{ $i }}][start]"
-                               value="{{ old("project_reports.$i.start", optional($report)->period_start) }}"
+                               value="{{ old("project_reports.$i.start", $periodStart) }}"
                                class="form-control">
                     </td>
 
                     <td>
                         <input type="date"
                                name="project_reports[{{ $i }}][end]"
-                               value="{{ old("project_reports.$i.end", optional($report)->period_end) }}"
+                               value="{{ old("project_reports.$i.end", $periodEnd) }}"
                                class="form-control">
                     </td>
 
                     <td>
                         <input type="date"
                                name="project_reports[{{ $i }}][submission_date]"
-                               value="{{ old("project_reports.$i.submission_date", optional($report)->submission_date) }}"
+                               value="{{ old("project_reports.$i.submission_date", $submissionDate) }}"
                                class="form-control">
                     </td>
 

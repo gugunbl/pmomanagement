@@ -37,6 +37,33 @@ class ProjectReportMonitoringFilterTest extends TestCase
             $table->text('uploaded_file')->nullable();
         });
 
+        Schema::create('m_team_supports', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->tinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        Schema::create('project_team_support', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('project_id');
+            $table->unsignedBigInteger('team_support_id');
+            $table->timestamps();
+        });
+
+        Schema::create('project_report_team_files', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('project_report_id');
+            $table->unsignedBigInteger('team_support_id');
+            $table->text('uploaded_file')->nullable();
+            $table->string('uploaded_disk')->nullable();
+            $table->text('uploaded_original_name')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->unsignedBigInteger('uploaded_by')->nullable();
+            $table->timestamp('uploaded_at')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('project_comments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('project_id');

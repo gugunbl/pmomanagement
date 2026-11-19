@@ -150,6 +150,9 @@
                         @php
                             $periodEnd = $report->period_end ? \Carbon\Carbon::parse($report->period_end)->startOfDay() : null;
                             $daysToPeriodEnd = $periodEnd ? now()->startOfDay()->diffInDays($periodEnd, false) : null;
+                            $teamSlotCount = $report->teamFiles->count();
+                            $expectedTeamCount = $teamSlotCount > 0 ? $teamSlotCount : $report->project->teamSupports->count();
+                            $uploadedTeamCount = $report->teamFiles->whereNotNull('uploaded_file')->count();
                         @endphp
                         <div class="monitor-record report-grid {{ $activeTab === 'action' && $daysToPeriodEnd !== null && $daysToPeriodEnd < 0 ? 'is-report-overdue' : '' }}">
                             <div data-label="Report"><span class="monitor-record-index">#{{ $report->report_ke }}</span></div>
@@ -193,7 +196,9 @@
                             <div data-label="Aksi" class="monitor-record-actions">
                                 @can('monitoring-laporan-upload-laporan')
                                     @if($report->status === 'signoff')
-                                        @if($report->uploaded_file)
+                                        @if($expectedTeamCount > 0)
+                                            <a href="{{ route('project.report.upload.form', $report->id) }}" class="btn btn-sm {{ $uploadedTeamCount === $expectedTeamCount ? 'btn-success' : 'btn-primary' }}"><i class="fas fa-users"></i><span>Kelola {{ $uploadedTeamCount }}/{{ $expectedTeamCount }}</span></a>
+                                        @elseif($report->uploaded_file)
                                             <a href="{{ route('project.report.download', $report->id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i><span>Lihat file</span></a>
                                             <a href="{{ route('project.report.upload.form', $report->id) }}" class="btn btn-sm btn-success"><i class="fas fa-sync-alt"></i><span>Ganti</span></a>
                                         @else

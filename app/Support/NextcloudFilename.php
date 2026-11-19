@@ -9,27 +9,37 @@ final class NextcloudFilename
 
     public static function projectName($value)
     {
-        $projectName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', (string) $value);
-        $projectName = preg_replace('/[\x00-\x1F\x7F]/u', '', $projectName);
-        $projectName = preg_replace('/\s+/u', ' ', trim($projectName));
-        $projectName = trim($projectName, " .");
+        return self::cleanSegment($value, self::PROJECT_NAME_MAX_CHARACTERS, self::PROJECT_NAME_MAX_BYTES, 'Project', 50);
+    }
 
-        if ($projectName === '') {
-            return 'Project';
+    public static function teamName($value)
+    {
+        return self::cleanSegment($value, 45, 80, 'Team', 25);
+    }
+
+    private static function cleanSegment($value, $maxCharacters, $maxBytes, $fallback, $minimumWordBoundary)
+    {
+        $segment = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', (string) $value);
+        $segment = preg_replace('/[\x00-\x1F\x7F]/u', '', $segment);
+        $segment = preg_replace('/\s+/u', ' ', trim($segment));
+        $segment = trim($segment, " .");
+
+        if ($segment === '') {
+            return $fallback;
         }
 
-        $fullProjectName = $projectName;
-        $projectName = mb_substr($projectName, 0, self::PROJECT_NAME_MAX_CHARACTERS, 'UTF-8');
+        $fullSegment = $segment;
+        $segment = mb_substr($segment, 0, $maxCharacters, 'UTF-8');
 
-        if (mb_strlen($fullProjectName, 'UTF-8') > self::PROJECT_NAME_MAX_CHARACTERS) {
-            $lastSpace = mb_strrpos($projectName, ' ', 0, 'UTF-8');
-            if ($lastSpace !== false && $lastSpace >= 50) {
-                $projectName = mb_substr($projectName, 0, $lastSpace, 'UTF-8');
+        if (mb_strlen($fullSegment, 'UTF-8') > $maxCharacters) {
+            $lastSpace = mb_strrpos($segment, ' ', 0, 'UTF-8');
+            if ($lastSpace !== false && $lastSpace >= $minimumWordBoundary) {
+                $segment = mb_substr($segment, 0, $lastSpace, 'UTF-8');
             }
         }
 
-        $projectName = mb_strcut($projectName, 0, self::PROJECT_NAME_MAX_BYTES, 'UTF-8');
+        $segment = mb_strcut($segment, 0, $maxBytes, 'UTF-8');
 
-        return rtrim($projectName, " .");
+        return rtrim($segment, " .");
     }
 }

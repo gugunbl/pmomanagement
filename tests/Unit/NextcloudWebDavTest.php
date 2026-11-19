@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Project;
 use App\ProjectReport;
 use App\ProjectTopMaintenance;
+use App\ProjectReportTeamFile;
 use App\Services\NextcloudWebDav;
 use App\Services\NextcloudWebDavException;
 use GuzzleHttp\Client;
@@ -46,6 +47,27 @@ class NextcloudWebDavTest extends TestCase
         $this->assertSame(
             'IT PMO/Project/2021_Pengadaan_Server_MDM/30_Preventive_Maintenance/' . $fileName,
             (new NextcloudWebDav($this->client([new Response(201)])))->reportPath($report, $fileName)
+        );
+    }
+
+    public function test_team_report_filename_keeps_existing_format_and_adds_sanitized_team_name()
+    {
+        $this->configureNextcloud();
+        $report = $this->makeReport('2024_SAP', 'SAP BRIFIRST Project');
+        $report->report_ke = 6;
+        $report->period_start = '2026-09-01';
+        $report->period_end = '2026-12-31';
+        $team = new \App\TeamSupport(['name' => 'SAP GTI - Compute']);
+
+        $teamFile = new ProjectReportTeamFile();
+        $teamFile->setRelation('report', $report);
+        $teamFile->setRelation('teamSupport', $team);
+        $fileName = '20261119_Laporan_PM_SAP BRIFIRST Project_6_SAP GTI - Compute_20260901_20261231.pdf';
+
+        $this->assertSame($fileName, $teamFile->uploadFilename('2026-11-19'));
+        $this->assertSame(
+            'IT PMO/Project/2024_SAP/30_Preventive_Maintenance/' . $fileName,
+            (new NextcloudWebDav($this->client([new Response(207)])))->reportTeamPath($teamFile, $fileName)
         );
     }
 
@@ -157,6 +179,34 @@ class NextcloudWebDavTest extends TestCase
             'IT PMO/Project/2026_Project_Baru/31_Document_Maintenance/20261118_RCA_case_10.pdf',
             $service->caseDocumentPath($project, '20261118_RCA_case_10.pdf')
         );
+    }
+
+    public function test_file_metadata_verifies_existing_pdf_through_propfind()
+    {
+        $this->configureNextcloud();
+        $history = [];
+        $xml = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:"><d:response><d:propstat><d:prop><d:getcontentlength>73400320</d:getcontentlength><d:getcontenttype>application/pdf</d:getcontenttype><d:resourcetype/></d:prop></d:propstat></d:response></d:multistatus>';
+        $service = new NextcloudWebDav($this->client([new Response(207, ['Content-Type' => 'application/xml'], $xml)], $history));
+
+        $metadata = $service->fileMetadata('IT PMO/Project/2025_VDI/30_Preventive_Maintenance/Laporan Besar.pdf');
+
+        $this->assertTrue($metadata['exists']);
+        $this->assertFalse($metadata['is_collection']);
+        $this->assertSame(73400320, $metadata['size']);
+        $this->assertSame('application/pdf', $metadata['content_type']);
+        $this->assertSame('PROPFIND', $history[0]['request']->getMethod());
+        $this->assertSame('0', $history[0]['request']->getHeaderLine('Depth'));
+    }
+
+    public function test_file_metadata_reports_missing_nextcloud_file()
+    {
+        $this->configureNextcloud();
+        $service = new NextcloudWebDav($this->client([new Response(404)]));
+
+        $metadata = $service->fileMetadata('IT PMO/Project/2025_VDI/30_Preventive_Maintenance/Tidak Ada.pdf');
+
+        $this->assertFalse($metadata['exists']);
+        $this->assertNull($metadata['size']);
     }
 
     public function test_ba_filename_and_path_use_document_directory_and_limited_project_name()

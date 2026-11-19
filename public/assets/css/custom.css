@@ -3648,6 +3648,110 @@ a.app-kpi-card:hover {
     color: #40566d;
 }
 
+.report-upload-methods {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    margin: 1rem 0;
+}
+
+.report-upload-method {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    padding: .85rem 1rem;
+    text-align: left;
+    color: #52657c;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.report-upload-method > i {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    color: #49647f;
+    border-radius: 10px;
+    background: #edf2f7;
+}
+
+.report-upload-method strong,
+.report-upload-method small { display: block; }
+.report-upload-method strong { color: #17314d; font-size: .78rem; }
+.report-upload-method small { margin-top: .16rem; color: #7c8ba0; font-size: .62rem; }
+.report-upload-method.is-active { border-color: rgba(218, 37, 29, .45); background: #fff7f6; box-shadow: inset 0 0 0 1px rgba(218, 37, 29, .12); }
+.report-upload-method.is-active > i { color: #fff; background: var(--app-red); }
+.report-upload-panel { display: none; padding: 1rem; border: 1px solid #e2e7ee; border-radius: 12px; background: #fbfcfe; }
+.report-upload-panel.is-active { display: block; }
+.report-nextcloud-note { display: flex; gap: .65rem; align-items: flex-start; margin-bottom: 1rem; padding: .75rem; color: #315b54; border: 1px solid #c8e5dd; border-radius: 10px; background: #f0faf7; }
+.report-nextcloud-note > i { margin-top: .15rem; color: #128367; }
+.report-nextcloud-note strong,
+.report-nextcloud-note span { display: block; }
+.report-nextcloud-note span { margin-top: .12rem; color: #607a76; font-size: .68rem; }
+.report-nextcloud-preview { margin-bottom: 1rem; }
+.report-nextcloud-preview > span { display: block; margin-bottom: .35rem; color: #607086; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.report-nextcloud-preview code { display: block; padding: .7rem .8rem; overflow-wrap: anywhere; color: #1c3854; border: 1px dashed #c6d3df; border-radius: 8px; background: #fff; }
+
+@media (max-width: 575.98px) {
+    .report-upload-methods { grid-template-columns: 1fr; }
+}
+
+.team-report-workspace { padding-bottom: 2rem; color: #172b45; }
+.team-report-header { display: flex; gap: 1rem; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; padding: 1.25rem 1.35rem; border: 1px solid var(--app-line); border-radius: 16px; background: #fff; box-shadow: 0 8px 24px rgba(23, 43, 77, .055); }
+.team-report-header h2 { margin: .4rem 0 .25rem; font-size: 1.15rem; font-weight: 800; }
+.team-report-header p { margin: 0; color: #708097; font-size: .72rem; }
+.team-report-progress-card { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(260px, 1.5fr) auto; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem 1.2rem; border: 1px solid #dbe4ed; border-radius: 14px; background: #fff; }
+.team-report-progress-copy span,
+.team-report-progress-copy strong { display: block; }
+.team-report-progress-copy span { color: #78879a; font-size: .62rem; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+.team-report-progress-copy strong { margin-top: .15rem; font-size: .82rem; }
+.team-report-progress-track { height: 9px; overflow: hidden; border-radius: 999px; background: #edf1f5; }
+.team-report-progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--app-red), #f05a4f); transition: width .25s ease; }
+.team-report-progress-card > b { min-width: 42px; color: var(--app-red-dark); font-size: .8rem; text-align: right; }
+.team-report-legacy { display: flex; gap: 1rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding: .9rem 1rem; color: #5d4b1e; border: 1px solid #ecd99e; border-radius: 12px; background: #fffbeb; }
+.team-report-legacy > div:first-child { display: flex; gap: .6rem; align-items: flex-start; }
+.team-report-legacy strong,
+.team-report-legacy small { display: block; }
+.team-report-legacy small { margin-top: .15rem; color: #806f43; }
+.team-report-legacy-actions { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; }
+.team-report-legacy-actions form { margin: 0; }
+.team-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.team-report-card { display: flex; min-width: 0; flex-direction: column; padding: 1rem; border: 1px solid #dfe6ee; border-radius: 15px; background: #fff; box-shadow: 0 7px 20px rgba(23, 43, 77, .045); }
+.team-report-card.is-complete { border-color: #bfe4d7; }
+.team-report-card header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .7rem; align-items: center; }
+.team-report-icon { display: grid; width: 40px; height: 40px; place-items: center; color: #547089; border-radius: 11px; background: #edf3f7; }
+.team-report-card.is-complete .team-report-icon { color: #0c8064; background: #e3f6ef; }
+.team-report-card header span { color: #8a96a7; font-size: .57rem; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+.team-report-card header h3 { margin: .12rem 0 0; overflow-wrap: anywhere; color: #19324d; font-size: .82rem; font-weight: 800; }
+.team-report-card header em { display: inline-flex; gap: .28rem; align-items: center; padding: .3rem .48rem; color: #8a6411; border-radius: 999px; background: #fff3cd; font-size: .56rem; font-style: normal; font-weight: 800; text-transform: uppercase; }
+.team-report-card.is-complete header em { color: #08765e; background: #def5ed; }
+.team-report-file-info,
+.team-report-empty-copy { min-height: 72px; margin: .9rem 0; padding: .75rem; border-radius: 10px; background: #f7f9fb; }
+.team-report-file-info strong,
+.team-report-file-info span,
+.team-report-empty-copy strong,
+.team-report-empty-copy span { display: block; }
+.team-report-file-info strong { overflow-wrap: anywhere; font-size: .7rem; }
+.team-report-file-info span,
+.team-report-empty-copy span { margin-top: .3rem; color: #8090a4; font-size: .62rem; }
+.team-report-empty-copy strong { color: #53677e; font-size: .72rem; }
+.team-report-card footer { display: flex; gap: .45rem; justify-content: flex-end; margin-top: auto; }
+.team-report-card footer .btn { display: inline-flex; gap: .35rem; align-items: center; }
+
+@media (max-width: 767.98px) {
+    .team-report-header { flex-direction: column; }
+    .team-report-progress-card { grid-template-columns: 1fr auto; }
+    .team-report-progress-track { grid-column: 1 / -1; grid-row: 2; }
+    .team-report-progress-card > b { grid-column: 2; grid-row: 1; }
+    .team-report-legacy { align-items: flex-start; flex-direction: column; }
+    .team-report-legacy-actions { justify-content: flex-start; }
+    .team-report-grid { grid-template-columns: 1fr; }
+}
+
 .monitor-filter-panel {
     margin-bottom: 1.25rem;
     padding: 0;

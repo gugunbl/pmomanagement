@@ -10,6 +10,7 @@ use App\Status;
 use App\ProjectTopImplementasi;
 use App\ProjectTopMaintenance;
 use App\ProjectReport;
+use App\ProjectReportTeamFile;
 use App\ProjectReportComment;
 use App\ProjectReportStatusLog;
 use App\ProjectTopMaintenanceComment;
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\NextcloudWebDav;
 use App\Services\NextcloudWebDavException;
 use App\Services\ProjectReportPeriodReminder;
+use App\Services\ProjectReportTeamFiles as ProjectReportTeamFilesService;
 
 
 class ProjectController extends Controller
@@ -499,6 +501,13 @@ public function update(Request $request, Project $project)
         'top_maintenance_signers.*.*' => 'nullable|in:1',
         'team_support'             => 'nullable|array',
         'team_support.*'           => 'exists:m_team_supports,id',
+        'project_report_total'     => 'nullable|integer|min:0|max:60',
+        'project_reports'          => 'nullable|array',
+        'project_reports.*.start'  => 'nullable|date_format:Y-m-d',
+        'project_reports.*.end'    => 'nullable|date_format:Y-m-d',
+        'project_reports.*.submission_date' => 'nullable|date_format:Y-m-d',
+        'project_reports.*.status' => 'nullable|in:open,progress,submitted,signoff',
+        'project_reports.*.keterangan' => 'nullable|string|max:1000',
     ]);
 
     DB::transaction(function () use ($request, $project) {
@@ -649,6 +658,8 @@ public function update(Request $request, Project $project)
                         'new_status' => $newStatus,
                     ]);
                 }
+
+                app(ProjectReportTeamFilesService::class)->ensureSlots($updatedReport);
             }
 
             \App\ProjectReport::where('project_id', $project->id_project)
@@ -734,7 +745,7 @@ public function update(Request $request, Project $project)
             ? (int) $request->query('project')
             : null;
 
-        $query = ProjectReport::with(['project.comments.user', 'comments.user', 'notifications'])
+        $query = ProjectReport::with(['project.comments.user', 'project.teamSupports', 'comments.user', 'notifications', 'teamFiles.teamSupport'])
             ->whereHas('project');
 
         if ($selectedCustomer !== null) {
@@ -914,6 +925,12 @@ public function update(Request $request, Project $project)
         abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
         abort_unless($report->status === 'signoff', 403);
 
+        $teamFiles = app(ProjectReportTeamFilesService::class)->ensureSlots($report);
+        if ($teamFiles->isNotEmpty()) {
+            $report->loadMissing('project');
+            return view('project.report-upload-teams', compact('report', 'teamFiles'));
+        }
+
         $uploadFileName = $report->uploadFilename();
 
         return view('project.report-upload', compact('report', 'uploadFileName'));
@@ -923,6 +940,7 @@ public function update(Request $request, Project $project)
     {
         abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
         abort_unless($report->status === 'signoff', 403);
+        abort_if(app(ProjectReportTeamFilesService::class)->ensureSlots($report)->isNotEmpty(), 409, 'Gunakan slot upload team untuk laporan ini.');
 
         $maxUploadKb = intval(config('filesystems.project_report_max_upload_kb', 51200));
         $uploadFile = $request->file('upload_file');
@@ -1027,6 +1045,334 @@ public function update(Request $request, Project $project)
 
         flash('File laporan berhasil diupload!')->success();
         return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    public function reportRegisterNextcloud(Request $request, ProjectReport $report)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+        abort_if(app(ProjectReportTeamFilesService::class)->ensureSlots($report)->isNotEmpty(), 409, 'Gunakan slot Nextcloud per team untuk laporan ini.');
+
+        $request->validate([
+            'existing_file_name' => ['required', 'string', 'max:255', 'regex:/\.pdf$/i'],
+        ], [
+            'existing_file_name.required' => 'Nama file PDF di Nextcloud wajib diisi.',
+            'existing_file_name.max' => 'Nama file maksimal 255 karakter.',
+            'existing_file_name.regex' => 'File yang dapat dihubungkan harus berformat PDF.',
+        ]);
+
+        $fileName = trim($request->input('existing_file_name'));
+        if ($fileName !== basename($fileName) || strpos($fileName, '/') !== false || strpos($fileName, '\\') !== false) {
+            return back()->withErrors([
+                'existing_file_name' => 'Masukkan nama file saja, tanpa folder, path, atau shared link.',
+            ])->withInput();
+        }
+
+        $report->loadMissing('project');
+
+        try {
+            $nextcloud = app(NextcloudWebDav::class);
+            $path = $nextcloud->reportPath($report, $fileName);
+            $metadata = $nextcloud->fileMetadata($path);
+        } catch (NextcloudWebDavException $e) {
+            return back()->withErrors([
+                'existing_file_name' => 'Pemeriksaan Nextcloud gagal: ' . $e->getMessage(),
+            ])->withInput();
+        }
+
+        if (!$metadata['exists']) {
+            return back()->withErrors([
+                'existing_file_name' => 'File tidak ditemukan pada folder 30_Preventive_Maintenance project ini.',
+            ])->withInput();
+        }
+
+        if ($metadata['is_collection']) {
+            return back()->withErrors([
+                'existing_file_name' => 'Objek yang ditemukan adalah folder, bukan file PDF.',
+            ])->withInput();
+        }
+
+        if ($metadata['size'] === 0) {
+            return back()->withErrors([
+                'existing_file_name' => 'File ditemukan, tetapi ukurannya 0 byte.',
+            ])->withInput();
+        }
+
+        $contentType = strtolower((string) $metadata['content_type']);
+        if ($contentType !== '' && strpos($contentType, 'application/pdf') === false && strpos($contentType, 'application/octet-stream') === false) {
+            return back()->withErrors([
+                'existing_file_name' => 'Objek ditemukan, tetapi tipe file dari Nextcloud bukan PDF.',
+            ])->withInput();
+        }
+
+        $usedByReport = ProjectReport::query()
+            ->where('id', '<>', $report->id)
+            ->where('uploaded_disk', 'nextcloud')
+            ->where('uploaded_file', $path)
+            ->first();
+
+        if ($usedByReport) {
+            return back()->withErrors([
+                'existing_file_name' => 'File ini sudah terhubung ke laporan #' . $usedByReport->report_ke . ' pada data lain.',
+            ])->withInput();
+        }
+
+        DB::transaction(function () use ($report, $path, $fileName) {
+            $report->uploaded_file = $path;
+            $report->uploaded_disk = 'nextcloud';
+            $report->uploaded_original_name = $fileName;
+            $report->save();
+
+            ProjectReportComment::create([
+                'project_report_id' => $report->id,
+                'user_id' => Auth::id(),
+                'comment' => 'File Nextcloud dihubungkan ke laporan: ' . $fileName,
+            ]);
+        });
+
+        $sizeLabel = $metadata['size'] !== null
+            ? ' (' . number_format($metadata['size'] / 1024 / 1024, 2) . ' MB)'
+            : '';
+        flash('File Nextcloud berhasil diverifikasi dan dihubungkan' . $sizeLabel . '.')->success();
+
+        return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    public function reportTeamFileUpload(Request $request, ProjectReport $report, ProjectReportTeamFile $teamFile)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+        $this->guardTeamFile($report, $teamFile);
+
+        $maxUploadKb = intval(config('filesystems.project_report_max_upload_kb', 51200));
+        $request->validate([
+            'upload_file' => 'required|file|mimes:pdf|max:' . $maxUploadKb,
+        ], [
+            'upload_file.uploaded' => 'File gagal diterima oleh PHP. Periksa batas ukuran upload server lalu coba kembali.',
+            'upload_file.max' => 'Ukuran PDF tidak boleh melebihi ' . number_format($maxUploadKb / 1024) . ' MB.',
+            'upload_file.mimes' => 'File laporan team harus berformat PDF.',
+        ]);
+
+        $teamFile->loadMissing(['report.project', 'teamSupport']);
+        $upload = $request->file('upload_file');
+        $fileName = $teamFile->uploadFilename();
+        if (!$fileName) {
+            return back()->withErrors(['upload_file' => 'Periode laporan harus lengkap sebelum file dapat diupload.'])
+                ->with('team_file_error', $teamFile->id);
+        }
+
+        $disk = config('filesystems.project_report_disk', 'public');
+        $oldPath = $teamFile->uploaded_file;
+        $oldDisk = $teamFile->uploaded_disk ?: 'public';
+
+        try {
+            if ($disk === 'nextcloud') {
+                $nextcloud = app(NextcloudWebDav::class);
+                $path = $nextcloud->reportTeamPath($teamFile, $fileName);
+                $nextcloud->upload($upload->getRealPath(), $path);
+            } else {
+                $directory = trim(config('filesystems.project_report_path', 'project_reports/files'), '/');
+                $path = $upload->storeAs($directory, $fileName, $disk);
+                if (!$path) {
+                    throw new \RuntimeException('File laporan team gagal disimpan ke storage.');
+                }
+            }
+        } catch (NextcloudWebDavException $e) {
+            return back()->withErrors(['upload_file' => 'Upload ke Nextcloud gagal: ' . $e->getMessage()])
+                ->with('team_file_error', $teamFile->id);
+        } catch (\Throwable $e) {
+            Log::error('Project team report upload failed.', ['team_file_id' => $teamFile->id, 'exception' => $e]);
+            return back()->withErrors(['upload_file' => 'File laporan team gagal disimpan. Silakan coba kembali.'])
+                ->with('team_file_error', $teamFile->id);
+        }
+
+        $teamFile->uploaded_file = $path;
+        $teamFile->uploaded_disk = $disk;
+        $teamFile->uploaded_original_name = $fileName;
+        $teamFile->file_size = $upload->getSize();
+        $teamFile->uploaded_by = Auth::id();
+        $teamFile->uploaded_at = now();
+
+        try {
+            DB::transaction(function () use ($teamFile, $fileName) {
+                $teamFile->save();
+                ProjectReportComment::create([
+                    'project_report_id' => $teamFile->project_report_id,
+                    'user_id' => Auth::id(),
+                    'comment' => 'File team ' . optional($teamFile->teamSupport)->name . ' diupload: ' . $fileName,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            $uploadedToNewPath = !$oldPath || $oldPath !== $path || $oldDisk !== $disk;
+            if ($uploadedToNewPath) {
+                $this->deleteProjectReportFile($disk, $path, $report->id, 'team-file-rollback');
+            }
+            Log::error('Project team report metadata could not be saved.', ['team_file_id' => $teamFile->id, 'exception' => $e]);
+            return back()->withErrors(['upload_file' => 'Metadata file team gagal disimpan. Silakan coba kembali.'])
+                ->with('team_file_error', $teamFile->id);
+        }
+
+        if ($oldPath && ($oldPath !== $path || $oldDisk !== $disk)) {
+            $this->deleteProjectReportFile($oldDisk, $oldPath, $report->id, 'team-file-replacement');
+        }
+
+        flash('Laporan ' . optional($teamFile->teamSupport)->name . ' berhasil diupload.')->success();
+        return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    public function reportTeamFileRegisterNextcloud(Request $request, ProjectReport $report, ProjectReportTeamFile $teamFile)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+        $this->guardTeamFile($report, $teamFile);
+
+        $request->validate([
+            'existing_file_name' => ['required', 'string', 'max:255', 'regex:/\.pdf$/i'],
+        ], [
+            'existing_file_name.required' => 'Nama file PDF di Nextcloud wajib diisi.',
+            'existing_file_name.max' => 'Nama file maksimal 255 karakter.',
+            'existing_file_name.regex' => 'File yang dapat dihubungkan harus berformat PDF.',
+        ]);
+
+        $fileName = trim($request->input('existing_file_name'));
+        if ($fileName !== basename($fileName) || strpos($fileName, '/') !== false || strpos($fileName, '\\') !== false) {
+            return back()->withErrors(['existing_file_name' => 'Masukkan nama file saja, tanpa folder, path, atau shared link.'])
+                ->withInput()->with('team_file_error', $teamFile->id);
+        }
+
+        $teamFile->loadMissing(['report.project', 'teamSupport']);
+        try {
+            $nextcloud = app(NextcloudWebDav::class);
+            $path = $nextcloud->reportTeamPath($teamFile, $fileName);
+            $metadata = $nextcloud->fileMetadata($path);
+        } catch (NextcloudWebDavException $e) {
+            return back()->withErrors(['existing_file_name' => 'Pemeriksaan Nextcloud gagal: ' . $e->getMessage()])
+                ->withInput()->with('team_file_error', $teamFile->id);
+        }
+
+        $metadataError = $this->nextcloudPdfMetadataError($metadata);
+        if ($metadataError) {
+            return back()->withErrors(['existing_file_name' => $metadataError])
+                ->withInput()->with('team_file_error', $teamFile->id);
+        }
+
+        $usedByTeam = ProjectReportTeamFile::query()
+            ->where('id', '<>', $teamFile->id)
+            ->where('uploaded_disk', 'nextcloud')
+            ->where('uploaded_file', $path)
+            ->first();
+        $usedByLegacy = ProjectReport::query()
+            ->where('uploaded_disk', 'nextcloud')
+            ->where('uploaded_file', $path)
+            ->first();
+        if ($usedByTeam || $usedByLegacy) {
+            return back()->withErrors(['existing_file_name' => 'File Nextcloud ini sudah terhubung ke laporan lain.'])
+                ->withInput()->with('team_file_error', $teamFile->id);
+        }
+
+        DB::transaction(function () use ($teamFile, $path, $fileName, $metadata) {
+            $teamFile->uploaded_file = $path;
+            $teamFile->uploaded_disk = 'nextcloud';
+            $teamFile->uploaded_original_name = $fileName;
+            $teamFile->file_size = $metadata['size'];
+            $teamFile->uploaded_by = Auth::id();
+            $teamFile->uploaded_at = now();
+            $teamFile->save();
+
+            ProjectReportComment::create([
+                'project_report_id' => $teamFile->project_report_id,
+                'user_id' => Auth::id(),
+                'comment' => 'File Nextcloud team ' . optional($teamFile->teamSupport)->name . ' dihubungkan: ' . $fileName,
+            ]);
+        });
+
+        flash('File Nextcloud untuk team ' . optional($teamFile->teamSupport)->name . ' berhasil dihubungkan.')->success();
+        return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    public function reportTeamFileDownload(ProjectReport $report, ProjectReportTeamFile $teamFile)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        $this->guardTeamFile($report, $teamFile);
+        abort_unless($teamFile->uploaded_file, 404);
+
+        $disk = $teamFile->uploaded_disk ?: 'public';
+        $downloadName = $teamFile->uploaded_original_name ?: basename($teamFile->uploaded_file);
+        if ($disk === 'nextcloud') {
+            try {
+                $response = app(NextcloudWebDav::class)->download($teamFile->uploaded_file);
+            } catch (NextcloudWebDavException $e) {
+                abort($e->getStatusCode() === 404 ? 404 : 502, $e->getMessage());
+            }
+
+            $stream = $response->getBody();
+            return response()->streamDownload(function () use ($stream) {
+                while (!$stream->eof()) {
+                    echo $stream->read(8192);
+                }
+            }, $downloadName, ['Content-Type' => 'application/pdf']);
+        }
+
+        abort_unless(Storage::disk($disk)->exists($teamFile->uploaded_file), 404);
+        return Storage::disk($disk)->download($teamFile->uploaded_file, $downloadName);
+    }
+
+    public function reportTeamFileAssignLegacy(ProjectReport $report, ProjectReportTeamFile $teamFile)
+    {
+        abort_unless(Auth::user()->can('monitoring-laporan-upload-laporan'), 403);
+        abort_unless($report->status === 'signoff', 403);
+        $this->guardTeamFile($report, $teamFile);
+        abort_unless($report->uploaded_file, 422, 'Tidak ada file existing yang dapat dipetakan.');
+        abort_if($teamFile->uploaded_file, 422, 'Team ini sudah memiliki file.');
+
+        $teamFile->loadMissing('teamSupport');
+        DB::transaction(function () use ($report, $teamFile) {
+            $teamFile->uploaded_file = $report->uploaded_file;
+            $teamFile->uploaded_disk = $report->uploaded_disk;
+            $teamFile->uploaded_original_name = $report->uploaded_original_name;
+            $teamFile->uploaded_by = Auth::id();
+            $teamFile->uploaded_at = now();
+            $teamFile->save();
+
+            $report->uploaded_file = null;
+            $report->uploaded_disk = null;
+            $report->uploaded_original_name = null;
+            $report->save();
+
+            ProjectReportComment::create([
+                'project_report_id' => $report->id,
+                'user_id' => Auth::id(),
+                'comment' => 'File existing dipetakan ke team ' . optional($teamFile->teamSupport)->name . '.',
+            ]);
+        });
+
+        flash('File existing berhasil dipetakan ke team ' . optional($teamFile->teamSupport)->name . '.')->success();
+        return redirect()->route('project.report.upload.form', $report->id);
+    }
+
+    private function guardTeamFile(ProjectReport $report, ProjectReportTeamFile $teamFile)
+    {
+        abort_unless((int) $teamFile->project_report_id === (int) $report->id, 404);
+    }
+
+    private function nextcloudPdfMetadataError(array $metadata)
+    {
+        if (!$metadata['exists']) {
+            return 'File tidak ditemukan pada folder 30_Preventive_Maintenance project ini.';
+        }
+        if ($metadata['is_collection']) {
+            return 'Objek yang ditemukan adalah folder, bukan file PDF.';
+        }
+        if ($metadata['size'] === 0) {
+            return 'File ditemukan, tetapi ukurannya 0 byte.';
+        }
+
+        $contentType = strtolower((string) $metadata['content_type']);
+        if ($contentType !== '' && strpos($contentType, 'application/pdf') === false && strpos($contentType, 'application/octet-stream') === false) {
+            return 'Objek ditemukan, tetapi tipe file dari Nextcloud bukan PDF.';
+        }
+
+        return null;
     }
 
     private function deleteProjectReportFile($disk, $path, $reportId, $reason)

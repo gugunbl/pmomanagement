@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $nextcloudRoot = trim(config('filesystems.project_report_nextcloud_root', ''), '/');
+    $nextcloudSubdirectory = trim(config('filesystems.project_report_nextcloud_subdirectory', '30_Preventive_Maintenance'), '/');
+    $nextcloudProjectFolder = $report->project->link_dokumen ?? '';
+    $nextcloudDirectory = collect([$nextcloudRoot, $nextcloudProjectFolder, $nextcloudSubdirectory])
+        ->filter(function ($segment) { return $segment !== null && $segment !== ''; })
+        ->implode('/');
+    $nextcloudDestination = collect([$nextcloudDirectory, $uploadFileName])
+        ->filter(function ($segment) { return $segment !== null && $segment !== ''; })
+        ->implode('/');
+    $manualNextcloudActive = $errors->has('existing_file_name');
+@endphp
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card shadow-sm">
@@ -18,19 +30,6 @@
                 </div>
 
                 @if(config('filesystems.project_report_disk') === 'nextcloud')
-                    @php
-                        $nextcloudRoot = trim(config('filesystems.project_report_nextcloud_root', ''), '/');
-                        $nextcloudSubdirectory = trim(config('filesystems.project_report_nextcloud_subdirectory', '30_Preventive_Maintenance'), '/');
-                        $nextcloudProjectFolder = $report->project->link_dokumen ?? '';
-                        $nextcloudDestination = collect([
-                            $nextcloudRoot,
-                            $nextcloudProjectFolder,
-                            $nextcloudSubdirectory,
-                            $uploadFileName,
-                        ])->filter(function ($segment) {
-                            return $segment !== null && $segment !== '';
-                        })->implode('/');
-                    @endphp
                     <div class="alert upload-destination-alert mb-4" role="status">
                         <div class="upload-destination-title mb-2"><i class="fas fa-cloud-upload-alt mr-1"></i> Tujuan upload Nextcloud</div>
                         <code class="upload-destination-path">{{ $nextcloudDestination }}</code>
@@ -61,21 +60,53 @@
                     </div>
                 @endif
 
-                <form id="report-upload-form" action="{{ route('project.report.upload', $report->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="form-group">
-                        <label for="upload_file">Upload File Laporan (PDF, max {{ number_format(intval(config('filesystems.project_report_max_upload_kb', 51200)) / 1024) }}MB)</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="upload_file" name="upload_file" accept="application/pdf" required>
-                            <label class="custom-file-label" for="upload_file">Pilih file PDF...</label>
+                <div class="report-upload-methods" role="tablist" aria-label="Metode penyimpanan laporan">
+                    <button type="button" class="report-upload-method {{ $manualNextcloudActive ? '' : 'is-active' }}" data-upload-method="computer" aria-selected="{{ $manualNextcloudActive ? 'false' : 'true' }}">
+                        <i class="fas fa-upload"></i><span><strong>Upload dari komputer</strong><small>Untuk file di bawah batas upload aplikasi</small></span>
+                    </button>
+                    <button type="button" class="report-upload-method {{ $manualNextcloudActive ? 'is-active' : '' }}" data-upload-method="nextcloud" aria-selected="{{ $manualNextcloudActive ? 'true' : 'false' }}">
+                        <i class="fas fa-cloud"></i><span><strong>File sudah di Nextcloud</strong><small>Verifikasi tanpa mengunggah ulang</small></span>
+                    </button>
+                </div>
+
+                <section class="report-upload-panel {{ $manualNextcloudActive ? '' : 'is-active' }}" data-upload-panel="computer">
+                    <form id="report-upload-form" action="{{ route('project.report.upload', $report->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group">
+                            <label for="upload_file">Upload File Laporan (PDF, max {{ number_format(intval(config('filesystems.project_report_max_upload_kb', 51200)) / 1024) }}MB)</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="upload_file" name="upload_file" accept="application/pdf" required>
+                                <label class="custom-file-label" for="upload_file">Pilih file PDF...</label>
+                            </div>
+                            @error('upload_file')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            <small id="upload-file-client-error" class="text-danger d-none"></small>
                         </div>
-                        @error('upload_file')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                        <small id="upload-file-client-error" class="text-danger d-none"></small>
+                        <button type="submit" id="upload-submit" class="btn btn-primary" {{ $uploadFileName ? '' : 'disabled' }}><i class="fas fa-upload mr-1"></i> Upload</button>
+                    </form>
+                </section>
+
+                <section class="report-upload-panel {{ $manualNextcloudActive ? 'is-active' : '' }}" data-upload-panel="nextcloud">
+                    <div class="report-nextcloud-note">
+                        <i class="fas fa-shield-alt"></i>
+                        <div><strong>File tidak akan dipindahkan atau disalin.</strong><span>Sistem hanya memverifikasi keberadaannya melalui WebDAV dan menghubungkan path ke laporan ini.</span></div>
                     </div>
-                    <button type="submit" id="upload-submit" class="btn btn-primary" {{ $uploadFileName ? '' : 'disabled' }}>Upload</button>
-                </form>
+                    <form id="report-nextcloud-register-form" action="{{ route('project.report.register-nextcloud', $report->id) }}" method="POST">
+                        @csrf
+                        <div class="form-group">
+                            <label for="existing_file_name">Nama file PDF di Nextcloud</label>
+                            <input type="text" id="existing_file_name" name="existing_file_name" class="form-control @error('existing_file_name') is-invalid @enderror" value="{{ old('existing_file_name') }}" placeholder="Contoh: Laporan_PM_Januari_2026.pdf" maxlength="255" autocomplete="off" required>
+                            @error('existing_file_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <small class="form-text text-muted">Masukkan nama file saja, bukan shared link atau path folder.</small>
+                        </div>
+                        <div class="report-nextcloud-preview">
+                            <span>Lokasi yang akan diperiksa</span>
+                            <code data-nextcloud-base="{{ $nextcloudDirectory }}">{{ $nextcloudDirectory }}/<strong data-nextcloud-file>{{ old('existing_file_name', 'nama-file.pdf') }}</strong></code>
+                        </div>
+                        <button type="submit" id="nextcloud-register-submit" class="btn btn-primary"><i class="fas fa-link mr-1"></i> Periksa &amp; Hubungkan</button>
+                    </form>
+                </section>
             </div>
         </div>
     </div>
@@ -86,6 +117,18 @@
 <script>
     $(document).ready(function() {
         var maxUploadBytes = {{ intval(config('filesystems.project_report_max_upload_kb', 51200)) * 1024 }};
+
+        $('[data-upload-method]').on('click', function() {
+            var method = $(this).data('upload-method');
+            $('[data-upload-method]').removeClass('is-active').attr('aria-selected', 'false');
+            $(this).addClass('is-active').attr('aria-selected', 'true');
+            $('[data-upload-panel]').removeClass('is-active');
+            $('[data-upload-panel="' + method + '"]').addClass('is-active');
+        });
+
+        $('#existing_file_name').on('input', function() {
+            $('[data-nextcloud-file]').text($.trim($(this).val()) || 'nama-file.pdf');
+        });
 
         $('.custom-file-input').on('change', function() {
             var input = this;
@@ -128,6 +171,21 @@
                 onBeforeOpen: function() {
                     Swal.showLoading();
                 }
+            });
+        });
+
+        var registerInProgress = false;
+        $('#report-nextcloud-register-form').on('submit', function(event) {
+            if (registerInProgress) { event.preventDefault(); return; }
+            registerInProgress = true;
+            $('#nextcloud-register-submit').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa Nextcloud...');
+            Swal.fire({
+                title: 'Memeriksa file Nextcloud',
+                text: 'Sistem sedang memastikan file tersedia pada folder project yang benar.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                onBeforeOpen: function() { Swal.showLoading(); }
             });
         });
     });

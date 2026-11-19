@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Project;
 use App\ProjectReport;
+use App\ProjectReportTeamFile;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -65,6 +66,14 @@ class NextcloudWebDav
         $segments[] = $fileName;
 
         return implode('/', $segments);
+    }
+
+    public function reportTeamPath(ProjectReportTeamFile $teamFile, $fileName = null)
+    {
+        $teamFile->loadMissing('report.project');
+        $fileName = $fileName ?: $teamFile->uploadFilename();
+
+        return $this->reportPath($teamFile->report, $fileName);
     }
 
     /**
@@ -159,6 +168,56 @@ class NextcloudWebDav
     public function download($remotePath)
     {
         return $this->request('GET', $remotePath, ['stream' => true]);
+    }
+
+    public function fileMetadata($remotePath)
+    {
+        $response = $this->request('PROPFIND', $remotePath, [
+            'headers' => ['Depth' => '0'],
+        ], [200, 207, 404]);
+
+        if ($response->getStatusCode() === 404) {
+            return [
+                'exists' => false,
+                'is_collection' => false,
+                'size' => null,
+                'content_type' => null,
+            ];
+        }
+
+        $metadata = [
+            'exists' => true,
+            'is_collection' => false,
+            'size' => null,
+            'content_type' => null,
+        ];
+        $xml = (string) $response->getBody();
+
+        if ($xml === '' || !class_exists(\DOMDocument::class)) {
+            return $metadata;
+        }
+
+        $previousUseInternalErrors = libxml_use_internal_errors(true);
+        $document = new \DOMDocument();
+        $loaded = $document->loadXML($xml, LIBXML_NONET | LIBXML_NOBLANKS);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousUseInternalErrors);
+
+        if (!$loaded) {
+            return $metadata;
+        }
+
+        $xpath = new \DOMXPath($document);
+        $sizeNode = $xpath->query('//*[local-name()="getcontentlength"]')->item(0);
+        $typeNode = $xpath->query('//*[local-name()="getcontenttype"]')->item(0);
+
+        $metadata['is_collection'] = $xpath->query('//*[local-name()="resourcetype"]/*[local-name()="collection"]')->length > 0;
+        $metadata['size'] = $sizeNode && is_numeric(trim($sizeNode->textContent))
+            ? (int) trim($sizeNode->textContent)
+            : null;
+        $metadata['content_type'] = $typeNode ? trim($typeNode->textContent) : null;
+
+        return $metadata;
     }
 
     public function delete($remotePath)
