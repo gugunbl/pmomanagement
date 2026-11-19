@@ -37,6 +37,7 @@ class Project extends Model
         'top_maintenance_signer_total',
         'top_maintenance_notes',
         'project_report_total',
+        'project_report_period_type',
         'tipe_maintenance',
     ];
 

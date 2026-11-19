@@ -123,18 +123,22 @@ class NextcloudWebDavTest extends TestCase
     {
         $this->configureNextcloud();
         $history = [];
-        $service = new NextcloudWebDav($this->client([
-            new Response(404),
-            new Response(201),
-            new Response(404),
-            new Response(201),
-            new Response(404),
-            new Response(201),
-        ], $history));
+        $directoryCount = 1 + count(config('filesystems.project_report_nextcloud_standard_subdirectories')) + 2;
+        $responses = [];
+        for ($i = 0; $i < $directoryCount; $i++) {
+            $responses[] = new Response(404);
+            $responses[] = new Response(201);
+        }
+        $service = new NextcloudWebDav($this->client($responses, $history));
 
         $service->ensureProjectFolders('2026_Project Baru');
 
-        $this->assertSame(['PROPFIND', 'MKCOL', 'PROPFIND', 'MKCOL', 'PROPFIND', 'MKCOL'], array_map(function ($item) {
+        $expectedMethods = [];
+        for ($i = 0; $i < $directoryCount; $i++) {
+            $expectedMethods[] = 'PROPFIND';
+            $expectedMethods[] = 'MKCOL';
+        }
+        $this->assertSame($expectedMethods, array_map(function ($item) {
             return $item['request']->getMethod();
         }, $history));
         $this->assertSame(
@@ -142,12 +146,20 @@ class NextcloudWebDavTest extends TestCase
             (string) $history[1]['request']->getUri()
         );
         $this->assertSame(
-            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/30_Preventive_Maintenance',
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/01.%20DOKUMEN%20AWAL',
             (string) $history[3]['request']->getUri()
         );
         $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/13.%20BERITA%20ACARA',
+            (string) $history[27]['request']->getUri()
+        );
+        $this->assertSame(
+            'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/30_Preventive_Maintenance',
+            (string) $history[29]['request']->getUri()
+        );
+        $this->assertSame(
             'https://cloud.example/remote.php/dav/files/pmomaintenance/IT%20PMO/Project/2026_Project%20Baru/31_Document_Maintenance',
-            (string) $history[5]['request']->getUri()
+            (string) $history[31]['request']->getUri()
         );
     }
 
@@ -155,15 +167,15 @@ class NextcloudWebDavTest extends TestCase
     {
         $this->configureNextcloud();
         $history = [];
-        $service = new NextcloudWebDav($this->client([
-            new Response(207),
-            new Response(207),
-            new Response(207),
-        ], $history));
+        $directoryCount = 1 + count(config('filesystems.project_report_nextcloud_standard_subdirectories')) + 2;
+        $responses = array_map(function () {
+            return new Response(207);
+        }, range(1, $directoryCount));
+        $service = new NextcloudWebDav($this->client($responses, $history));
 
         $service->ensureProjectFolders('2026_Project_Existing');
 
-        $this->assertSame(['PROPFIND', 'PROPFIND', 'PROPFIND'], array_map(function ($item) {
+        $this->assertSame(array_fill(0, $directoryCount, 'PROPFIND'), array_map(function ($item) {
             return $item['request']->getMethod();
         }, $history));
     }
@@ -288,6 +300,21 @@ class NextcloudWebDavTest extends TestCase
             'filesystems.project_report_nextcloud_username' => 'pmomaintenance',
             'filesystems.project_report_nextcloud_password' => 'app-password',
             'filesystems.project_report_nextcloud_root' => 'IT PMO/Project',
+            'filesystems.project_report_nextcloud_standard_subdirectories' => [
+                '01. DOKUMEN AWAL',
+                '02. KOM',
+                '03. MOM',
+                '04. TIMELINE',
+                '05. PRE-REQUISITE',
+                '06. DO',
+                '07. PAT',
+                '08. UAT',
+                '09. DOKUMEN DESIGN',
+                '10. DOKUMEN IMPLEMENTASI',
+                '11. USER MANUAL - USER GUIDE',
+                '12. TRANSFERKNOWLEDGE',
+                '13. BERITA ACARA',
+            ],
             'filesystems.project_report_nextcloud_subdirectory' => '30_Preventive_Maintenance',
             'filesystems.project_report_nextcloud_document_subdirectory' => '31_Document_Maintenance',
             'filesystems.project_report_nextcloud_timeout' => 10,

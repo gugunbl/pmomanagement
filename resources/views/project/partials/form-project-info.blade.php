@@ -207,7 +207,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                     <small class="form-text text-muted">
-                        Folder project beserta subfolder <strong>30_Preventive_Maintenance</strong> dan <strong>31_Document_Maintenance</strong> akan dibuat otomatis. Spasi diperbolehkan; jangan gunakan karakter / atau \\.
+                        Folder project beserta struktur standar <strong>01–13</strong>, <strong>30_Preventive_Maintenance</strong>, dan <strong>31_Document_Maintenance</strong> akan diperiksa dan dilengkapi otomatis. Spasi diperbolehkan; jangan gunakan karakter / atau \\.
                     </small>
                 </div>
             </div>

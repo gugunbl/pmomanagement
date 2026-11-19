@@ -34,6 +34,7 @@ use App\Services\NextcloudWebDav;
 use App\Services\NextcloudWebDavException;
 use App\Services\ProjectReportPeriodReminder;
 use App\Services\ProjectReportTeamFiles as ProjectReportTeamFilesService;
+use App\Services\ProjectReportPeriodGenerator;
 
 
 class ProjectController extends Controller
@@ -489,6 +490,8 @@ public function update(Request $request, Project $project)
         'nama_project'             => 'required|string|max:255',
         'nomor_spk'                => 'required|string|max:255',
         'tanggal_spk'              => 'required|date_format:Y-m-d',
+        'tanggal_mulai_maintenance' => 'required|date_format:Y-m-d',
+        'tanggal_akhir_maintenance' => 'required|date_format:Y-m-d|after_or_equal:tanggal_mulai_maintenance',
         'link_dokumen'             => config('filesystems.project_report_disk') === 'nextcloud'
             ? Project::nextcloudFolderValidationRules()
             : 'nullable|string|max:255',
@@ -502,6 +505,9 @@ public function update(Request $request, Project $project)
         'team_support'             => 'nullable|array',
         'team_support.*'           => 'exists:m_team_supports,id',
         'project_report_total'     => 'nullable|integer|min:0|max:60',
+        'project_report_period_type' => 'nullable|in:' . implode(',', ProjectReportPeriodGenerator::patterns()),
+        'project_report_generate'  => 'nullable|boolean',
+        'project_report_dates_edited' => 'nullable|boolean',
         'project_reports'          => 'nullable|array',
         'project_reports.*.start'  => 'nullable|date_format:Y-m-d',
         'project_reports.*.end'    => 'nullable|date_format:Y-m-d',
@@ -510,7 +516,43 @@ public function update(Request $request, Project $project)
         'project_reports.*.keterangan' => 'nullable|string|max:1000',
     ]);
 
-    DB::transaction(function () use ($request, $project) {
+    $reportPeriodType = $request->input('project_report_period_type', ProjectReportPeriodGenerator::MANUAL);
+    $requestedReportTotal = (int) $request->input('project_report_total', 0);
+    $periodSettingsChanged = $reportPeriodType !== ($project->project_report_period_type ?: ProjectReportPeriodGenerator::MANUAL)
+        || $requestedReportTotal !== (int) $project->project_report_total;
+    $shouldGenerateReportPeriods = $reportPeriodType !== ProjectReportPeriodGenerator::MANUAL
+        && !$request->boolean('project_report_dates_edited')
+        && ($request->boolean('project_report_generate') || $periodSettingsChanged);
+    $generatedReportPeriods = $shouldGenerateReportPeriods
+        ? app(ProjectReportPeriodGenerator::class)->generate(
+            $request->tanggal_mulai_maintenance,
+            $requestedReportTotal,
+            $reportPeriodType
+        )
+        : [];
+
+    // Synchronize the external folder tree before changing project data. The
+    // operation is idempotent: existing directories are kept and only missing
+    // directories are created. If the folder name changes, the old tree is
+    // intentionally left untouched to avoid accidental document loss.
+    if (config('filesystems.project_report_disk') === 'nextcloud') {
+        try {
+            app(NextcloudWebDav::class)->ensureProjectFolders($request->link_dokumen);
+        } catch (NextcloudWebDavException $e) {
+            Log::warning('Sinkronisasi folder project di Nextcloud saat edit gagal.', [
+                'project_id' => $project->id_project,
+                'folder' => $request->link_dokumen,
+                'user_id' => Auth::id(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['link_dokumen' => 'Folder Nextcloud gagal disiapkan: ' . $e->getMessage()]);
+        }
+    }
+
+    DB::transaction(function () use ($request, $project, $reportPeriodType, $generatedReportPeriods) {
 
         /* ===============================
          * 1️⃣ UPDATE PROJECT INFO
@@ -535,6 +577,7 @@ public function update(Request $request, Project $project)
             'tipe_maintenance'              => $request->tipe_maintenance,
             'top_maintenance_signer_total'  => $request->top_maintenance_signer_total ?? 0,
             'top_maintenance_notes'         => $request->top_maintenance_notes ?? null,
+            'project_report_period_type'    => $reportPeriodType,
         ]);
 
         // Sync team supports (many-to-many)
@@ -628,13 +671,15 @@ public function update(Request $request, Project $project)
 
             for ($i = 1; $i <= $request->project_report_total; $i++) {
 
-                if (!isset($rows[$i])) continue;
+                if (!isset($rows[$i]) && !isset($generatedReportPeriods[$i])) continue;
+
+                $row = $rows[$i] ?? [];
 
                 $existingReport = \App\ProjectReport::where('project_id', $project->id_project)
                     ->where('report_ke', $i)
                     ->first();
 
-                $newStatus = $rows[$i]['status'] ?? 'progress';
+                $newStatus = $row['status'] ?? 'open';
 
                 $updatedReport = \App\ProjectReport::updateOrCreate(
                     [
@@ -642,11 +687,15 @@ public function update(Request $request, Project $project)
                         'report_ke'  => $i,
                     ],
                     [
-                        'period_start'    => $rows[$i]['start'] ?? null,
-                        'period_end'      => $rows[$i]['end'] ?? null,
-                        'submission_date' => $rows[$i]['submission_date'] ?? null,
+                        'period_start'    => isset($generatedReportPeriods[$i])
+                            ? $generatedReportPeriods[$i]['start']
+                            : ($row['start'] ?? null),
+                        'period_end'      => isset($generatedReportPeriods[$i])
+                            ? $generatedReportPeriods[$i]['end']
+                            : ($row['end'] ?? null),
+                        'submission_date' => $row['submission_date'] ?? null,
                         'status'          => $newStatus,
-                        'keterangan'      => $rows[$i]['keterangan'] ?? null,
+                        'keterangan'      => $row['keterangan'] ?? null,
                     ]
                 );
 
@@ -668,7 +717,11 @@ public function update(Request $request, Project $project)
         }
     });
 
-    flash('Project berhasil diperbarui')->success();
+    $successMessage = config('filesystems.project_report_disk') === 'nextcloud'
+        ? 'Project berhasil diperbarui dan struktur folder Nextcloud telah dilengkapi.'
+        : 'Project berhasil diperbarui';
+
+    flash($successMessage)->success();
     return redirect()->back();
 }
 

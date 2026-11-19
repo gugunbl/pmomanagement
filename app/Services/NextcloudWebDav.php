@@ -83,10 +83,18 @@ class NextcloudWebDav
     public function ensureProjectFolders($projectFolder)
     {
         $projectFolder = trim((string) $projectFolder);
-        $subdirectories = array_values(array_unique([
+        $standardSubdirectories = config('filesystems.project_report_nextcloud_standard_subdirectories', []);
+        if (!is_array($standardSubdirectories)) {
+            throw new NextcloudWebDavException('Konfigurasi struktur folder standard Nextcloud harus berupa daftar folder.');
+        }
+
+        $subdirectories = array_map('trim', array_merge($standardSubdirectories, [
             trim((string) config('filesystems.project_report_nextcloud_subdirectory', '30_Preventive_Maintenance')),
             trim((string) config('filesystems.project_report_nextcloud_document_subdirectory', '31_Document_Maintenance')),
         ]));
+        $subdirectories = array_values(array_unique(array_filter($subdirectories, function ($directory) {
+            return $directory !== '';
+        })));
 
         if (!Project::isValidNextcloudFolderName($projectFolder)) {
             throw new NextcloudWebDavException('Nama folder project belum diisi atau mengandung karakter path yang tidak diperbolehkan.');
